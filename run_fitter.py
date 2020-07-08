@@ -29,42 +29,54 @@ def make_fit():
     canv.DrawCrosshair()
     canv.cd()
 
-    fit_name = 'crys_ball'
+    fit_name = 'gaus'
     fit_info = 'fitter-init.json'
 
     ftr = fitter(fit_name,fit_info)
     func = ftr.get_fit()
     hist = ftr.hist
+    func.SetLineColor(kRed)
+    func.SetLineWidth(3)
+    hist.SetFillColor(kAzure+4)
     hist.Draw("HIST same")
     func.Draw("same")
     
-    
     #func.DrawIntegral("same")
 
-    print "intg",func.Integral(ftr.lo,ftr.hi)
+    print "intg func",func.Integral(ftr.lo,ftr.hi)
     #print "intg func",func.DrawIntegral("same").Eval(4.9)
 
-    func.SetLineColor(kRed)
-    func.SetLineWidth(3)
-
-    hist.SetFillColor(kAzure+4)
-
-
-    lgn = ROOT.TLegend(0.675,0.75,0.875,0.875)
-    #lgn.AddEntry("hist","fit data","f")
-    lgn.AddEntry("func","%s fit"%(ftr.fit_name),"l")
+    lgn = ROOT.TLegend(0.675,0.8,0.875,0.875)
+    lgn.AddEntry("hist","fit data","F")
+    lgn.AddEntry("func","%s fit"%(ftr.fit_name),"L")
 
     lgn.Draw("same")
 
     cmd = " "
+    delay = 3.
     while not cmd == "" and\
         not cmd[(cmd.rfind('/') if cmd.rfind('/') != -1 else 0):] == "/run_fitter.py":
-        time.sleep(3)
         cmd = raw_input("cmd:")
         if cmd == 's':
-            affirm = raw_input("are you sure you want to save this model? [y/n]")
+            print "[SAVING]"
+            affirm = raw_input("are you sure you want to SAVE this model? [y/n]")
             if affirm == 'y':
                 ftr.jsonify()
+        elif cmd == 'r':
+            print "[REFITTING]"
+            affirm = raw_input("are you sure you want to REFIT? [y/n]")
+            if affirm == 'y':
+                func = ftr.get_fit()
+                hist = ftr.hist
+                func.SetLineColor(kRed)
+                func.SetLineWidth(3)
+                hist.SetFillColor(kAzure+4)
+                hist.Draw()
+                func.Draw("same")
+        elif cmd == 't':
+            print "[DELAY]"
+            delay = float(raw_input("New Delay Time (in sec):"))
+        time.sleep(delay)
 
 def test():
     f1 = ROOT.TF1("f1","ROOT::Math::landau_pdf(x[0],[1],[0])",0.,5.)
@@ -103,8 +115,8 @@ def test():
     cmd = " "
     while not cmd == "" and\
         not cmd[(cmd.rfind('/') if cmd.rfind('/') != -1 else 0):] == "/run_fitter.py":
-        time.sleep(3)
         cmd = raw_input("cmd:")
+        time.sleep(3)
 
 def get_fit():
     canv = ROOT.TCanvas("canv","title",1200,900)
@@ -130,18 +142,30 @@ def get_fit():
     cmd = " "
     while not cmd == "" and\
         not cmd[(cmd.rfind('/') if cmd.rfind('/') != -1 else 0):] == "/run_fitter.py":
-        time.sleep(3)
         cmd = raw_input("cmd:")
         if cmd == 's':
+            print "[SAVING]"
             affirm = raw_input("are you sure you want to save this model? [y/n]")
             if affirm == 'y':
                 ftr.jsonify()
-        if cmd == 'i':
-            #intglo = float(raw_input("integrate from: "))
-            #intghi = float(raw_input("integrate to: "))
-            #print ftr.func.Integral(intglo,intghi)
-            ftr.func.DrawIntegral()
-            print ftr.func.CreateHistogram().Integral()
+        elif cmd == 'd':
+            print "[DRAWING]"
+            func.Draw()
+        elif cmd == 'i':
+            print "[INTEGRATING]"
+            intglo = float(raw_input("integrate from: "))
+            intghi = float(raw_input("integrate to: "))
+            print ftr.func.Integral(intglo,intghi)
+            print func.Integral(ftr.lo,ftr.hi)
+            #ftr.func.DrawIntegral()
+            #print ftr.func.CreateHistogram().Integral()
+        elif cmd == 'n':
+            print "[NORMALIZING]"
+            newfunc = func.Clone()
+            newfunc.SetParameter(0,func.GetParameter(0)/func.Integral(ftr.lo,ftr.hi))
+            newfunc.Draw()
+            print newfunc.Integral(ftr.lo,ftr.hi)
+        time.sleep(3)
 
 
 if __name__ == '__main__':

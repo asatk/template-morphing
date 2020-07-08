@@ -142,6 +142,8 @@ class fitter:
             fn.SetParameter('Constant',random.uniform(1./30,1./3) if self.normalize else self.nEntries*random.uniform(1./30,1./3))
             fn.SetParameter('Mean',mean_est+mean_est*random.uniform(-0.05,0.05))
             fn.SetParameter('Sigma',random.uniform(0.001,0.25) if self.pname == 'omega' else random.randint(1,25))
+            fn.SetParLimits(0,0.,self.nEntries)
+            fn.SetParLimits(1,0.,mean_est*2)
         elif fit_name in ['dbl_gaus','dbl_gaus_cdf']:
             fn.SetParName(0,'Constant-1')
             fn.SetParName(1,'Mean-1')
@@ -151,6 +153,10 @@ class fitter:
             fn.SetParName(5,'Sigma-2')
             fn.SetParameters(random.uniform(1./30,1./3) if self.normalize else self.nEntries*random.uniform(1./30,1./3),mean_est+mean_est*random.uniform(-0.05,0.05),random.randint(0,100),\
                 random.uniform(1./30,1./3) if self.normalize else self.nEntries*random.uniform(1./30,1./3),mean_est+mean_est*random.uniform(-0.05,0.05),random.randint(0,100))
+            fn.SetParLimits(0,0.,self.nEntries)
+            fn.SetParLimits(3,0.,self.nEntries)
+            fn.SetParLimits(1,0.,mean_est*2)
+            #fn.SetParLimits(4,0.,mean_est*2)
         elif fit_name in ['crys_ball','crys_ball_fn','crys_ball_pdf','crys_ball_cdf']:
             fn.SetParName(0,'Constant')
             fn.SetParName(1,'Mean')
@@ -162,6 +168,8 @@ class fitter:
             fn.SetParameter('Sigma',random.uniform(0.001,0.25) if self.pname == 'omega' else random.randint(0,25))
             fn.SetParameter('Alpha',random.random()*25)
             fn.SetParameter('n',random.randint(1,10))
+            fn.SetParLimits(0,0.,self.nEntries)
+            fn.SetParLimits(1,0.,mean_est*2)
         elif fit_name in ['landau','landau_pdf','landau_cdf']:
             fn.SetParName(0,'Constant')
             fn.SetParName(1,'x0/Mean')
@@ -169,6 +177,8 @@ class fitter:
             fn.SetParameter('Constant',random.uniform(1./30,1./3) if self.normalize else self.nEntries*random.uniform(1./30,1./3))
             fn.SetParameter('x0/Mean',mean_est+mean_est*random.uniform(-0.05,0.05))
             fn.SetParameter('eta/Width',random.uniform(0.001,0.1) if self.pname == 'omega' else random.randint(0,100))
+            fn.SetParLimits(0,0.,self.nEntries)
+            fn.SetParLimits(1,0.,mean_est*2)
         elif fit_name in ['landxgaus','landxgaus_cdf']:
             fn_conv = ROOT.TF1Convolution('landau','gaus',self.lo,self.hi,True)
             fn_conv.SetRange(self.lo,self.hi)
@@ -235,10 +245,10 @@ class fitter:
             print "\nFIT PARAMETERS FOR %s"%(fit_str)
             for i in range(fit_fn.GetNpar()):
                 print "PAR %i:\t %s \t| %s"%(i,fit_fn.GetParName(i)[:4],fit_fn.GetParameter(i))
-            print "CHI SQUARED FOR FIT ",fit_fn.GetChisquare()
             time.sleep(self.window_time)
 
         if debug >= 1:
+            print "CHI SQUARED FOR FIT ",fit_fn.GetChisquare()
             print "\nTEST %s - END\n"%(fit_name)
         
         self.func = fit_fn
@@ -277,5 +287,6 @@ class fitter:
 
             info['pars'] = pars
             info['names'] = names
+            info['chi'] = self.func.GetChisquare()
 
             json.dump(info,json_out,indent=4)

@@ -1,10 +1,10 @@
 {
-    "fileName": "root/TwoProngNtuplizer_etaprime500.root",
+    "fileName": "root/TwoProngNtuplizer_eta125.root",
     "pname":"phi",
     "phi": [
         {
         "var": "Obj_PhotonTwoProng.mass",
-        "bins": "100,0,1500"
+        "bins": "50,0,250"
         }
     ],
     "omega": [
@@ -24,6 +24,6 @@
     "cum":"n",
     "nEntries":"10000",
     "seed":"n",
-    "debug":"2",
+    "debug":"1",
     "window_time":"1"
 }
