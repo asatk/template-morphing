@@ -1,0 +1,281 @@
+It appears root/TwoProngNtuplizer_etaprime125.root is a rootfile
+It appears root/TwoProngNtuplizer_etaprime125.root is a rootfile
+Drawing into histogram...
+Draw String:  Obj_PhotonTwoProng.mass>>hist_1 nTwoProngs>0 && nIDPhotons>0 && Obj_PhotonTwoProng.dR>0.1 && Obj_PhotonTwoProng.part2_pt>150
+Draw String:  TwoProng_MassPi0[0]>>hist_2 nTwoProngs>0 && nIDPhotons>0 && Obj_PhotonTwoProng.dR>0.1 && Obj_PhotonTwoProng.part2_pt>150
+Entries 1  :  11  , total : 11.0
+Entries 2  :  11  , total : 11.0
+Plotting...
+ FCN=1.42176e-09 FROM HESSE     STATUS=NOT POSDEF     16 CALLS          76 TOTAL
+                     EDM=2.84018e-09    STRATEGY= 1      ERR MATRIX NOT POS-DEF
+  EXT PARAMETER                APPROXIMATE        STEP         FIRST   
+  NO.   NAME      VALUE            ERROR          SIZE      DERIVATIVE 
+   1  Constant     1.42629e+01   6.30877e+01   4.19135e-04   1.75363e-05
+   2  Mean         1.05180e+02   1.54617e+00   2.50768e-05  -7.22323e-04
+   3  Sigma        2.49526e-01   2.13439e+00   1.88729e-05   3.90221e-04
+ FCN=2.23413e-09 FROM HESSE     STATUS=OK             16 CALLS          83 TOTAL
+                     EDM=4.46839e-09    STRATEGY= 1      ERROR MATRIX ACCURATE 
+  EXT PARAMETER                                   STEP         FIRST   
+  NO.   NAME      VALUE            ERROR          SIZE      DERIVATIVE 
+   1  Constant     1.41943e+01   1.15007e+03   4.17796e-04  -2.20882e-05
+   2  Mean         3.51762e+01   2.94608e+01   1.01848e-05   9.07205e-04
+   3  Sigma        2.46790e-01   2.33613e+00   1.91515e-05  -4.83075e-04
+Elapsed Time:  0.4 sec
+[Enter] to finish, 'options' to see options: Must supply the name of the variable to be plotted with --var
+It appears root/TwoProngNtuplizer_eta125.root is a rootfile
+It appears root/TwoProngNtuplizer_eta300.root is a rootfile
+It appears root/TwoProngNtuplizer_eta500.root is a rootfile
+It appears root/TwoProngNtuplizer_eta750.root is a rootfile
+It appears root/TwoProngNtuplizer_eta1000.root is a rootfile
+Drawing into histogram...
+Draw String:  TwoProng_MassPi0[0]>>hist_1 nTwoProngs>0 && nIDPhotons>0 && Obj_PhotonTwoProng.dR>0.1 && Obj_PhotonTwoProng.part2_pt>150
+Draw String:  TwoProng_MassPi0[0]>>hist_2 nTwoProngs>0 && nIDPhotons>0 && Obj_PhotonTwoProng.dR>0.1 && Obj_PhotonTwoProng.part2_pt>150
+Draw String:  TwoProng_MassPi0[0]>>hist_3 nTwoProngs>0 && nIDPhotons>0 && Obj_PhotonTwoProng.dR>0.1 && Obj_PhotonTwoProng.part2_pt>150
+Draw String:  TwoProng_MassPi0[0]>>hist_4 nTwoProngs>0 && nIDPhotons>0 && Obj_PhotonTwoProng.dR>0.1 && Obj_PhotonTwoProng.part2_pt>150
+Draw String:  TwoProng_MassPi0[0]>>hist_5 nTwoProngs>0 && nIDPhotons>0 && Obj_PhotonTwoProng.dR>0.1 && Obj_PhotonTwoProng.part2_pt>150
+Entries 1  :  23  , total : 23.0
+Entries 2  :  294  , total : 294.0
+Entries 3  :  964  , total : 964.0
+Entries 4  :  1140  , total : 1140.0
+Entries 5  :  1088  , total : 1088.0
+Plotting...
+ FCN=1.73002e-09 FROM HESSE     STATUS=NOT POSDEF     16 CALLS          83 TOTAL
+                     EDM=3.4565e-09    STRATEGY= 1      ERR MATRIX NOT POS-DEF
+  EXT PARAMETER                APPROXIMATE        STEP         FIRST   
+  NO.   NAME      VALUE            ERROR          SIZE      DERIVATIVE 
+   1  Constant     3.01136e+01   9.36190e+01   6.13018e-04   1.32483e-05
+   2  Mean         3.51861e+01   1.06526e+00   8.38903e-06  -1.15507e-03
+   3  Sigma        2.53556e-01   1.56734e+00   1.27135e-05   6.40000e-04
+ FCN=2.61874e-07 FROM HESSE     STATUS=NOT POSDEF     16 CALLS          84 TOTAL
+                     EDM=5.23199e-07    STRATEGY= 1      ERR MATRIX NOT POS-DEF
+  EXT PARAMETER                APPROXIMATE        STEP         FIRST   
+  NO.   NAME      VALUE            ERROR          SIZE      DERIVATIVE 
+   1  Constant     3.78901e+02   3.19689e+02   2.15673e-03  -4.63139e-05
+   2  Mean         3.51752e+01   2.98838e-01   8.38642e-06   5.08311e-02
+   3  Sigma        2.45928e-01   3.95448e-01   3.72073e-06  -2.69594e-02
+ FCN=1.83371e-07 FROM HESSE     STATUS=NOT POSDEF     16 CALLS          86 TOTAL
+                     EDM=3.66364e-07    STRATEGY= 1      ERR MATRIX NOT POS-DEF
+  EXT PARAMETER                APPROXIMATE        STEP         FIRST   
+  NO.   NAME      VALUE            ERROR          SIZE      DERIVATIVE 
+   1  Constant     1.24400e+03   5.83493e+02   3.91132e-03  -2.13750e-05
+   2  Mean         3.51763e+01   1.65168e-01   8.38668e-06   7.69383e-02
+   3  Sigma        2.46826e-01   2.27172e-01   2.04542e-06  -4.09754e-02
+ FCN=1.73237e-07 FROM HESSE     STATUS=NOT POSDEF     16 CALLS          83 TOTAL
+                     EDM=3.46116e-07    STRATEGY= 1      ERR MATRIX NOT POS-DEF
+  EXT PARAMETER                APPROXIMATE        STEP         FIRST   
+  NO.   NAME      VALUE            ERROR          SIZE      DERIVATIVE 
+   1  Constant     1.46193e+03   6.30404e+02   4.21393e-03  -1.92252e-05
+   2  Mean         3.51701e+01   1.50214e-01   8.38520e-06   8.22138e-02
+   3  Sigma        2.41131e-01   2.09689e-01   1.93951e-06  -4.27951e-02
+ FCN=2.822e-12 FROM HESSE     STATUS=NOT POSDEF     16 CALLS          89 TOTAL
+                     EDM=5.72228e-12    STRATEGY= 1      ERR MATRIX NOT POS-DEF
+  EXT PARAMETER                APPROXIMATE        STEP         FIRST   
+  NO.   NAME      VALUE            ERROR          SIZE      DERIVATIVE 
+   1  Constant     1.39640e+03   6.19894e+02   4.13508e-03  -7.93618e-08
+   2  Mean         3.51584e+01   1.42739e-01   8.38243e-06   3.51500e-04
+   3  Sigma        2.24271e-01   1.99672e-01   1.85967e-06  -1.76201e-04
+Elapsed Time:  0.4 sec
+[Enter] to finish, 'options' to see options:   File "/home/asatk/Documents/code/cern/TM/plotter.py", line 323
+    print sample['tree']
+               ^
+SyntaxError: invalid syntax
+It appears root/TwoProngNtuplizer_eta125.root is a rootfile
+twoprongNtuplizer/fTree
+root/TwoProngNtuplizer_eta125.root
+It appears root/TwoProngNtuplizer_eta300.root is a rootfile
+twoprongNtuplizer/fTree
+root/TwoProngNtuplizer_eta300.root
+It appears root/TwoProngNtuplizer_eta500.root is a rootfile
+twoprongNtuplizer/fTree
+root/TwoProngNtuplizer_eta500.root
+It appears root/TwoProngNtuplizer_eta750.root is a rootfile
+twoprongNtuplizer/fTree
+root/TwoProngNtuplizer_eta750.root
+It appears root/TwoProngNtuplizer_eta1000.root is a rootfile
+twoprongNtuplizer/fTree
+root/TwoProngNtuplizer_eta1000.root
+Drawing into histogram...
+Draw String:  Obj_PhotonTwoProng.mass>>hist_1 nTwoProngs>0 && nIDPhotons>0 && Obj_PhotonTwoProng.dR>0.1 && Obj_PhotonTwoProng.part2_pt>150
+Draw String:  Obj_PhotonTwoProng.mass>>hist_2 nTwoProngs>0 && nIDPhotons>0 && Obj_PhotonTwoProng.dR>0.1 && Obj_PhotonTwoProng.part2_pt>150
+Draw String:  Obj_PhotonTwoProng.mass>>hist_3 nTwoProngs>0 && nIDPhotons>0 && Obj_PhotonTwoProng.dR>0.1 && Obj_PhotonTwoProng.part2_pt>150
+Draw String:  Obj_PhotonTwoProng.mass>>hist_4 nTwoProngs>0 && nIDPhotons>0 && Obj_PhotonTwoProng.dR>0.1 && Obj_PhotonTwoProng.part2_pt>150
+Draw String:  Obj_PhotonTwoProng.mass>>hist_5 nTwoProngs>0 && nIDPhotons>0 && Obj_PhotonTwoProng.dR>0.1 && Obj_PhotonTwoProng.part2_pt>150
+Entries 1  :  23  , total : 23.0
+Entries 2  :  294  , total : 294.0
+Entries 3  :  964  , total : 964.0
+Entries 4  :  1140  , total : 1140.0
+Entries 5  :  1088  , total : 1088.0
+Plotting...
+ FCN=2.97278e-09 FROM HESSE     STATUS=NOT POSDEF     16 CALLS          76 TOTAL
+                     EDM=5.93844e-09    STRATEGY= 1      ERR MATRIX NOT POS-DEF
+  EXT PARAMETER                APPROXIMATE        STEP         FIRST   
+  NO.   NAME      VALUE            ERROR          SIZE      DERIVATIVE 
+   1  Constant     2.98223e+01   9.02896e+01   6.06069e-04   1.75363e-05
+   2  Mean         1.05180e+02   1.06589e+00   2.50768e-05  -1.51031e-03
+   3  Sigma        2.49526e-01   1.60855e+00   1.30518e-05   8.15920e-04
+ FCN=10.9991 FROM MIGRAD    STATUS=CONVERGED     170 CALLS         171 TOTAL
+                     EDM=8.60942e-07    STRATEGY= 1      ERROR MATRIX ACCURATE 
+  EXT PARAMETER                                   STEP         FIRST   
+  NO.   NAME      VALUE            ERROR          SIZE      DERIVATIVE 
+   1  Constant     3.00711e+02   2.97723e+01   3.02617e-02   2.62157e-05
+   2  Mean         3.02121e+02   3.02637e+00   2.99105e-03   4.92983e-04
+   3  Sigma        2.45336e+01   1.55609e+00   1.21855e-05  -1.23477e-01
+ FCN=20.578 FROM MIGRAD    STATUS=CONVERGED     193 CALLS         194 TOTAL
+                     EDM=1.06035e-08    STRATEGY= 1      ERROR MATRIX ACCURATE 
+  EXT PARAMETER                                   STEP         FIRST   
+  NO.   NAME      VALUE            ERROR          SIZE      DERIVATIVE 
+   1  Constant     9.18776e+02   6.55000e+01   6.78415e-02   2.93876e-06
+   2  Mean         4.92489e+02   8.35476e-01   1.89398e-03   8.77225e-05
+   3  Sigma        3.01768e+01   1.38260e+00   9.29147e-06   8.95829e-03
+ FCN=34.8039 FROM MIGRAD    STATUS=CONVERGED     163 CALLS         164 TOTAL
+                     EDM=2.54215e-07    STRATEGY= 1      ERROR MATRIX ACCURATE 
+  EXT PARAMETER                                   STEP         FIRST   
+  NO.   NAME      VALUE            ERROR          SIZE      DERIVATIVE 
+   1  Constant     9.57561e+02   3.15889e+01   8.40866e-02  -3.70702e-06
+   2  Mean         7.29688e+02   1.11724e+00   3.19984e-03   5.85635e-04
+   3  Sigma        3.11116e+01   5.58588e-01   8.68041e-06   3.21622e-02
+ FCN=72.9285 FROM MIGRAD    STATUS=CONVERGED     140 CALLS         141 TOTAL
+                     EDM=7.91603e-09    STRATEGY= 1      ERROR MATRIX ACCURATE 
+  EXT PARAMETER                                   STEP         FIRST   
+  NO.   NAME      VALUE            ERROR          SIZE      DERIVATIVE 
+   1  Constant     9.14563e+02   4.88215e+01   1.20490e-01  -4.19145e-06
+   2  Mean         9.87508e+02   9.20951e-01   3.79695e-03  -1.05918e-07
+   3  Sigma        3.18340e+01   1.11605e+00   1.54937e-05  -3.20982e-02
+Elapsed Time:  0.5 sec
+[Enter] to finish, 'options' to see options: It appears root/TwoProngNtuplizer_eta125.root is a rootfile
+twoprongNtuplizer/fTree
+root/TwoProngNtuplizer_eta125.root
+Name: twoprongNtuplizer/fTree Title: 
+It appears root/TwoProngNtuplizer_eta300.root is a rootfile
+twoprongNtuplizer/fTree
+root/TwoProngNtuplizer_eta300.root
+Name: twoprongNtuplizer/fTree Title: 
+It appears root/TwoProngNtuplizer_eta500.root is a rootfile
+twoprongNtuplizer/fTree
+root/TwoProngNtuplizer_eta500.root
+Name: twoprongNtuplizer/fTree Title: 
+It appears root/TwoProngNtuplizer_eta750.root is a rootfile
+twoprongNtuplizer/fTree
+root/TwoProngNtuplizer_eta750.root
+Name: twoprongNtuplizer/fTree Title: 
+It appears root/TwoProngNtuplizer_eta1000.root is a rootfile
+twoprongNtuplizer/fTree
+root/TwoProngNtuplizer_eta1000.root
+Name: twoprongNtuplizer/fTree Title: 
+Drawing into histogram...
+Draw String:  Obj_PhotonTwoProng.mass>>hist_1 nTwoProngs>0 && nIDPhotons>0 && Obj_PhotonTwoProng.dR>0.1 && Obj_PhotonTwoProng.part2_pt>150
+Draw String:  Obj_PhotonTwoProng.mass>>hist_2 nTwoProngs>0 && nIDPhotons>0 && Obj_PhotonTwoProng.dR>0.1 && Obj_PhotonTwoProng.part2_pt>150
+Draw String:  Obj_PhotonTwoProng.mass>>hist_3 nTwoProngs>0 && nIDPhotons>0 && Obj_PhotonTwoProng.dR>0.1 && Obj_PhotonTwoProng.part2_pt>150
+Draw String:  Obj_PhotonTwoProng.mass>>hist_4 nTwoProngs>0 && nIDPhotons>0 && Obj_PhotonTwoProng.dR>0.1 && Obj_PhotonTwoProng.part2_pt>150
+Draw String:  Obj_PhotonTwoProng.mass>>hist_5 nTwoProngs>0 && nIDPhotons>0 && Obj_PhotonTwoProng.dR>0.1 && Obj_PhotonTwoProng.part2_pt>150
+Entries 1  :  23  , total : 23.0
+Entries 2  :  294  , total : 294.0
+Entries 3  :  964  , total : 964.0
+Entries 4  :  1140  , total : 1140.0
+Entries 5  :  1088  , total : 1088.0
+Plotting...
+ FCN=2.97278e-09 FROM HESSE     STATUS=NOT POSDEF     16 CALLS          76 TOTAL
+                     EDM=5.93844e-09    STRATEGY= 1      ERR MATRIX NOT POS-DEF
+  EXT PARAMETER                APPROXIMATE        STEP         FIRST   
+  NO.   NAME      VALUE            ERROR          SIZE      DERIVATIVE 
+   1  Constant     2.98223e+01   9.02896e+01   6.06069e-04   1.75363e-05
+   2  Mean         1.05180e+02   1.06589e+00   2.50768e-05  -1.51031e-03
+   3  Sigma        2.49526e-01   1.60855e+00   1.30518e-05   8.15920e-04
+ FCN=10.9991 FROM MIGRAD    STATUS=CONVERGED     170 CALLS         171 TOTAL
+                     EDM=8.60942e-07    STRATEGY= 1      ERROR MATRIX ACCURATE 
+  EXT PARAMETER                                   STEP         FIRST   
+  NO.   NAME      VALUE            ERROR          SIZE      DERIVATIVE 
+   1  Constant     3.00711e+02   2.97723e+01   3.02617e-02   2.62157e-05
+   2  Mean         3.02121e+02   3.02637e+00   2.99105e-03   4.92983e-04
+   3  Sigma        2.45336e+01   1.55609e+00   1.21855e-05  -1.23477e-01
+ FCN=20.578 FROM MIGRAD    STATUS=CONVERGED     193 CALLS         194 TOTAL
+                     EDM=1.06035e-08    STRATEGY= 1      ERROR MATRIX ACCURATE 
+  EXT PARAMETER                                   STEP         FIRST   
+  NO.   NAME      VALUE            ERROR          SIZE      DERIVATIVE 
+   1  Constant     9.18776e+02   6.55000e+01   6.78415e-02   2.93876e-06
+   2  Mean         4.92489e+02   8.35476e-01   1.89398e-03   8.77225e-05
+   3  Sigma        3.01768e+01   1.38260e+00   9.29147e-06   8.95829e-03
+ FCN=34.8039 FROM MIGRAD    STATUS=CONVERGED     163 CALLS         164 TOTAL
+                     EDM=2.54215e-07    STRATEGY= 1      ERROR MATRIX ACCURATE 
+  EXT PARAMETER                                   STEP         FIRST   
+  NO.   NAME      VALUE            ERROR          SIZE      DERIVATIVE 
+   1  Constant     9.57561e+02   3.15889e+01   8.40866e-02  -3.70702e-06
+   2  Mean         7.29688e+02   1.11724e+00   3.19984e-03   5.85635e-04
+   3  Sigma        3.11116e+01   5.58588e-01   8.68041e-06   3.21622e-02
+ FCN=72.9285 FROM MIGRAD    STATUS=CONVERGED     140 CALLS         141 TOTAL
+                     EDM=7.91603e-09    STRATEGY= 1      ERROR MATRIX ACCURATE 
+  EXT PARAMETER                                   STEP         FIRST   
+  NO.   NAME      VALUE            ERROR          SIZE      DERIVATIVE 
+   1  Constant     9.14563e+02   4.88215e+01   1.20490e-01  -4.19145e-06
+   2  Mean         9.87508e+02   9.20951e-01   3.79695e-03  -1.05918e-07
+   3  Sigma        3.18340e+01   1.11605e+00   1.54937e-05  -3.20982e-02
+Elapsed Time:  0.5 sec
+[Enter] to finish, 'options' to see options: It appears root/TwoProngNtuplizer_eta125.root is a rootfile
+twoprongNtuplizer/fTree
+root/TwoProngNtuplizer_eta125.root
+Name: twoprongNtuplizer/fTree Title: 
+It appears root/TwoProngNtuplizer_eta300.root is a rootfile
+twoprongNtuplizer/fTree
+root/TwoProngNtuplizer_eta300.root
+Name: twoprongNtuplizer/fTree Title: 
+It appears root/TwoProngNtuplizer_eta500.root is a rootfile
+twoprongNtuplizer/fTree
+root/TwoProngNtuplizer_eta500.root
+Name: twoprongNtuplizer/fTree Title: 
+It appears root/TwoProngNtuplizer_eta750.root is a rootfile
+twoprongNtuplizer/fTree
+root/TwoProngNtuplizer_eta750.root
+Name: twoprongNtuplizer/fTree Title: 
+It appears root/TwoProngNtuplizer_eta1000.root is a rootfile
+twoprongNtuplizer/fTree
+root/TwoProngNtuplizer_eta1000.root
+Name: twoprongNtuplizer/fTree Title: 
+Drawing into histogram...
+Draw String:  Obj_PhotonTwoProng.mass>>hist_1 nTwoProngs>0 && nIDPhotons>0 && Obj_PhotonTwoProng.dR>0.1 && Obj_PhotonTwoProng.part2_pt>150
+Draw String:  Obj_PhotonTwoProng.mass>>hist_2 nTwoProngs>0 && nIDPhotons>0 && Obj_PhotonTwoProng.dR>0.1 && Obj_PhotonTwoProng.part2_pt>150
+Draw String:  Obj_PhotonTwoProng.mass>>hist_3 nTwoProngs>0 && nIDPhotons>0 && Obj_PhotonTwoProng.dR>0.1 && Obj_PhotonTwoProng.part2_pt>150
+Draw String:  Obj_PhotonTwoProng.mass>>hist_4 nTwoProngs>0 && nIDPhotons>0 && Obj_PhotonTwoProng.dR>0.1 && Obj_PhotonTwoProng.part2_pt>150
+Draw String:  Obj_PhotonTwoProng.mass>>hist_5 nTwoProngs>0 && nIDPhotons>0 && Obj_PhotonTwoProng.dR>0.1 && Obj_PhotonTwoProng.part2_pt>150
+Entries 1  :  23  , total : 23.0
+Entries 2  :  294  , total : 294.0
+Entries 3  :  964  , total : 964.0
+Entries 4  :  1140  , total : 1140.0
+Entries 5  :  1088  , total : 1088.0
+Plotting...
+ FCN=2.97278e-09 FROM HESSE     STATUS=NOT POSDEF     16 CALLS          76 TOTAL
+                     EDM=5.93844e-09    STRATEGY= 1      ERR MATRIX NOT POS-DEF
+  EXT PARAMETER                APPROXIMATE        STEP         FIRST   
+  NO.   NAME      VALUE            ERROR          SIZE      DERIVATIVE 
+   1  Constant     2.98223e+01   9.02896e+01   6.06069e-04   1.75363e-05
+   2  Mean         1.05180e+02   1.06589e+00   2.50768e-05  -1.51031e-03
+   3  Sigma        2.49526e-01   1.60855e+00   1.30518e-05   8.15920e-04
+ FCN=10.9991 FROM MIGRAD    STATUS=CONVERGED     170 CALLS         171 TOTAL
+                     EDM=8.60942e-07    STRATEGY= 1      ERROR MATRIX ACCURATE 
+  EXT PARAMETER                                   STEP         FIRST   
+  NO.   NAME      VALUE            ERROR          SIZE      DERIVATIVE 
+   1  Constant     3.00711e+02   2.97723e+01   3.02617e-02   2.62157e-05
+   2  Mean         3.02121e+02   3.02637e+00   2.99105e-03   4.92983e-04
+   3  Sigma        2.45336e+01   1.55609e+00   1.21855e-05  -1.23477e-01
+ FCN=20.578 FROM MIGRAD    STATUS=CONVERGED     193 CALLS         194 TOTAL
+                     EDM=1.06035e-08    STRATEGY= 1      ERROR MATRIX ACCURATE 
+  EXT PARAMETER                                   STEP         FIRST   
+  NO.   NAME      VALUE            ERROR          SIZE      DERIVATIVE 
+   1  Constant     9.18776e+02   6.55000e+01   6.78415e-02   2.93876e-06
+   2  Mean         4.92489e+02   8.35476e-01   1.89398e-03   8.77225e-05
+   3  Sigma        3.01768e+01   1.38260e+00   9.29147e-06   8.95829e-03
+ FCN=34.8039 FROM MIGRAD    STATUS=CONVERGED     163 CALLS         164 TOTAL
+                     EDM=2.54215e-07    STRATEGY= 1      ERROR MATRIX ACCURATE 
+  EXT PARAMETER                                   STEP         FIRST   
+  NO.   NAME      VALUE            ERROR          SIZE      DERIVATIVE 
+   1  Constant     9.57561e+02   3.15889e+01   8.40866e-02  -3.70702e-06
+   2  Mean         7.29688e+02   1.11724e+00   3.19984e-03   5.85635e-04
+   3  Sigma        3.11116e+01   5.58588e-01   8.68041e-06   3.21622e-02
+ FCN=72.9285 FROM MIGRAD    STATUS=CONVERGED     140 CALLS         141 TOTAL
+                     EDM=7.91603e-09    STRATEGY= 1      ERROR MATRIX ACCURATE 
+  EXT PARAMETER                                   STEP         FIRST   
+  NO.   NAME      VALUE            ERROR          SIZE      DERIVATIVE 
+   1  Constant     9.14563e+02   4.88215e+01   1.20490e-01  -4.19145e-06
+   2  Mean         9.87508e+02   9.20951e-01   3.79695e-03  -1.05918e-07
+   3  Sigma        3.18340e+01   1.11605e+00   1.54937e-05  -3.20982e-02
+Elapsed Time:  0.5 sec
+[Enter] to finish, 'options' to see options: 

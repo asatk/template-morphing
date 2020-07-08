@@ -1,0 +1,164 @@
+{
+    "events":[ 
+	{
+            "file-suffix": "eta125",
+	    "n":23,
+	    "particles": [
+	        {
+		    "name":"phi",
+		    "mean":123,
+		    "std-dev":5.794
+	        },
+		{
+		    "name":"omega",
+		    "mean":0.6175,
+		    "std-dev":0.1282
+		}
+	    ]
+	},
+	{
+            "file-suffix": "eta300",
+            "n":294,
+            "particles": [
+                {
+                    "name":"phi",
+                    "mean":305.6,
+                    "std-dev":67.59
+                    },
+                    {
+                    "name":"omega",
+                    "mean":0.7017,
+                    "std-dev":0.325
+                }
+            ]
+        },
+	{
+            "file-suffix": "eta500",
+            "n":964,
+            "particles": [
+                {
+                    "name":"phi",
+                    "mean":494.1,
+                    "std-dev":75.96
+                    },
+                    {
+                    "name":"omega",
+                    "mean":0.7521,
+                    "std-dev":0.3106
+                }
+            ]
+        },
+	{
+            "file-suffix": "eta750",
+            "n":1140,
+            "particles": [
+                {
+                    "name":"phi",
+                    "mean":732,
+                    "std-dev":61.3
+                },
+                {
+                    "name":"omega",
+                    "mean":0.7738,
+                    "std-dev":0.3381
+                }
+            ]
+        },
+	{
+            "file-suffix": "eta1000",
+            "n":1088,
+            "particles": [
+                {
+                "name":"phi",
+                "mean":976.1,
+                "std-dev":89.32
+            },
+            {
+                "name":"omega",
+                "mean":0.8429,
+                "std-dev":0.4125
+                }
+            ]
+        },
+        {
+            "file-suffix": "etaprime125",
+	    "n":11,
+            "particles": [
+                {
+                    "name":"phi",
+                    "mean":120,
+                    "std-dev":6.413
+                },
+                {
+                    "name":"omega",
+                    "mean":0.7416,
+                    "std-dev":0.1637
+                }
+            ]
+        },
+        {
+            "file-suffix": "etaprime300",
+	    "n":140,
+            "particles": [
+                {
+                    "name":"phi",
+                    "mean":304.9,
+                    "std-dev":84.46
+                },
+                {
+                    "name":"omega",
+                    "mean":0.8399,
+                    "std-dev":0.2319
+                }
+            ]
+        },
+        {
+            "file-suffix": "etaprime500",
+	    "n":613,
+            "particles": [
+                {
+                    "name":"phi",
+                    "mean":482.2,
+                    "std-dev":70.89
+                },
+                {
+                    "name":"omega",
+                    "mean":0.846,
+                    "std-dev":0.2673
+                }
+            ]
+        },
+        {
+            "file-suffix": "eta750",
+            "n":691,
+            "particles": [
+                {
+                    "name":"phi",
+                    "mean":720.6,
+                    "std-dev":43.03
+                },
+                    {
+                    "name":"omega",
+                    "mean":0.8891,
+                    "std-dev":0.3484
+                }
+            ]
+        },
+        {
+            "file-suffix": "eta1000",
+	    "n":731,
+            "particles": [
+                {
+                    "name":"phi",
+                    "mean":957.7,
+                    "std-dev":68.47
+                },
+                {
+                    "name":"omega",
+                    "mean":0.9579,
+                    "std-dev":0.3837
+                }
+            ]
+        }
+    ]
+}

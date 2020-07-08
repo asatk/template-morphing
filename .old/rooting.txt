@@ -1,0 +1,1 @@
+python plotter.py TwoProngNtuplizer_eta125.root -v Obj_PhotonTwoProng.mass -b 50,0,2000 -c "nTwoProngs>0 && nIDPhotons>0 && Obj_PhotonTwoProng.dR>0.1 && Obj_PhotonTwoProng.part2_pt>150"
