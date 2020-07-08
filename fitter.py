@@ -267,7 +267,7 @@ class fitter:
         return par[0]*self.func.Integral(self.lo,x[0])
 
     def jsonify(self):
-        outname = "fitter-%s"%(self.pname+'-'+self.fileName[self.fileName.find('eta'):-5]+'.json')
+        outname = "./fit-files/fitter-%s"%(self.pname+'-'+self.fileName[self.fileName.find('eta'):-5]+'.json')
         with open(outname,'w') as json_out:
             info = {}
 
@@ -275,6 +275,7 @@ class fitter:
             info['fit_name'] = self.fit_name
             info['lo'] = self.lo
             info['hi'] = self.hi
+            info['bins'] = self.bins
             par_names = list(self.func.GetParName(i) for i in range(self.func.GetNpar()))
             par_values = list(self.func.GetParameter(i) for i in range(self.func.GetNpar()))
             #pars = zip(par_names,par_values)

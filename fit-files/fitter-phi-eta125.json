@@ -2,6 +2,7 @@
     "lo": 0.0, 
     "fileName": "root/TwoProngNtuplizer_eta125.root", 
     "hi": 250.0, 
+    "bins": 100,
     "pars": {
         "0": 5.826573699066799, 
         "1": 123.2363375579462, 

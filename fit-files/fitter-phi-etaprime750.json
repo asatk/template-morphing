@@ -2,6 +2,7 @@
     "lo": 0.0, 
     "fileName": "root/TwoProngNtuplizer_etaprime750.root", 
     "hi": 1500.0, 
+    "bins": 100,
     "pars": {
         "0": 166.00086453119616, 
         "1": 739.4867282891942, 

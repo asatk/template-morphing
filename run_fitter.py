@@ -29,7 +29,7 @@ def make_fit():
     canv.DrawCrosshair()
     canv.cd()
 
-    fit_name = 'gaus'
+    fit_name = 'landau'
     fit_info = 'fitter-init.json'
 
     ftr = fitter(fit_name,fit_info)
@@ -62,7 +62,7 @@ def make_fit():
             affirm = raw_input("are you sure you want to SAVE this model? [y/n]")
             if affirm == 'y':
                 ftr.jsonify()
-        elif cmd == 'r':
+        elif cmd == 'r' or cmd == 'refit':
             print "[REFITTING]"
             affirm = raw_input("are you sure you want to REFIT? [y/n]")
             if affirm == 'y':
@@ -73,6 +73,17 @@ def make_fit():
                 hist.SetFillColor(kAzure+4)
                 hist.Draw()
                 func.Draw("same")
+        elif cmd == 'rebin':
+            print "[REBINNING]"
+            tempbins = raw_input("new bin size: ")
+            templo = raw_input("new lo: ")
+            temphi = raw_input("new hi: ")
+            if tempbins is not '':
+                ftr.bins = int(tempbins)
+            if templo is not '':
+                ftr.lo = float(templo)
+            if temphi is not '':
+                ftr.hi = float(temphi)
         elif cmd == 't':
             print "[DELAY]"
             delay = float(raw_input("New Delay Time (in sec):"))
@@ -145,7 +156,7 @@ def get_fit():
         cmd = raw_input("cmd:")
         if cmd == 's':
             print "[SAVING]"
-            affirm = raw_input("are you sure you want to save this model? [y/n]")
+            affirm = raw_input("are you sure you want to SAVE this model? [y/n]")
             if affirm == 'y':
                 ftr.jsonify()
         elif cmd == 'd':

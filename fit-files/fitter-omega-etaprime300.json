@@ -1,0 +1,18 @@
+{
+    "lo": 0.0, 
+    "fileName": "root/TwoProngNtuplizer_etaprime300.root", 
+    "hi": 5.0, 
+    "pars": {
+        "0": 77.03049171658232, 
+        "1": 0.717238002748385, 
+        "2": 0.10288296737715823
+    }, 
+    "names": {
+        "0": "Constant", 
+        "1": "x0/Mean", 
+        "2": "eta/Width"
+    }, 
+    "chi": 10.97869429454654, 
+    "fit_name": "landau", 
+    "bins": 100
+}

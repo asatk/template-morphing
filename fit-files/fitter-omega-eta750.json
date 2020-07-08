@@ -1,0 +1,18 @@
+{
+    "lo": 0.0, 
+    "fileName": "root/TwoProngNtuplizer_eta750.root", 
+    "hi": 5.0,
+    "bins": 50,
+    "pars": {
+        "0": 1008.6227351375396, 
+        "1": 0.5925329473826526, 
+        "2": 0.05672719783713401
+    }, 
+    "names": {
+        "0": "Constant", 
+        "1": "x0/Mean", 
+        "2": "eta/Width"
+    }, 
+    "chi": 31.932287302048678, 
+    "fit_name": "landau"
+}
