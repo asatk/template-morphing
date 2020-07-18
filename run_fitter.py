@@ -166,6 +166,7 @@ def get_fit(fit_info,q=deque()):
     drawfunc = False
     drawhist = False
     drawfhist = False
+    drawcum = False
     delay = 0.
 
     while not cmd == "" and\
@@ -177,7 +178,10 @@ def get_fit(fit_info,q=deque()):
             cmd = raw_input("cmd: ")
         if cmd == 's':
             print "s - [SAVING]"
-            json_name = "./fit-files/%sfitter-%s-%s-%s.json" % ("norm" if normalized else "",ftr.fit_name,ftr.pname,
+            if normalized: keyword = "norm"
+            elif drawcum: keyword = "cum"
+            else: keyword = ""
+            json_name = "./fit-files/%sfitter-%s-%s-%s.json" % (keyword,ftr.fit_name,ftr.pname,
                     ftr.file_name[ftr.file_name.find('eta'):-5])
             if len(q) > 0:
                 affirm = q.pop()
@@ -252,13 +256,14 @@ def get_fit(fit_info,q=deque()):
             canv.Update()
         elif cmd == 'c':
             print "c - [CUMULATIVE]"
-            #fintg = func.DrawIntegral(option="")
+            if drawhist:
+                hist.GetCumulative().Draw()
+                print "c - hist Integral",hist.Integral()
             if drawfhist:
-                fhist.GetCumulative().Draw()
-                fhist.GetIntegral()
-                print "c - fhist getintegral",fhist.Integral()
-            #func.DrawDerivative("same")
+                fhist.GetCumulative().Draw("SAME" if drawhist else "")
+                print "c - fhist Integral",fhist.Integral()
             canv.Update()
+            drawcum = True
         elif cmd == 'n':
             print "n - [NORMALIZING]"
             if not normalized:
@@ -298,8 +303,15 @@ def get_fit(fit_info,q=deque()):
                     hist.Scale(norm_factor)
                     hist.Draw("HIST")
                     canv.Update()
+                if drawfhist:
+                    if 'fhist' in locals():
+                        del fhist
+                    fhist = ROOT.TH1D(func.GetHistogram())
+                    #fhist.Rebin(fhist.GetNbinsX()/ftr.bins)
+                    fhist.Draw("SAME" if drawhist else "")
+                    drawfhist = True
                 if drawfunc:
-                    func.Draw("C"+("SAME" if drawhist else ""))
+                    func.Draw("C"+("SAME" if drawhist or drawfhist else ""))
                     canv.Update()
                 normalized = False
             
@@ -315,14 +327,16 @@ def get_fit(fit_info,q=deque()):
                 print json.dumps(info,indent=4)
         elif cmd == 'fhist':
             if drawfhist:
+                print "fhist - function histogram off"
                 del fhist
                 drawfhist = False
             else:
+                print "fhist - function histogram on"
                 if 'fhist' in locals():
                     del fhist
                 fhist = ROOT.TH1D(func.GetHistogram())
-                fhist.Rebin(fhist.GetNbinsX()/ftr.bins)
-                fhist.Draw("same")
+                #fhist.Rebin(fhist.GetNbinsX()/ftr.bins)
+                fhist.Draw("same" if drawfunc or drawhist else "")
                 drawfhist = True
             canv.Update()
         elif cmd == 'h':
@@ -430,6 +444,7 @@ def get_fit(fit_info,q=deque()):
                 drawfunc = False
                 drawhist = False
                 drawfhist = False
+                drawcum = False
                 delay = 0.
                 q = deque()
                 canv.Update()
@@ -448,6 +463,7 @@ def get_fit(fit_info,q=deque()):
             drawfunc = False
             drawhist = False
             drawfhist = False
+            drawcum = False
             q = deque()
             canv.Update()
         elif cmd == 'cmd-q':
