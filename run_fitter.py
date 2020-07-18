@@ -255,7 +255,8 @@ def get_fit(fit_info,q=deque()):
             #fintg = func.DrawIntegral(option="")
             if drawfhist:
                 fhist.GetCumulative().Draw()
-                print "c - fhist getintegral",fhist.GetIntegral()
+                fhist.GetIntegral()
+                print "c - fhist getintegral",fhist.Integral()
             #func.DrawDerivative("same")
             canv.Update()
         elif cmd == 'n':
