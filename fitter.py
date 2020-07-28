@@ -50,7 +50,7 @@ class fitter:
                 self.lo = float(s[1])
                 self.hi = float(s[2])
                 self.func = ROOT.TF1(self.fit_name, self.fits[self.fit_name], self.lo, self.hi)
-                self.normalized = info['normalized'] == 'True' or info['normalized'] == 'true'
+                self.normalized = bool(info['normalized'] == "True" or info['normalized'] == "true")
                 for i in range(self.func.GetNpar()):
                     self.func.SetParameter(i, info['pars']['%i' % (i)])
                     self.func.SetParName(i, info['names']['%i' % (i)])
@@ -66,7 +66,7 @@ class fitter:
             self.lo = float(s[1])
             self.hi = float(s[2])
             self.user_data = info['user_data'] == 'y'
-            self.normalize = info['normalize'] == 'y'
+            self.normalized = info['normalized'] == 'y'
             self.cum = info['cum'] == 'y'
             self.nEntries = int(info['nEntries'])
             self.seed = info['seed']
@@ -102,7 +102,7 @@ class fitter:
                          (fit_name), self.bins, self.lo, self.hi)
         hist.GetXaxis().SetTitle("Mass (GeV)")
         hist.GetXaxis().CenterTitle(True)
-        if self.normalize:
+        if self.normalized:
             hist.GetYaxis().SetTitle("Normalized Distribution")
         else:
             hist.GetYaxis().SetTitle("Events")
@@ -162,7 +162,7 @@ class fitter:
             fn.SetParName(1, 'Mean')
             fn.SetParName(2, 'Sigma')
             fn.SetParameter('Constant', random.uniform(
-                1. / 30, 1. / 3) if self.normalize else self.nEntries * random.uniform(1. / 30, 1. / 3))
+                1. / 30, 1. / 3) if self.normalized else self.nEntries * random.uniform(1. / 30, 1. / 3))
             fn.SetParameter('Mean', mean_est + mean_est *
                             random.uniform(-0.05, 0.05))
             fn.SetParameter('Sigma', random.uniform(0.001, 0.25)
@@ -176,8 +176,8 @@ class fitter:
             fn.SetParName(3, 'Constant-2')
             fn.SetParName(4, 'Mean-2')
             fn.SetParName(5, 'Sigma-2')
-            fn.SetParameters(random.uniform(1. / 30, 1. / 3) if self.normalize else self.nEntries * random.uniform(1. / 30, 1. / 3), mean_est + mean_est * random.uniform(-0.05, 0.05), random.randint(0, 100),
-                             random.uniform(1. / 30, 1. / 3) if self.normalize else self.nEntries * random.uniform(1. / 30, 1. / 3), mean_est + mean_est * random.uniform(-0.05, 0.05), random.randint(0, 100))
+            fn.SetParameters(random.uniform(1. / 30, 1. / 3) if self.normalized else self.nEntries * random.uniform(1. / 30, 1. / 3), mean_est + mean_est * random.uniform(-0.05, 0.05), random.randint(0, 100),
+                             random.uniform(1. / 30, 1. / 3) if self.normalized else self.nEntries * random.uniform(1. / 30, 1. / 3), mean_est + mean_est * random.uniform(-0.05, 0.05), random.randint(0, 100))
             #fn.SetParLimits(0, 0., self.nEntries)
             #fn.SetParLimits(3, 0., self.nEntries)
             fn.SetParLimits(1, 0., mean_est * 2)
@@ -189,7 +189,7 @@ class fitter:
             fn.SetParName(3, 'Alpha')
             fn.SetParName(4, 'n')
             fn.SetParameter('Constant', random.uniform(
-                1. / 30, 1. / 3) if self.normalize else self.nEntries * random.uniform(1. / 30, 1. / 3))
+                1. / 30, 1. / 3) if self.normalized else self.nEntries * random.uniform(1. / 30, 1. / 3))
             fn.SetParameter('Mean', mean_est + mean_est *
                             random.uniform(-0.05, 0.05))
             fn.SetParameter('Sigma', random.uniform(0.001, 0.25)
@@ -201,27 +201,27 @@ class fitter:
             fn.SetParLimits(4, 0., 10e6)
         elif fit_name in ['landau', 'landau_pdf', 'landau_cdf']:
             fn.SetParName(0, 'Constant')
-            fn.SetParName(1, 'x0/Mean')
-            fn.SetParName(2, 'eta/Width')
+            fn.SetParName(1, 'MPV')
+            fn.SetParName(2, 'Eta')
             fn.SetParameter('Constant', random.uniform(
-                1. / 30, 1. / 3) if self.normalize else self.nEntries * random.uniform(1. / 30, 1. / 3))
-            fn.SetParameter('x0/Mean', mean_est + mean_est *
+                1. / 30, 1. / 3) if self.normalized else self.nEntries * random.uniform(1. / 30, 1. / 3))
+            fn.SetParameter('MPV', mean_est + mean_est *
                             random.uniform(-0.05, 0.05))
-            fn.SetParameter('eta/Width', random.uniform(0.001, 0.1)
+            fn.SetParameter('Eta', random.uniform(0.001, 0.1)
                             if self.pname == 'omega' else random.randint(0, 100))
             #fn.SetParLimits(0, 0., self.nEntries)
             fn.SetParLimits(1, 0., mean_est * 2)
         elif fit_name in ['landxgaus', 'landxgaus_cdf']:
             fn.SetParName(0, 'Constant')
-            fn.SetParName(1, 'x0/Mean')
-            fn.SetParName(2, 'eta/Width')
+            fn.SetParName(1, 'MPV')
+            fn.SetParName(2, 'Eta')
             fn.SetParName(3, 'Mean')
             fn.SetParName(4, 'Sigma')
             fn.SetParameter('Constant', random.uniform(
-                1. / 30, 1. / 3) if self.normalize else self.nEntries * random.uniform(1. / 30, 1. / 3))
-            fn.SetParameter('x0/Mean', mean_est + mean_est *
+                1. / 30, 1. / 3) if self.normalized else self.nEntries * random.uniform(1. / 30, 1. / 3))
+            fn.SetParameter('MPV', mean_est + mean_est *
                             random.uniform(-0.05, 0.05))
-            fn.SetParameter('eta/Width', random.uniform(0.001, 0.1)
+            fn.SetParameter('Eta', random.uniform(0.001, 0.1)
                             if self.pname == 'omega' else random.randint(0, 100))
             fn.SetParameter('Mean', mean_est + mean_est *
                             random.uniform(-0.05, 0.05))
@@ -230,15 +230,6 @@ class fitter:
             #fn.SetParLimits(0, 0., self.nEntries)
             fn.SetParLimits(1, 0., mean_est * 2)
             fn.SetParLimits(3, 0., mean_est * 2)
-            # fn_conv = ROOT.TF1Convolution(
-            #     'landau', 'gaus', self.lo, self.hi, True)
-            # fn_conv.SetRange(self.lo, self.hi)
-            # fn_conv.SetNofPointsFFT(1000)
-            # fn = ROOT.TF1('fit', fn_conv, self.lo, self.hi, fn_conv.GetNpar())
-            # for i in range(fn_conv.GetNpar()):
-            #     fn.SetParameter(i, random.random() *
-            #                     random.randint(0, mean_est))
-            pass
 
         # print seed parameters for given fit set previously
         if debug >= 2:
@@ -275,7 +266,7 @@ class fitter:
         '''
 
         # normalize histogram POST-fit
-        if self.normalize:
+        if self.normalized:
             #hist.Scale(1. / self.nEntries)
             hist.DrawNormalized()
             fhist = ROOT.TH1D(fit_fn.GetHistogram())
@@ -293,10 +284,10 @@ class fitter:
 
         # show plots and fit info during fitting
         if debug >= 2:
-            fit_fn.SetLineColor(kRed)
+            fit_fn.SetLineColor(ROOT.kPink)
             print "\nDRAWING FIT"
             # hist.Draw("HIST")
-            fit_fn.Draw("same")
+            # fit_fn.Draw("same")
             print "VALUE AT THEORETICAL MEAN ", fit_fn.Eval(mean_est)
             print "\nFIT FORMULA"
             #print fit_fn.GetFormula().Print()
@@ -315,16 +306,6 @@ class fitter:
 
         return self.func
 
-    def get_cum(self):
-        self.cum_func = ROOT.TF1('cum_func', self.__cum__, self.lo, self.hi, 1)
-        print self.cum_func
-        if self.debug == 2:
-            self.cum_func.Draw()
-        return self.cum_func
-
-    def __cum__(self, x, par):
-        return par[0] * self.func.Integral(self.lo, x[0])
-
     def jsonify(self,fit_info=""):
         if fit_info == "":
             fit_info = "./fit-files/fitter-%s-%s-%s.json" % (self.fit_name,self.pname,
@@ -342,7 +323,7 @@ class fitter:
                              for i in range(self.func.GetNpar()))
             par_values = list(self.func.GetParameter(i)
                               for i in range(self.func.GetNpar()))
-            #pars = zip(par_names,par_values)
+            # pars = zip(par_names,par_values)
             pars = {}
             names = {}
 

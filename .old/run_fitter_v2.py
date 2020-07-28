@@ -46,37 +46,42 @@ ROOTCOLORS = [
     'kViolet',
     'kPink']
 
-def build_fit(file_name,fit_name,fit_info):
+def make_fit(file_name,fit_name,fit_info):
     canv = ROOT.TCanvas("canv","title",1200,900)
     canv.DrawCrosshair()
     canv.cd()
 
     ftr = fitter(file_name,fit_name,fit_info)
     ftr.fit()
-    ftr.func.SetLineColor(kPink)
-    ftr.func.SetLineWidth(5)
-    ftr.func.SetNpx(ftr.bins)
-    func = ftr.func.Clone()
-    hist = ftr.hist.Clone()
-    hist.GetXaxis().SetTitle("%s (GeV)"%(ftr.var))
+    func = ftr.func
+    hist = ftr.hist
+    func.SetLineColor(kRed)
+    func.SetLineWidth(3)
+    hist.GetXaxis().SetTitle("Mass (GeV)")
     hist.GetXaxis().CenterTitle(True)
     hist.GetYaxis().SetTitle("Events")
     hist.GetYaxis().CenterTitle(True)
-    hist.SetStats(1)
-    ROOT.gStyle.SetOptFit(1111)
-    ROOT.gStyle.SetOptStat(1111)
+    hist.SetStats(0)
     hist.SetFillColor(kAzure-8)
     hist.SetLineColor(kAzure-7)
     hist.SetLineWidth(3)
+    
+    #func.DrawIntegral("same")
 
-    hist.Draw("HIST")
-    func.Draw("C SAME")
-    #func.Draw("HIST SAME")
+    #print "intg func",func.Integral(ftr.lo,ftr.hi)
+    #print "intg func",func.DrawIntegral("same").Eval(4.9)
+
+    lgn = ROOT.TLegend(0.675,0.8,0.875,0.875)
+    #lgn.AddEntry("hist","fit data","F")
+    #lgn.AddEntry("func","%s fit"%(ftr.fit_name),"L")
+
+    lgn.Draw("same")
 
     cmd = " "
+    delay = 0.
     while not cmd == "" and\
         not cmd[(cmd.rfind('/') if cmd.rfind('/') != -1 else 0):] == "/run_fitter.py":
-        cmd = raw_input("cmd: ")
+        cmd = raw_input("cmd:")
         if cmd == 's':
             print "[SAVING]"
             affirm = raw_input("are you sure you want to SAVE this model? [y/n]")
@@ -97,22 +102,20 @@ def build_fit(file_name,fit_name,fit_info):
                 canv.Clear()
                 ftr = fitter(file_name,fit_name,fit_info)
                 ftr.fit()
-                ftr.func.SetLineColor(kPink)
-                ftr.func.SetLineWidth(5)
-                ftr.func.SetNpx(ftr.bins)
-                func = ftr.func.Clone()
-                hist = ftr.hist.Clone()
-                hist.GetXaxis().SetTitle("%s (GeV)"%(ftr.var))
+                func = ftr.func
+                hist = ftr.hist
+                func.SetLineColor(kRed)
+                func.SetLineWidth(3)
+                hist.GetXaxis().SetTitle("Mass (GeV)")
                 hist.GetXaxis().CenterTitle(True)
                 hist.GetYaxis().SetTitle("Events")
                 hist.GetYaxis().CenterTitle(True)
-                hist.SetStats(1)
+                hist.SetStats(0)
                 hist.SetFillColor(kAzure-8)
                 hist.SetLineColor(kAzure-7)
                 hist.SetLineWidth(3)
                 hist.Draw()
                 func.Draw("c same")
-                #func.Draw("hist same")
                 canv.Update()
         elif cmd == 'rebin':
             print "[REBINNING]"
@@ -132,8 +135,12 @@ def build_fit(file_name,fit_name,fit_info):
                 file_name = raw_input("* - new data: ")
                 fit_name = raw_input("* - fit name: ")
                 ftr = fitter(file_name,fit_name=fit_name,fit_info=fit_info)
+        elif cmd == 't':
+            print "[DELAY]"
+            delay = float(raw_input("New Delay Time (in sec):"))
+        time.sleep(delay)
 
-def analyze_fit(fit_info,q=deque()):
+def get_fit(fit_info,q=deque()):
     #set up canvas
     if 'canv' in locals():
         canv.Clear()
@@ -154,18 +161,18 @@ def analyze_fit(fit_info,q=deque()):
     cmd = " "
     normalized = info['normalized'] == 'True' or info['normalized'] == 'true'
     hasLegend = False
-    hasStats = False
     drawfunc = False
     drawhist = False
     drawfhist = False
     drawcum = False
+    delay = 0.
 
     while not cmd == "" and\
         not cmd[(cmd.rfind('/') if cmd.rfind('/') != -1 else 0):] == "/run_fitter.py":
         if len(q) > 0:
             cmd = q.pop()
         else:
-            print ['s','d','l','lstats','i','c','n','h','p','json-p','+','*','/','cmd-q']
+            print ['s','d','l','i','c','n','json-p','fhist','h','p','+','*','/','cmd-q','t']
             cmd = raw_input("cmd: ")
         if cmd == 's':
             print "s - [SAVING]"
@@ -198,61 +205,41 @@ def analyze_fit(fit_info,q=deque()):
                 draw_opts = q.pop()
             else:
                 draw_opts = raw_input("draw option input string [SAME, L, C, FC, HIST]: ")
-
             if "same" not in draw_opts or "SAME" not in draw_opts:
                 drawhist = False
-                drawcum = False
-            if ("hist" not in draw_opts and "HIST" not in draw_opts)\
-                    and ("c" in draw_opts and "C" not in draw_opts):
+            if "hist" not in draw_opts or "HIST" not in draw_opts:
                 drawfhist = False
-                drawfunc = True
             else: 
-                drawfhist = True
-                drawfunc = False
+                if drawfhist:
+                    del fhist
+                fhist = ROOT.TH1D(func.GetHistogram())
+                fhist.Rebin(fhist.GetNbinsX()/ftr.bins)
             func.Draw(draw_opts)
-            canv.Update()
+            
             if hasLegend:
-                lgn = legend(lgn,"FUNC",func=func,fit_name=ftr.fit_name)
-                lgn.Draw()
-                canv.Update()
-            if hasStats:
-                st = stats(st,"FUNC",func=func,chi=ftr.chi)
-                st.Draw()
-                canv.Update()
+                lgn_entry_list = lgn.GetListOfPrimitives()
+                print lgn_entry_list
+                #lgn.Remove("fhist")
+                lgn_func = lgn.AddEntry("func","%s fit curve"%(ftr.fit_name),"l")
+                lgn_func.SetLineWidth(4)
+                lgn_func.SetLineColor(func.GetLineColor())
+                lgn.Draw("same")
+            drawfunc = True
+            canv.Update()
         elif cmd == 'l':
             print "l - [LEGEND]"
             if not hasLegend:
                 hasLegend = True
-                lgn = legend("ON")
-                lgn.Draw()
-                canv.Update()
-                if drawfunc or drawfhist:
-                    lgn = legend(lgn,"FUNC",func=func,fit_name=ftr.fit_name)
-                    lgn.Draw()
-                    canv.Update()
-                if drawhist:
-                    lgn = legend(lgn,"HIST",hist=hist,fit_name=ftr.fit_name)
-                    lgn.Draw()
-                    canv.Update()
+                lgn = ROOT.TLegend(0.55,0.75,0.9,0.9)
+                lgn.SetHeader("Fit Function and Histogram")
+                lgn.SetEntrySeparation(0.05)
+                lgn.SetTextSize(0.025)
+                lgn.Draw("same")
             else:
                 hasLegend = False
-                legend(lgn,"OFF")
-                canv.Update()
-        elif cmd == 'lstats':
-            print "lstats - [STATS BOX]"
-            if not hasStats:
-                hasStats = True
-                st = stats("ON")
-                st.Draw()
-                canv.Update()
-                if drawfunc or drawfhist:
-                    st = stats(st,"FUNC",chi=ftr.chi,func=func)
-                    st.Draw()
-                    canv.Update()
-            else:
-                hasStats = False
-                stats(st,"OFF")
-                canv.Update()
+                lgn.Clear()
+                del lgn
+            canv.Update()
         elif cmd == 'i':
             print "i - [INTEGRATING]"
             if len(q) > 0:
@@ -261,8 +248,8 @@ def analyze_fit(fit_info,q=deque()):
             else:
                 intglo = float(raw_input("i - integrate from: "))
                 intghi = float(raw_input("i - integrate to: "))
-            print "i - integral of func on [%4.4f,%4.4f]: %f"%(intglo,intghi,func.Integral(intglo,intghi))
-            print "i - integral of func on range [%4.4f,%4.4f]: %f"%(ftr.lo,ftr.hi,func.Integral(ftr.lo,ftr.hi))
+            print ftr.func.Integral(intglo,intghi)
+            print func.Integral(ftr.lo,ftr.hi)
             canv.Update()
         elif cmd == 'c':
             print "c - [CUMULATIVE]"
@@ -270,100 +257,140 @@ def analyze_fit(fit_info,q=deque()):
                 hist.GetCumulative().Draw()
                 print "c - hist Integral",hist.Integral()
             if drawfhist:
-                func.GetHistogram().GetCumulative().Draw("SAME" if drawhist else "")
-                print "c - func histogram Integral",func.GetHistogram().Integral()
+                fhist.GetCumulative().Draw("SAME" if drawhist else "")
+                print "c - fhist Integral",fhist.Integral()
             canv.Update()
             drawcum = True
         elif cmd == 'n':
+            print "n - [NORMALIZING]"
             if not normalized:
-                print "n - [NORMALIZING]"
-                norm_factor = 1. / func.GetHistogram().Integral()
-                func.SetParameter(0,func.GetParameter(0)*norm_factor)
-                if drawhist:
-                    hist.GetYaxis().SetTitle("Event Probability Density")
-                    hist = ROOT.TH1D(hist.DrawNormalized("HIST"))
-                    canv.Update()
                 if drawfhist:
-                    func.GetHistogram().DrawNormalized("HIST"+("SAME" if drawhist else ""))
+                    del fhist
+                
+                fhist = ROOT.TH1D(func.GetHistogram())
+                norm_factor = 1. / fhist.Integral()
+                func.SetParameter(0,func.GetParameter(0)*norm_factor)
+
+                if drawhist:
+                    hist = ROOT.TH1D(hist.DrawNormalized("HIST"))
+            
+                if drawfhist:
+                    if 'fhist_norm' in locals():
+                        del fhist_norm
+                    fhist_norm = ROOT.TH1D(fhist.DrawNormalized("HIST"+("SAME" if drawhist else "")))
+                    fhist_norm.SetTitle("fhist_norm")
+                    fhist_norm.SetName("fhist_norm")
+                    canv.Update()
+                
+                if not drawfhist and drawhist:
+                    hist.Draw("HIST")
                     canv.Update()
                 if drawfunc:
+                    #func.SetLineColor(kPink)
                     func.Draw("C"+("SAME" if drawfhist or drawhist else ""))
                     canv.Update()
+                canv.Update()
                 normalized = True
             elif normalized:
-                print "n - [DE-NORMALIZING]"
+                print "n - de-normalizing"
                 norm_factor = 1. if 'norm_factor' not in locals() else 1. / norm_factor
                 func.SetParameter(0,func.GetParameter(0)*norm_factor)
+                #func.SetLineColor(kPink)
                 if drawhist:
-                    hist.GetYaxis().SetTitle("Events")
                     hist.Scale(norm_factor)
                     hist.Draw("HIST")
-                if drawfhist:
-                    func.Draw("HIST"+("SAME" if drawhist else ""))
                     canv.Update()
+                if drawfhist:
+                    if 'fhist' in locals():
+                        del fhist
+                    fhist = ROOT.TH1D(func.GetHistogram())
+                    #fhist.Rebin(fhist.GetNbinsX()/ftr.bins)
+                    fhist.Draw("SAME" if drawhist else "")
+                    drawfhist = True
                 if drawfunc:
                     func.Draw("C"+("SAME" if drawhist or drawfhist else ""))
                     canv.Update()
                 normalized = False
             
             if hasLegend:
-                lgn = legend(lgn,"HIST",hist=hist,fit_name=ftr.fit_name)
-                lgn.Draw()
-                canv.Update()
-            if hasStats:
-                st = stats(st,option="FUNC",func=func,chi=ftr.chi)
-                st.Draw()
-                canv.Update()
+                lgn.Draw("same")
 
-            print "n - normalization factor: ",norm_factor
+            print "n - normalization factor:",norm_factor
+            canv.Update()
+        elif cmd == 'json-p':
+            print "json-p - [PRINTING STATS]"
+            with open(fit_info) as json_file:
+                info = json.load(json_file)
+                print json.dumps(info,indent=4)
+        elif cmd == 'fhist':
+            if drawfhist:
+                print "fhist - function histogram off"
+                del fhist
+                drawfhist = False
+            else:
+                print "fhist - function histogram on"
+                if 'fhist' in locals():
+                    del fhist
+                fhist = ROOT.TH1D(func.GetHistogram())
+                fhist.Draw("same" if drawfunc or drawhist else "")
+                if hasLegend:
+                    #lgn.Remove("func")
+                    lgn_fhist = lgn.AddEntry("fhist","%s fit histogram"%(ftr.fit_name),"l")
+                    lgn_fhist.SetLineWidth(4)
+                    lgn_fhist.SetLineColor(func.GetLineColor())
+                    lgn.Draw("same")
+                drawfhist = True
             canv.Update()
         elif cmd == 'h':
             print "h - [HISTOGRAM PLOTTING]"
             if drawhist:
-                hist.Delete()
-                chain.Delete()
-            drawhist = True
+                del hist
+                del chain
             hist = ROOT.TH1D("hist","%s fit - %s"%(ftr.fit_name,ftr.var),ftr.bins,ftr.lo,ftr.hi)
-            
-            x_ax = hist.GetXaxis()
-            x_ax.SetTitle("%s (GeV)"%(ftr.var))
-            x_ax.CenterTitle(True)
-            y_ax = hist.GetYaxis()
-            y_ax.SetTitle("Event Probability Density" if normalized else "Events")
-            y_ax.CenterTitle(True)
-
+            hist.GetXaxis().SetTitle("Mass (GeV)")
+            hist.GetXaxis().CenterTitle(True)
+            if not normalized:
+                hist.GetYaxis().SetTitle("Events")
+            hist.GetYaxis().CenterTitle(True)
+            hist.SetStats(0)
             hist.SetFillColor(kAzure-8)
             hist.SetLineColor(kAzure-7)
             hist.SetLineWidth(3)
-            hist.SetStats(0)
-
+            ROOT.gStyle.SetOptStat(1111)
+            ROOT.gStyle.SetOptFit(1111)
+            hist.SetStats(1)
             chain = ROOT.TChain("twoprongNtuplizer/fTree")
             chain.Add(info['file_name'])
             draw_s = info['var'] + ">>hist"
             cut_s = info['cuts']
-            chain.Draw(draw_s, cut_s, option="HIST")
-            #y_ax.SetLimits(0.,max(func.GetMaximum(),hist.GetMaximum())*1.05)
-            #y_ax.SetMax(500)
+            chain.Draw(draw_s, cut_s)
+            if normalized:
+                hist = ROOT.TH1D(hist.DrawNormalized("hist"))
+
             canv.Update()
 
-            if normalized:
-                hist = ROOT.TH1D(hist.DrawNormalized("HIST"))
-                canv.Update()
+            hist.Fit(func.Clone(),'0')
 
+            canv.Update()
+
+            #fhist = func.GetHistogram()
             if drawfhist:
-                func.Draw("HIST SAME")
+                func.Draw("same HIST")
             if drawfunc:
-                func.Draw("C SAME")
+                func.Draw("same C")
+
             if hasLegend:
-                lgn = legend(lgn,"HIST",hist=hist,fit_name=ftr.fit_name)
-                lgn.Draw()
-                canv.Update()
-            if hasStats:
-                st.Draw()
-                canv.Update()
+                lgn.AddEntry("hist",ftr.file_name[ftr.file_name.rfind('/')+1:],"f")
+                lgn.Draw("same")
+                #canv.BuildLegend()
+                
+            drawhist = True
+            canv.Update()
 
             print "h - hist intg",hist.Integral()
-            print "h - fhist intg",func.GetHistogram().Integral()
+            print "h - hist intg width",hist.Integral("width")
+            print "h - fhist intg",fhist.Integral()
+            print "h - fhist intg width",fhist.Integral("width")
         elif cmd == 'p':
             print "p - [FETCHING PARAMETERS]"
             par_names = list(func.GetParName(i) for i in range(func.GetNpar()))
@@ -371,12 +398,6 @@ def analyze_fit(fit_info,q=deque()):
             pars = zip(par_names,par_values)
             print "p - ",pars
             print "p - Chi-Squared",ftr.chi
-        elif cmd == 'json-p':
-            print "json-p - [PRINTING STATS]"
-            print "json-p - File:",fit_info
-            with open(fit_info) as json_file:
-                info = json.load(json_file)
-                print json.dumps(info,indent=4)
         elif cmd == '+':
             print "+ - [ADDING FILE, NORMALIZING]"
 
@@ -427,17 +448,17 @@ def analyze_fit(fit_info,q=deque()):
                 file_name = info['file_name']
                 ftr = fitter(file_name,fitted=True,fit_info=fit_info)
                 ftr.func.SetNpx(ftr.bins)
-                func = ftr.func.Clone()
                 func.SetLineColor(kPink)
                 func.SetLineWidth(5)
+                func = ftr.func.Clone()
 
                 normalized = info['normalized'] == 'True' or info['normalized'] == 'true'
                 hasLegend = False
-                hasStats = False
                 drawfunc = False
                 drawhist = False
                 drawfhist = False
                 drawcum = False
+                delay = 0.
                 q = deque()
                 canv.Update()
         elif cmd == '/':
@@ -446,12 +467,12 @@ def analyze_fit(fit_info,q=deque()):
             func.SetLineColor(kPink)
             func.SetLineWidth(5)
             if 'lgn' in locals():
-                lgn.Delete()
+                lgn.Clear()
             canv.Clear()
             
+            delay = 0.
             normalized = info['normalized'] == 'True' or info['normalized'] == 'true'
             hasLegend = False
-            hasStats = False
             drawfunc = False
             drawhist = False
             drawfhist = False
@@ -465,161 +486,34 @@ def analyze_fit(fit_info,q=deque()):
             qlist.reverse()
             q = deque(qlist)
             print "cmd-q - queue:",q
-
-def interpolate_fit(fit_info_list,q=deque()):
-    #set up canvas
-    if 'canv' in locals():
-        canv.Clear()
-    canv = ROOT.TCanvas("canv","plot analysis",1200,900)
-    canv.DrawCrosshair()
-    canv.cd()
-    first = True
-    print fit_info_list
-    for i in fit_info_list:
-        #set up fitter and fit info
-        print "using file:",i
-        json_file = open(i,'r')
-        info = json.load(json_file)
-        file_name = info['file_name']
-        ftr = fitter(file_name,fitted=True,fit_info=i)
-        ftr.func.SetLineColor(eval(ROOTCOLORS[random.randint(0,len(ROOTCOLORS)-1)]))
-        ftr.func.SetLineWidth(5)
-        ftr.func.SetNpx(ftr.bins)
-        func = ftr.func.Clone()
-        func.Draw("hist" + ("" if first else "same"))
-        canv.Update()
-        first = False
-    cmd = " "
-    while not cmd == "" and\
-        not cmd[(cmd.rfind('/') if cmd.rfind('/') != -1 else 0):] == "/run_fitter.py":
-        if len(q) > 0:
-            cmd = q.pop()
-        else:
-            print ['s','d','l','i','c','n','json-p','fhist','h','p','+','*','/','cmd-q']
-            cmd = raw_input("cmd: ")
-
-def legend(lgn=None,option="ON",**kwargs):
-    if option == "ON":
-        # lgn = ROOT.TLegend(0.625,0.785,0.975,0.930)
-        lgn = ROOT.TLegend(0.55,0.75,0.89,0.88)
-        lgn.SetTextFont(22)
-        lgn.SetHeader("Fit Function and Histogram")
-        lgn.SetTextFont(132)
-        lgn.SetEntrySeparation(0.05)
-        lgn.SetTextSize(0.025)
-        lgn.SetLineWidth(2)
-        lgn.SetFillColor(19)
-        return lgn
-    elif option == "FUNC":
-        func = kwargs['func']
-        lgn_entry_list = lgn.GetListOfPrimitives()
-        entry_printed = False
-        for obj in lgn_entry_list:
-            entry = ROOT.TLegendEntry(obj)
-            if entry.GetLabel() == "%s fit curve"%(kwargs['fit_name']):
-                entry_printed = True
-        if not entry_printed:
-            lgn_func = lgn.AddEntry(func,"%s fit curve"%(kwargs['fit_name']),"l")
-            lgn_func.SetLineWidth(4)
-            lgn_func.SetLineColor(func.GetLineColor())
-        return lgn
-    elif option == "HIST":
-        hist = kwargs['hist']
-        fit_name = kwargs['fit_name']
-        lgn_entry_list = lgn.GetListOfPrimitives()
-        entry_printed = False
-        for obj in lgn_entry_list:
-            entry = ROOT.TLegendEntry(obj)
-            if entry.GetLabel() == file_name[file_name.rfind('/')+1:]:
-                entry_printed = True
-        if not entry_printed:
-            lgn_hist = lgn.AddEntry(hist,file_name[file_name.rfind('/')+1:],"f")
-            lgn_hist.SetLineWidth(4)
-            lgn_hist.SetLineColor(hist.GetLineColor())
-            lgn_hist.SetFillColor(hist.GetFillColor())
-        return lgn
-    elif option == "OFF":
-        lgn.Delete()
-        return None
-    else: return None
-
-def stats(st=None,option="ON",**kwargs):
-    if option == "ON":
-        st = ROOT.TPaveStats(0.70,0.35,0.89,0.70,"NDC")
-        st.SetLineWidth(2)
-        st.SetBorderSize(1)
-        return st
-    elif option == "FUNC":
-        st.Clear()
-        func = kwargs['func']
-        chi = kwargs['chi']
-        title = st.AddText("Fit Statistics for %s"%(func.GetName()))
-        title.SetTextFont(22)
-        st_lines = st.GetListOfLines()
-        par_names = list(func.GetParName(i) for i in range(func.GetNpar()))
-        par_values = list(func.GetParameter(i) for i in range(func.GetNpar()))
-        for (name,p) in zip(par_names,par_values):
-            entry = ROOT.TLatex(0,0,"%s = %4.4f"%(name,p))
-            entry.SetTextFont(132)
-            entry.SetTextSize(0.025)
-            st_lines.Add(entry)
-        entry = ROOT.TLatex(0,0,"c^{2} = %4.4f"%(chi))
-        entry.SetTextFont(122)
-        entry.SetTextSize(0.025)
-        st_lines.Add(entry)
-        return st
-    elif option == "OFF":
-        st.Delete()
-        return None
-    else: return None
+        elif cmd == 't':
+            print "t - [DELAY]"
+            delay = float(raw_input("t - New Delay Time (in sec):"))
+        canv.GetListOfPrimitives().Print()
+        time.sleep(delay)
 
 if __name__ == '__main__':
     file_name = 'root/TwoProngNtuplizer_eta125.root'
-    fit_names = ['gaus','crystalball','landau','landxgaus']
-    fit_name = fit_names[1]
+    fit_name = 'crystalball'
     
     cmd = " "
     while not cmd == "" and\
-        not cmd[(cmd.rfind('/') if cmd.rfind('/') != -1 else 0):] == "/run_fitter.py":
+        not cmd[(cmd.rfind('/') if cmd.rfind('/') != -1 else 0):] == "/run_fitter_v2.py":
         cmd = raw_input("run:")
-        if cmd in ['b','build']:
+        if cmd in ['m','make','make fit','make_fit']:
             fit_info = 'fitter-init.json'
-            build_fit(file_name,fit_name,fit_info)
-        elif cmd in ['b.','build-all']:
-            file_dir = "./root/"
-            for f in os.listdir(file_dir):
-                for fn in fit_names:
-                    print "building %s fit for %s"%(fn.upper(),f)
-                    build_fit(file_dir+f,fn,'fitter_init.json')
-                    affirm = raw_input("%s fit for %s: next FIT? [y/n]"%(fn.upper(),f))
-                    # affirm = 'y'
-                    if affirm != 'y':
-                        break
-                affirm2 = raw_input("%s fit for %s: next FILE? [y/n]"%(fn.upper(),f))
-                # affirm2 = 'y'
-                if affirm2 != 'y':
-                    break
-        elif cmd in ['a','analyze']:
+            make_fit(file_name,fit_name,fit_info)
+        elif cmd in ['g','get','get fit','get_fit']:
             fit_info = './fit-files/fitter-%s-omega-eta750.json'%(fit_name)
-            analyze_fit(fit_info)
-        elif cmd in ['a.','analyze-all']:
+            get_fit(fit_info)
+        elif cmd in ['n','na','norm','norm all','norm-all']:
             fit_dir = "./fit-files/"
-            for f in os.listdir(fit_dir):
+            for f in os.listdir("./fit-files"):
                 if f[:4] != "norm":
-                    q = deque(['','n','h','c','d','lstats','l'])
-                    print "analyzing + normalizing fit for",f
-                    analyze_fit(fit_dir+f,q)
+                    q = deque(['','c same','d','h','n','l'])
+                    print "normalizing fit for %s"%(f)
+                    get_fit("./fit-files/"+f,q)
                     affirm = raw_input("fit display and data obtained for %s: next file? [y/n]"%(f))
-                    # affirm = 'y'
+                    affirm = 'y'
                     if affirm != 'y':
                         break
-        elif cmd in ['i','interpolate']:
-            fit_info_list = [
-                    './fit-files/normfitter-landxgaus-omega-etaprime500.json',
-                    './fit-files/normfitter-landxgaus-omega-etaprime750.json'
-                    ]
-            name = raw_input("name of normalized fit info file [ENTER or q to EXIT]: ")
-            while name != "" and name != "q" and len(fit_info_list) > 0:
-                fit_info_list.append(name)
-                name = raw_input("name of normalized fit info file [ENTER or q to EXIT]: ")
-            interpolate_fit(fit_info_list)
