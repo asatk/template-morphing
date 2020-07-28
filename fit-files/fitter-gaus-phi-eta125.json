@@ -1,5 +1,5 @@
 {
-    "file_name": "root/TwoProngNtuplizer_eta125.root", 
+    "file_name": "./root/TwoProngNtuplizer_eta125.root", 
     "pars": {
         "0": 20.247315040957105, 
         "1": 124.50208449381466, 

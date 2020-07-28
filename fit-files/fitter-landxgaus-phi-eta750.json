@@ -1,0 +1,24 @@
+{
+    "file_name": "./root/TwoProngNtuplizer_eta750.root", 
+    "pars": {
+        "0": 6430.960182863137, 
+        "1": 188.62735480041877, 
+        "2": 0.04624314688914376, 
+        "3": 548.8504634833863, 
+        "4": 21.154563651379732
+    }, 
+    "pname": "phi", 
+    "normalized": false, 
+    "cuts": "nTwoProngs>0 && nIDPhotons>0 && Obj_PhotonTwoProng.dR>0.1 && Obj_PhotonTwoProng.part2_pt>150", 
+    "var": "Obj_PhotonTwoProng.mass", 
+    "fit_name": "landxgaus", 
+    "chi": 119.55921317256853, 
+    "bins": "100,0.000000,2000.000000", 
+    "names": {
+        "0": "Constant", 
+        "1": "MPV", 
+        "2": "Eta", 
+        "3": "Mean", 
+        "4": "Sigma"
+    }
+}

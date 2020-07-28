@@ -1,0 +1,20 @@
+{
+    "file_name": "./root/TwoProngNtuplizer_etaprime300.root", 
+    "pars": {
+        "0": 14.269718032896265, 
+        "1": 1.242491566601762, 
+        "2": 0.31122496769695385
+    }, 
+    "pname": "omega", 
+    "normalized": false, 
+    "cuts": "nTwoProngs>0 && nIDPhotons>0 && Obj_PhotonTwoProng.dR>0.1 && Obj_PhotonTwoProng.part2_pt>150", 
+    "var": "TwoProng_MassEta[0]", 
+    "fit_name": "gaus", 
+    "chi": 41.01633465338709, 
+    "bins": "50,0.000000,5.000000", 
+    "names": {
+        "0": "Constant", 
+        "1": "Mean", 
+        "2": "Sigma"
+    }
+}

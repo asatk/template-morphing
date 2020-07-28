@@ -1,24 +1,24 @@
 {
-    "file_name": "root/TwoProngNtuplizer_eta750.root", 
+    "file_name": "./root/TwoProngNtuplizer_eta750.root", 
     "pars": {
-        "0": 389.1306431443354, 
-        "1": 0.5903047734891076, 
-        "2": 0.0660552066100057, 
-        "3": -0.44650018070439124, 
-        "4": 3.820645669283529
+        "0": 389.13077016560266, 
+        "1": 0.5903060419476253, 
+        "2": 0.0660561016709942, 
+        "3": -0.44651931811600104, 
+        "4": 3.820334650850299
     }, 
+    "pname": "omega", 
+    "normalized": false, 
+    "cuts": "nTwoProngs>0 && nIDPhotons>0 && Obj_PhotonTwoProng.dR>0.1 && Obj_PhotonTwoProng.part2_pt>150", 
+    "var": "TwoProng_MassPi0[0]", 
+    "fit_name": "crystalball", 
+    "chi": 14.775767183259427, 
+    "bins": "50,0.000000,5.000000", 
     "names": {
         "0": "Constant", 
         "1": "Mean", 
         "2": "Sigma", 
         "3": "Alpha", 
         "4": "n"
-    }, 
-    "normalized": "False",
-    "pname": "omega",
-    "cuts": "nTwoProngs>0 && nIDPhotons>0 && Obj_PhotonTwoProng.dR>0.1 && Obj_PhotonTwoProng.part2_pt>150", 
-    "var": "TwoProng_MassPi0[0]", 
-    "fit_name": "crystalball", 
-    "chi": 0.0, 
-    "bins": "50,0.000000,5.000000"
+    }
 }

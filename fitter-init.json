@@ -1,5 +1,5 @@
 {
-    "pname":"phi",
+    "pname":"omega",
     "phi": [
         {
         "var": "Obj_PhotonTwoProng.mass",
@@ -19,10 +19,10 @@
     ],
     "cuts": "nTwoProngs>0 && nIDPhotons>0 && Obj_PhotonTwoProng.dR>0.1 && Obj_PhotonTwoProng.part2_pt>150",
     "user_data":"y",
-    "normalize":"n",
+    "normalized":"n",
     "cum":"n",
     "nEntries":"10000",
     "seed":"n",
-    "debug":"2",
+    "debug":"1",
     "window_time":"1"
 }

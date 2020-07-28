@@ -1,0 +1,20 @@
+{
+    "file_name": "./root/TwoProngNtuplizer_eta500.root", 
+    "pars": {
+        "0": 12900.765410148846, 
+        "1": 475.54353642335013, 
+        "2": 2.286651423479816
+    }, 
+    "pname": "phi", 
+    "normalized": false, 
+    "cuts": "nTwoProngs>0 && nIDPhotons>0 && Obj_PhotonTwoProng.dR>0.1 && Obj_PhotonTwoProng.part2_pt>150", 
+    "var": "Obj_PhotonTwoProng.mass", 
+    "fit_name": "landau", 
+    "chi": 321.6994698341051, 
+    "bins": "100,0.000000,2000.000000", 
+    "names": {
+        "0": "Constant", 
+        "1": "MPV", 
+        "2": "Eta"
+    }
+}

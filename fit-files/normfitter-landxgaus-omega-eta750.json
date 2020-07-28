@@ -15,6 +15,7 @@
         "3": "Mean", 
         "4": "Sigma"
     }, 
+    "normalized": "True",
     "cuts": "nTwoProngs>0 && nIDPhotons>0 && Obj_PhotonTwoProng.dR>0.1 && Obj_PhotonTwoProng.part2_pt>150", 
     "var": "TwoProng_MassPi0[0]", 
     "fit_name": "landxgaus", 

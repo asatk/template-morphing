@@ -1,23 +1,23 @@
 {
-    "file_name": "root/TwoProngNtuplizer_etaprime500.root", 
+    "file_name": "./root/TwoProngNtuplizer_etaprime500.root", 
     "pars": {
-        "0": 123251.3989527284, 
-        "1": 0.15496315208716444, 
-        "2": 0.06140358642661993, 
-        "3": 0.838610140769137, 
-        "4": 0.003136362034017309
+        "0": 85585.28207611102, 
+        "1": 0.8629931872765015, 
+        "2": 0.06134148895342044, 
+        "3": 0.13064016692973257, 
+        "4": 0.004521135587739891
     }, 
     "pname": "omega", 
     "normalized": false, 
     "cuts": "nTwoProngs>0 && nIDPhotons>0 && Obj_PhotonTwoProng.dR>0.1 && Obj_PhotonTwoProng.part2_pt>150", 
     "var": "TwoProng_MassEta[0]", 
     "fit_name": "landxgaus", 
-    "chi": 49.564094019469046, 
+    "chi": 49.575727861081916, 
     "bins": "50,0.000000,5.000000", 
     "names": {
         "0": "Constant", 
-        "1": "x0/Mean", 
-        "2": "eta/Width", 
+        "1": "MPV", 
+        "2": "Eta", 
         "3": "Mean", 
         "4": "Sigma"
     }
