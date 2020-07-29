@@ -1,16 +1,18 @@
 {
     "file_name": "./root/TwoProngNtuplizer_eta300.root", 
     "pars": {
-        "0": 74.21829644078741, 
-        "1": 0.6329173518941502, 
-        "2": 0.12287506621210208
+        "0": 74.21824192352365, 
+        "1": 0.6329138639220356, 
+        "2": 0.1228736869759394
     }, 
+    "NDF": 12, 
+    "chiprob": 1.8631567722557263e-10, 
     "pname": "omega", 
     "normalized": false, 
     "cuts": "nTwoProngs>0 && nIDPhotons>0 && Obj_PhotonTwoProng.dR>0.1 && Obj_PhotonTwoProng.part2_pt>150", 
     "var": "TwoProng_MassPi0[0]", 
     "fit_name": "gaus", 
-    "chi": 71.25601670235038, 
+    "chi": 71.25601686104388, 
     "bins": "50,0.000000,5.000000", 
     "names": {
         "0": "Constant", 

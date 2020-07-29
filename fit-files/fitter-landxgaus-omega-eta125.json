@@ -1,18 +1,20 @@
 {
     "file_name": "./root/TwoProngNtuplizer_eta125.root", 
     "pars": {
-        "0": 13072.58883994068, 
-        "1": 0.4610205851082065, 
-        "2": 0.007173640391312732, 
-        "3": 0.039656060660218706, 
-        "4": 0.016365077887414693
+        "0": 14637699.555158652, 
+        "1": 0.45234768878977033, 
+        "2": 0.0002904589010478084, 
+        "3": 0.04446692278388956, 
+        "4": 0.01156092773792189
     }, 
+    "NDF": 1, 
+    "chiprob": 0.061340273786051676, 
     "pname": "omega", 
     "normalized": false, 
     "cuts": "nTwoProngs>0 && nIDPhotons>0 && Obj_PhotonTwoProng.dR>0.1 && Obj_PhotonTwoProng.part2_pt>150", 
     "var": "TwoProng_MassPi0[0]", 
     "fit_name": "landxgaus", 
-    "chi": 3.6260789639114495, 
+    "chi": 3.5007707870861666, 
     "bins": "50,0.000000,5.000000", 
     "names": {
         "0": "Constant", 

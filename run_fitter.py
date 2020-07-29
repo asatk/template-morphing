@@ -46,7 +46,7 @@ ROOTCOLORS = [
     'kViolet',
     'kPink']
 
-def build_fit(file_name,fit_name,fit_info):
+def build_fit(file_name,fit_name,fit_info,q=deque()):
     canv = ROOT.TCanvas("canv","title",1200,900)
     canv.DrawCrosshair()
     canv.cd()
@@ -76,18 +76,33 @@ def build_fit(file_name,fit_name,fit_info):
     cmd = " "
     while not cmd == "" and\
         not cmd[(cmd.rfind('/') if cmd.rfind('/') != -1 else 0):] == "/run_fitter.py":
-        cmd = raw_input("cmd: ")
+        if len(q) > 0:
+            cmd = q.pop()
+        else:
+            cmd = raw_input("cmd: ")
         if cmd == 's':
             print "[SAVING]"
-            affirm = raw_input("are you sure you want to SAVE this model? [y/n]")
+            if len(q) > 0:
+                affirm = q.pop()
+            else:
+                affirm = raw_input("are you sure you want to SAVE this model? [y/n]")
             if affirm == 'y':
                 ftr.jsonify()
         elif cmd == 'r' or cmd == 'refit':
             print "[REFITTING]"
-            affirm = raw_input("are you sure you want to REFIT? [y/n]")
-            file_name2 = raw_input("new data: ")
-            fit_name2 = raw_input("new fit function: ")
-            fit_info2 = raw_input("new fit info: ")
+            if len(q) > 0:
+                affirm = q.pop()
+            else:
+                affirm = raw_input("are you sure you want to REFIT? [y/n]")
+            if affirm == 'y':
+                if len(q) < 3:
+                    file_name2 = raw_input("new data: ")
+                    fit_name2 = raw_input("new fit function: ")
+                    fit_info2 = raw_input("new fit info: ")
+                else:
+                    file_name2 = q.pop()
+                    fit_name2 = q.pop()
+                    fit_info = q.pop()
 
             file_name = file_name if file_name2 == "" else file_name2
             fit_name = fit_name if fit_name2 == "" else fit_name2
@@ -116,35 +131,35 @@ def build_fit(file_name,fit_name,fit_info):
                 canv.Update()
         elif cmd == 'rebin':
             print "[REBINNING]"
-            tempbins = raw_input("new bin size: ")
-            templo = raw_input("new lo: ")
-            temphi = raw_input("new hi: ")
+            if len(q) < 3:
+                tempbins = raw_input("new bin size: ")
+                templo = raw_input("new lo: ")
+                temphi = raw_input("new hi: ")
+            else:
+                tempbins = q.pop()
+                templo = q.pop()
+                temphi = q.pop()
             if tempbins is not '':
                 ftr.bins = int(tempbins)
             if templo is not '':
                 ftr.lo = float(templo)
             if temphi is not '':
                 ftr.hi = float(temphi)
-        elif cmd == '*':
-            print "* - [RESTARTING]"
-            affirm = raw_input("* - are you sure you want to RESTART with a new file? [y/n]")
-            if affirm == 'y':
-                file_name = raw_input("* - new data: ")
-                fit_name = raw_input("* - fit name: ")
-                ftr = fitter(file_name,fit_name=fit_name,fit_info=fit_info)
 
 def analyze_fit(fit_info,q=deque()):
-    #set up canvas
+    # set up canvas
     if 'canv' in locals():
         canv.Clear()
     canv = ROOT.TCanvas("canv","title",1200,900)
     canv.DrawCrosshair()
     canv.cd()
 
-    #set up fitter and fit info
+    # set up fitter and fit info
     json_file = open(fit_info,'r')
     info = json.load(json_file)
     file_name = info['file_name']
+    print "USING MODEL",fit_info
+    print "USING DATA FROM",file_name
     ftr = fitter(file_name,fitted=True,fit_info=fit_info)
     ftr.func.SetLineColor(kPink)
     ftr.func.SetLineWidth(5)
@@ -198,6 +213,9 @@ def analyze_fit(fit_info,q=deque()):
                 draw_opts = q.pop()
             else:
                 draw_opts = raw_input("draw option input string [SAME, L, C, FC, HIST]: ")
+            
+            if drawhist:
+                hist.Draw("HIST SAME")
 
             if "same" not in draw_opts or "SAME" not in draw_opts:
                 drawhist = False
@@ -231,7 +249,7 @@ def analyze_fit(fit_info,q=deque()):
                     lgn.Draw()
                     canv.Update()
                 if drawhist:
-                    lgn = legend(lgn,"HIST",hist=hist,fit_name=ftr.fit_name)
+                    lgn = legend(lgn,"HIST",hist=hist,file_name=ftr.file_name)
                     lgn.Draw()
                     canv.Update()
             else:
@@ -283,12 +301,21 @@ def analyze_fit(fit_info,q=deque()):
                     hist.GetYaxis().SetTitle("Event Probability Density")
                     hist = ROOT.TH1D(hist.DrawNormalized("HIST"))
                     canv.Update()
+                    if drawfunc or drawfhist:
+                        # y_ax_max = float(1.05*max([func.GetMaximum(),hist.GetMaximum()]))
+                        # hist.SetMaximum(y_ax_max)
+                        # hist.Draw("HIST")
+                        pass
                 if drawfhist:
-                    func.GetHistogram().DrawNormalized("HIST"+("SAME" if drawhist else ""))
-                    canv.Update()
+                    # func.SetMaximum(y_ax_max)
+                    # func.GetHistogram().DrawNormalized("HIST"+("SAME" if drawhist else ""))
+                    # canv.Update()
+                    pass
                 if drawfunc:
-                    func.Draw("C"+("SAME" if drawfhist or drawhist else ""))
-                    canv.Update()
+                    # func.SetMaximum(y_ax_max)
+                    # func.Draw("C"+("SAME" if drawfhist or drawhist else ""))
+                    # canv.Update()
+                    pass
                 normalized = True
             elif normalized:
                 print "n - [DE-NORMALIZING]"
@@ -297,6 +324,9 @@ def analyze_fit(fit_info,q=deque()):
                 if drawhist:
                     hist.GetYaxis().SetTitle("Events")
                     hist.Scale(norm_factor)
+                    if drawfunc or drawfhist:
+                        # hist.SetMaximum(float(1.05*max([func.GetMaximum(),hist.GetMaximum()])))
+                        pass
                     hist.Draw("HIST")
                 if drawfhist:
                     func.Draw("HIST"+("SAME" if drawhist else ""))
@@ -307,7 +337,7 @@ def analyze_fit(fit_info,q=deque()):
                 normalized = False
             
             if hasLegend:
-                lgn = legend(lgn,"HIST",hist=hist,fit_name=ftr.fit_name)
+                lgn = legend(lgn,"HIST",hist=hist,file_name=ftr.file_name)
                 lgn.Draw()
                 canv.Update()
             if hasStats:
@@ -324,7 +354,7 @@ def analyze_fit(fit_info,q=deque()):
                 chain.Delete()
             drawhist = True
             hist = ROOT.TH1D("hist","%s fit - %s"%(ftr.fit_name,ftr.var),ftr.bins,ftr.lo,ftr.hi)
-            
+
             x_ax = hist.GetXaxis()
             x_ax.SetTitle("%s (GeV)"%(ftr.var))
             x_ax.CenterTitle(True)
@@ -344,6 +374,9 @@ def analyze_fit(fit_info,q=deque()):
             chain.Draw(draw_s, cut_s, option="HIST")
             #y_ax.SetLimits(0.,max(func.GetMaximum(),hist.GetMaximum())*1.05)
             #y_ax.SetMax(500)
+            if drawfunc or drawfhist:
+                # hist.SetMaximum(float(1.05*max([func.GetMaximum(),hist.GetMaximum()])))
+                pass
             canv.Update()
 
             if normalized:
@@ -355,7 +388,7 @@ def analyze_fit(fit_info,q=deque()):
             if drawfunc:
                 func.Draw("C SAME")
             if hasLegend:
-                lgn = legend(lgn,"HIST",hist=hist,fit_name=ftr.fit_name)
+                lgn = legend(lgn,"HIST",hist=hist,file_name=ftr.file_name)
                 lgn.Draw()
                 canv.Update()
             if hasStats:
@@ -425,6 +458,7 @@ def analyze_fit(fit_info,q=deque()):
                 json_file = open(fit_info,'r')
                 info = json.load(json_file)
                 file_name = info['file_name']
+                print "USING DATA FROM",file_name
                 ftr = fitter(file_name,fitted=True,fit_info=fit_info)
                 ftr.func.SetNpx(ftr.bins)
                 func = ftr.func.Clone()
@@ -475,6 +509,7 @@ def interpolate_fit(fit_info_list,q=deque()):
     canv.cd()
     first = True
     print fit_info_list
+
     for i in fit_info_list:
         #set up fitter and fit info
         print "using file:",i
@@ -489,6 +524,7 @@ def interpolate_fit(fit_info_list,q=deque()):
         func.Draw("hist" + ("" if first else "same"))
         canv.Update()
         first = False
+    
     cmd = " "
     while not cmd == "" and\
         not cmd[(cmd.rfind('/') if cmd.rfind('/') != -1 else 0):] == "/run_fitter.py":
@@ -497,6 +533,9 @@ def interpolate_fit(fit_info_list,q=deque()):
         else:
             print ['s','d','l','i','c','n','json-p','fhist','h','p','+','*','/','cmd-q']
             cmd = raw_input("cmd: ")
+        if cmd == 'pt':
+            print "pt - [SPECIFYING POINT]"
+            point = float(raw_input("pt - data point for",ftr.var))
 
 def legend(lgn=None,option="ON",**kwargs):
     if option == "ON":
@@ -525,7 +564,7 @@ def legend(lgn=None,option="ON",**kwargs):
         return lgn
     elif option == "HIST":
         hist = kwargs['hist']
-        fit_name = kwargs['fit_name']
+        file_name = kwargs['file_name']
         lgn_entry_list = lgn.GetListOfPrimitives()
         entry_printed = False
         for obj in lgn_entry_list:
@@ -574,9 +613,10 @@ def stats(st=None,option="ON",**kwargs):
     else: return None
 
 if __name__ == '__main__':
-    file_name = 'root/TwoProngNtuplizer_eta125.root'
     fit_names = ['gaus','crystalball','landau','landxgaus']
-    fit_name = fit_names[1]
+    fit_name = fit_names[3]
+    file_name = 'root/TwoProngNtuplizer_etaprime300.root'
+    fit_info = './fit-files/fitter-%s-omega-etaprime300.json'%(fit_name)
     
     cmd = " "
     while not cmd == "" and\
@@ -589,28 +629,28 @@ if __name__ == '__main__':
             file_dir = "./root/"
             for f in os.listdir(file_dir):
                 for fn in fit_names:
+                    q = deque(['','y','s'])
                     print "building %s fit for %s"%(fn.upper(),f)
-                    build_fit(file_dir+f,fn,'fitter_init.json')
-                    affirm = raw_input("%s fit for %s: next FIT? [y/n]"%(fn.upper(),f))
-                    # affirm = 'y'
+                    build_fit(file_dir+f,fn,'fitter_init.json',q)
+                    # affirm = raw_input("%s fit for %s: next FIT? [y/n]"%(fn.upper(),f))
+                    affirm = 'y'
                     if affirm != 'y':
                         break
-                affirm2 = raw_input("%s fit for %s: next FILE? [y/n]"%(fn.upper(),f))
-                # affirm2 = 'y'
+                # affirm2 = raw_input("%s fit for %s: next FILE? [y/n]"%(fn.upper(),f))
+                affirm2 = 'y'
                 if affirm2 != 'y':
                     break
         elif cmd in ['a','analyze']:
-            fit_info = './fit-files/fitter-%s-omega-eta750.json'%(fit_name)
             analyze_fit(fit_info)
         elif cmd in ['a.','analyze-all']:
             fit_dir = "./fit-files/"
             for f in os.listdir(fit_dir):
                 if f[:4] != "norm":
-                    q = deque(['','n','h','c','d','lstats','l'])
+                    q = deque(['','y','y','s','n','h','c','d','lstats','l'])
                     print "analyzing + normalizing fit for",f
                     analyze_fit(fit_dir+f,q)
-                    affirm = raw_input("fit display and data obtained for %s: next file? [y/n]"%(f))
-                    # affirm = 'y'
+                    # affirm = raw_input("fit display and data obtained for %s: next file? [y/n]"%(f))
+                    affirm = 'y'
                     if affirm != 'y':
                         break
         elif cmd in ['i','interpolate']:
@@ -618,8 +658,8 @@ if __name__ == '__main__':
                     './fit-files/normfitter-landxgaus-omega-etaprime500.json',
                     './fit-files/normfitter-landxgaus-omega-etaprime750.json'
                     ]
-            name = raw_input("name of normalized fit info file [ENTER or q to EXIT]: ")
-            while name != "" and name != "q" and len(fit_info_list) > 0:
-                fit_info_list.append(name)
-                name = raw_input("name of normalized fit info file [ENTER or q to EXIT]: ")
+            # name = raw_input("name of normalized fit info file [ENTER or q to EXIT]: ")
+            # while name != "" and name != "q" and len(fit_info_list) > 0:
+            #     fit_info_list.append(name)
+            #     name = raw_input("name of normalized fit info file [ENTER or q to EXIT]: ")
             interpolate_fit(fit_info_list)

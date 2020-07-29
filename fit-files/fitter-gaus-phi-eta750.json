@@ -1,16 +1,18 @@
 {
     "file_name": "./root/TwoProngNtuplizer_eta750.root", 
     "pars": {
-        "0": 385.7913759954358, 
-        "1": 737.53624363844, 
-        "2": 21.112197070082104
+        "0": 385.7925869257015, 
+        "1": 737.5362730589101, 
+        "2": 21.112401071157958
     }, 
+    "NDF": 28, 
+    "chiprob": 3.1480974029425917e-13, 
     "pname": "phi", 
     "normalized": false, 
     "cuts": "nTwoProngs>0 && nIDPhotons>0 && Obj_PhotonTwoProng.dR>0.1 && Obj_PhotonTwoProng.part2_pt>150", 
     "var": "Obj_PhotonTwoProng.mass", 
     "fit_name": "gaus", 
-    "chi": 119.23701261439227, 
+    "chi": 119.2370121398707, 
     "bins": "100,0.000000,2000.000000", 
     "names": {
         "0": "Constant", 

@@ -1,16 +1,18 @@
 {
     "file_name": "./root/TwoProngNtuplizer_eta125.root", 
     "pars": {
-        "0": 94.60238380397936, 
-        "1": 135.19567370538257, 
-        "2": 13.86897895778946
+        "0": 94.60348953321038, 
+        "1": 135.19858881444168, 
+        "2": 13.87053019112912
     }, 
+    "NDF": 0, 
+    "chiprob": 0.0, 
     "pname": "phi", 
     "normalized": false, 
     "cuts": "nTwoProngs>0 && nIDPhotons>0 && Obj_PhotonTwoProng.dR>0.1 && Obj_PhotonTwoProng.part2_pt>150", 
     "var": "Obj_PhotonTwoProng.mass", 
     "fit_name": "landau", 
-    "chi": 2.995649079559886e-09, 
+    "chi": 3.2730614860143705e-09, 
     "bins": "100,0.000000,2000.000000", 
     "names": {
         "0": "Constant", 

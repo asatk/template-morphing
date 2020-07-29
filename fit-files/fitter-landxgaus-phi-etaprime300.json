@@ -1,18 +1,20 @@
 {
     "file_name": "./root/TwoProngNtuplizer_etaprime300.root", 
     "pars": {
-        "0": 93.00736974286788, 
-        "1": 6.5824545047611815, 
-        "2": 0.7537370178988752, 
-        "3": 280.7675943660097, 
-        "4": 15.456628830025016
+        "0": 93.00829773078111, 
+        "1": 6.582427526186339, 
+        "2": 0.7537433780664875, 
+        "3": 280.767567464059, 
+        "4": 15.456529061550162
     }, 
+    "NDF": 5, 
+    "chiprob": 0.26420205785083056, 
     "pname": "phi", 
     "normalized": false, 
     "cuts": "nTwoProngs>0 && nIDPhotons>0 && Obj_PhotonTwoProng.dR>0.1 && Obj_PhotonTwoProng.part2_pt>150", 
     "var": "Obj_PhotonTwoProng.mass", 
     "fit_name": "landxgaus", 
-    "chi": 6.457601335698959, 
+    "chi": 6.457601285365195, 
     "bins": "100,0.000000,2000.000000", 
     "names": {
         "0": "Constant", 

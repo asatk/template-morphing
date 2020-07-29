@@ -1,0 +1,26 @@
+{
+    "file_name": "./root/TwoProngNtuplizer_etaprime125.root", 
+    "pars": {
+        "0": 359.7138240306367, 
+        "1": 0.9840090534295272, 
+        "2": 0.07459549211199464, 
+        "3": 0.0010841979363187158, 
+        "4": 0.0015163623192137
+    }, 
+    "NDF": 2, 
+    "chiprob": 0.5469721638309166, 
+    "pname": "omega", 
+    "normalized": false, 
+    "cuts": "nTwoProngs>0 && nIDPhotons>0 && Obj_PhotonTwoProng.dR>0.1 && Obj_PhotonTwoProng.part2_pt>150", 
+    "var": "TwoProng_MassEta[0]", 
+    "fit_name": "landxgaus", 
+    "chi": 1.206714733293554, 
+    "bins": "50,0.000000,5.000000", 
+    "names": {
+        "0": "Constant", 
+        "1": "MPV", 
+        "2": "Eta", 
+        "3": "Mean", 
+        "4": "Sigma"
+    }
+}

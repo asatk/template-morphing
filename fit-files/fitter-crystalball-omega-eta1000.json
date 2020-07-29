@@ -1,18 +1,20 @@
 {
     "file_name": "./root/TwoProngNtuplizer_eta1000.root", 
     "pars": {
-        "0": 299.8992318050314, 
-        "1": 0.6008897219147463, 
-        "2": 0.06928790993347936, 
-        "3": -0.3166360519949624, 
-        "4": 6.114850493177393
+        "0": 299.8994864259386, 
+        "1": 0.6008900131142431, 
+        "2": 0.06928788625050321, 
+        "3": -0.31663599347514143, 
+        "4": 6.1148480069929905
     }, 
+    "NDF": 25, 
+    "chiprob": 0.54038427003122, 
     "pname": "omega", 
     "normalized": false, 
     "cuts": "nTwoProngs>0 && nIDPhotons>0 && Obj_PhotonTwoProng.dR>0.1 && Obj_PhotonTwoProng.part2_pt>150", 
     "var": "TwoProng_MassPi0[0]", 
     "fit_name": "crystalball", 
-    "chi": 23.63759453756311, 
+    "chi": 23.63759452665518, 
     "bins": "50,0.000000,5.000000", 
     "names": {
         "0": "Constant", 

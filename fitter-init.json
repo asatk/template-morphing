@@ -22,7 +22,7 @@
     "normalized":"n",
     "cum":"n",
     "nEntries":"10000",
-    "seed":"n",
+    "seed":"file",
     "debug":"1",
     "window_time":"1"
 }
