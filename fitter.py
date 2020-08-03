@@ -25,8 +25,8 @@ class fitter:
         'dbl_gaus': 'gaus(0)+gaus(3)',
         'dbl_gaus_cdf': '',
         'crystalball': 'crystalball',
-        'crys_ball_fn': '[0]*ROOT::Math::crystalball_function(x[0],[3],[4],[2],[1])',
-        'crys_ball_cdf': '[0]*ROOT::Math::crystalball_cdf(x[0],[3],[4],[2],[1])',
+        'crystalball_fn': '[0]*ROOT::Math::crystalball_function(x[0],[3],[4],[2],[1])',
+        'crystalball_cdf': '[0]*ROOT::Math::crystalball_cdf(x[0],[3],[4],[2],[1])',
         'landau': 'landau',
         'landau_cdf': '[0]*ROOT::Math::landau_cdf(x[0],[2],[1])',
         'landxgaus': 'CONV(landau,gaus)',
@@ -140,8 +140,8 @@ class fitter:
                 pprime = bool(re.search("prime", file_name) is not None)
                 mean_est = 0.95 if pprime else 0.55
                 omega_scaling = 1 / 100
-            else:
-                pass
+            if self.normalized:
+                hist = ROOT.TH1D(hist.DrawNormalized("HIST"))
             if debug >= 1:
                 print "RECO MASS MODELLING FOR:", self.pname, mean_est
         else:
@@ -157,6 +157,7 @@ class fitter:
             if debug >= 1:
                 print "MODELLING WITH %s" % (fit_str)
             fn = ROOT.TF1("fit", fit_str, self.lo, self.hi)
+            fn.SetNpx(self.bins)
         else:
             if debug >= 1:
                 print "FIT NOT COMPATIBLE...exiting"
@@ -177,7 +178,9 @@ class fitter:
                 #fn.SetParLimits(0, 0., self.nEntries)
                 fn.SetParLimits(1, 0., mean_est * 2)
             elif self.seed == 'file':
-                seed_file = "./fit-files/fitter-%s-%s-%s.json" % (self.fit_name,self.pname,
+                seed_file = "./fit-files/%sfitter-%s-%s-%s.json"%(
+                        "norm" if self.normalized else "",
+                        self.fit_name,self.pname,
                         self.file_name[self.file_name.find('eta'):-5])
                 print seed_file
                 with open(seed_file) as json_file:
@@ -200,7 +203,9 @@ class fitter:
                 fn.SetParLimits(1, 0., mean_est * 2)
                 # fn.SetParLimits(4,0.,mean_est*2)
             elif self.seed == 'file':
-                seed_file = "./fit-files/fitter-%s-%s-%s.json" % (self.fit_name,self.pname,
+                seed_file = "./fit-files/%sfitter-%s-%s-%s.json"%(
+                        "norm" if self.normalized else "",
+                        self.fit_name,self.pname,
                         self.file_name[self.file_name.find('eta'):-5])
                 with open(seed_file) as json_file:
                     seed_info = json.load(json_file)
@@ -226,7 +231,9 @@ class fitter:
                 fn.SetParLimits(1, 0., mean_est * 2)
                 fn.SetParLimits(4, 0., 10e6)
             elif self.seed == 'file':
-                seed_file = "./fit-files/fitter-%s-%s-%s.json" % (self.fit_name,self.pname,
+                seed_file = "./fit-files/%sfitter-%s-%s-%s.json"%(
+                        "norm" if self.normalized else "",
+                        self.fit_name,self.pname,
                         self.file_name[self.file_name.find('eta'):-5])
                 with open(seed_file) as json_file:
                     seed_info = json.load(json_file)
@@ -247,7 +254,9 @@ class fitter:
                 #fn.SetParLimits(0, 0., self.nEntries)
                 fn.SetParLimits(1, 0., mean_est * 2)
             elif self.seed == 'file':
-                seed_file = "./fit-files/fitter-%s-%s-%s.json" % (self.fit_name,self.pname,
+                seed_file = "./fit-files/%sfitter-%s-%s-%s.json"%(
+                        "norm" if self.normalized else "",
+                        self.fit_name,self.pname,
                         self.file_name[self.file_name.find('eta'):-5])
                 with open(seed_file) as json_file:
                     seed_info = json.load(json_file)
@@ -275,7 +284,9 @@ class fitter:
                 fn.SetParLimits(1, 0., mean_est * 2)
                 fn.SetParLimits(3, 0., mean_est * 2)
             elif self.seed == 'file':
-                seed_file = "./fit-files/fitter-%s-%s-%s.json" % (self.fit_name,self.pname,
+                seed_file = "./fit-files/%sfitter-%s-%s-%s.json"%(
+                        "norm" if self.normalized else "",
+                        self.fit_name,self.pname,
                         self.file_name[self.file_name.find('eta'):-5])
                 with open(seed_file) as json_file:
                     seed_info = json.load(json_file)
@@ -319,19 +330,14 @@ class fitter:
 
         # normalize histogram POST-fit
         if self.normalized:
-            #hist.Scale(1. / self.nEntries)
-            hist.DrawNormalized()
-            fhist = ROOT.TH1D(fit_fn.GetHistogram())
-            fhist.Rebin(fhist.GetNbinsX()/self.bins)
-            norm_factor = 1. / fhist.Integral()
-            fit_fn.SetParameter(
-                'Constant', fit_fn.GetParameter('Constant') * norm_factor)
+            # norm_factor = 1. / fit_fn.GetHistogram().Integral()
+            # fit_fn.SetParameter(0,fit_fn.GetParameter(0)*norm_factor)
             if debug >= 2:
                 #print "\nNORMALIZING HIST BY FACTOR OF %f" % (1. / self.nEntries)
                 #print "intg", self.nEntries
                 print "NORMALIZING FUNC BY FACTOR OF %f" % (norm_factor)
                 print "intg func", 1. / norm_factor
-                fhist.DrawNormalized("same HIST")
+                # fhist.DrawNormalized("same HIST")
                 fit_fn.Draw("same C")
 
         # show plots and fit info during fitting
@@ -386,6 +392,7 @@ class fitter:
                 pars.update({i: self.func.GetParameter(i)})
                 names.update({i: self.func.GetParName(i)})
 
+            print self.normalized
             info['normalized'] = self.normalized
             info['pars'] = pars
             info['names'] = names
