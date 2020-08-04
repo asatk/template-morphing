@@ -569,7 +569,7 @@ def interpolate_fit(fit_info_list,q=deque()):
 
     normalized = 'norm' in fit_info_list[0]
     color = kOrange
-    cdf_color = None
+    cdf_color = kBlack
     animate = False
     hasStack = False
     hasPoint = False
@@ -638,92 +638,15 @@ def interpolate_fit(fit_info_list,q=deque()):
             elif not hasStack:
                 print "i-cdf - need histograms/functions: use 'pdf or 'cdf' to generate"
             else:
-                print "i-cdf - [INTERPOLATING CDF]"
-                # canv.Clear()
-                # canv.Update()
-
-                cflist = ROOT.TList()
-
-                for num,f in enumerate(flist):
-                    # print f
-                    # f.Print()
-                    cum_fit_name = f.GetName() + "_cdf"
-                    cum_func = ROOT.TF1("cum"+str(num)+"_interp"+str(len(interp_list)),fitter.fits[cum_fit_name],ftr.lo,ftr.hi)
-                    cum_func.SetLineColor(f.GetLineColor())
-                    cum_func.SetLineWidth(f.GetLineWidth())
-                    cum_func.SetNpx(Npx)
-
-                    cum_func.SetParName(0,f.GetParName(0))
-                    cum_func.SetParameter(0,1.0)
-                    for i in range(1,f.GetNpar()):
-                        cum_func.SetParName(i,f.GetParName(i))
-                        cum_func.SetParameter(i,f.GetParameter(i))
-                    par_names = list(cum_func.GetParName(i) for i in range(cum_func.GetNpar()))
-                    par_values = list(cum_func.GetParameter(i) for i in range(cum_func.GetNpar()))
-                    pars = zip(par_names,par_values)
-                    print "i-cdf - ",pars
-                    cflist.Add(cum_func)
+                interp_method = raw_input("i-cdf - choose interpolation method: ['percent','parameter']: ")
+                print "i-cdf - [INTERPOLATING CDF - %s]"%(interp_method)
                 
-                pcts = []
-                for num,cf in enumerate(cflist):
-                    x = cf.GetX(0.5)
-                    print "i-cdf - mean value for cdf #%i (x): %4.3f"%(num,x)
-                    pcts.append(x)
-
-                d = pcts[len(pcts)-1] - pcts[0]
-                pct = (point - pcts[0])/d
-                print "i-cdf - pct:",pct
-                del pcts
-
-                outerfirst = True
-                innerfirst = True
-                interp_cdf = ROOT.TGraph(res+1)
-                interp_cdf.SetLineColor(color+2)
-                interp_cdf.SetLineWidth(5)
-                interp_cdf.SetNameTitle("interp_cdf_"+str(len(interp_list)),"morphed cdf for %4.3f"%(point))
-                for y in [float(i) / res for i in range(res+1)]:
-                    print "i-cdf - level: y =",y
-                    pts = []
-                    for num,cf in enumerate(cflist):
-                        if outerfirst and not interp_append:
-                            cf.Draw("C SAME" if not innerfirst else "C")
-                            canv.Update()
-                        x = cf.GetX(y)
-                        pts.append(x)
-                        print "i-cdf - cdf_%i @ %1.3f = %4.3f (%s %s)"%(
-                                num,y,x,ftr.var,"MeV" if ftr.pname == 'phi' else "GeV")
-                        innerfirst = False
-                    
-                    interp_x = pts[0] + pct * (pts[len(pts)-1] - pts[0])
-                    print "i-cdf - interpolated point:",interp_x
-                    interp_cdf.SetPoint(int(y*res),interp_x,y)
-                    
-                    if draw_lines:
-                        if not outerfirst:
-                            del line
-                        line = ROOT.TLine(pts[0],y,pts[len(pts)-1],y)
-                        line.SetLineColor(color+1)
-                        line.SetLineWidth(3 if res < 100 else 2)
-                        line.Clone().Draw("SAME")
-                        canv.Update()
-
-                    if animate:
-                        interp_cdf.Draw("SAME")
-                        canv.Update()
-
-                    outerfirst = False
-                interp_cdf.SetPoint(res+2,ftr.hi,1.0)
-                for i in range(res+2):
-                    if math.isnan(interp_cdf.GetPointX(i)):
-                        interp_cdf.SetPoint(i,0.,0.)
-                    elif i != 0 and interp_cdf.GetPointX(i) == 0:
-                        interp_cdf.RemovePoint(i)
-                
-                interp_list.append(interp_cdf)
-                # interp_cdf.GetPoint(0,test_x,test_y)
-                interp_cdf.Draw("SAME")
-                canv.Update()
-                interp_cdf.Print()
+                if interp_method == "percent":
+                    interp_percent(
+                            flist,point,res,Npx,interp_list,interp_append,canv,
+                            ftr=ftr,color=color,draw_lines=draw_lines,animate=animate)
+                elif interp_method == "parameter":
+                    interp_parameter()
         elif cmd == 'pdf':
             print "pdf - [PDFs]"
             hstack = ROOT.THStack("hs","%s of %s for %s"
@@ -908,6 +831,100 @@ def stats(st=None,option="ON",**kwargs):
         st.Delete()
         return None
     else: return None
+
+def interp_percent(flist,point,res,Npx,interp_list,interp_append,canv,**kwargs):
+    cflist = ROOT.TList()
+
+    ftr = kwargs['ftr']
+    lo = ftr.lo
+    hi = ftr.hi
+    var = ftr.var
+    pname = ftr.pname
+    color = kwargs['color']
+    draw_lines = kwargs['draw_lines']
+    animate = kwargs['animate']
+
+    for num,f in enumerate(flist):
+        # print f
+        # f.Print()
+        cum_fit_name = f.GetName() + "_cdf"
+        cum_func = ROOT.TF1("cum"+str(num)+"_interp"+str(len(interp_list)),fitter.fits[cum_fit_name],lo,hi)
+        cum_func.SetLineColor(f.GetLineColor())
+        cum_func.SetLineWidth(f.GetLineWidth())
+        cum_func.SetNpx(Npx)
+        cum_func.SetParName(0,f.GetParName(0))
+        cum_func.SetParameter(0,1.0)
+        for i in range(1,f.GetNpar()):
+            cum_func.SetParName(i,f.GetParName(i))
+            cum_func.SetParameter(i,f.GetParameter(i))
+        par_names = list(cum_func.GetParName(i) for i in range(cum_func.GetNpar()))
+        par_values = list(cum_func.GetParameter(i) for i in range(cum_func.GetNpar()))
+        pars = zip(par_names,par_values)
+        print "i-cdf - ",pars
+        cflist.Add(cum_func)
+    
+    pcts = []
+    for num,cf in enumerate(cflist):
+        x = cf.GetX(0.5)
+        print "i-cdf - mean value for cdf #%i (x): %4.3f"%(num,x)
+        pcts.append(x)
+
+    d = pcts[len(pcts)-1] - pcts[0]
+    pct = (point - pcts[0])/d
+    print "i-cdf - pct:",pct
+    del pcts
+
+    outerfirst = True
+    innerfirst = True
+    interp_cdf = ROOT.TGraph(res+1)
+    interp_cdf.SetLineColor(color+2)
+    interp_cdf.SetLineWidth(5)
+    interp_cdf.SetNameTitle("interp_cdf_"+str(len(interp_list)),"morphed cdf for %4.3f"%(point))
+    for y in [float(i) / res for i in range(res+1)]:
+        print "i-cdf - level: y =",y
+        pts = []
+        for num,cf in enumerate(cflist):
+            if outerfirst and draw_lines:
+                cf.Draw("C SAME" if interp_append or not innerfirst else "C")
+                canv.Update()
+            x = cf.GetX(y)
+            pts.append(x)
+            print "i-cdf - cdf_%i @ %1.3f = %4.3f (%s %s)"%(
+                    num,y,x,var,"MeV" if pname == 'phi' else "GeV")
+            innerfirst = False
+        
+        interp_x = pts[0] + pct * (pts[len(pts)-1] - pts[0])
+        print "i-cdf - interpolated point:",interp_x
+        interp_cdf.SetPoint(int(y*res),interp_x,y)
+        
+        if draw_lines:
+            if not outerfirst:
+                del line
+            line = ROOT.TLine(pts[0],y,pts[len(pts)-1],y)
+            line.SetLineColor(color+1)
+            line.SetLineWidth(3 if res < 100 else 2)
+            line.Clone().Draw("SAME")
+            canv.Update()
+
+        if animate:
+            interp_cdf.Draw("SAME")
+            canv.Update()
+
+        outerfirst = False
+    interp_cdf.SetPoint(res+2,hi,1.0)
+    for i in range(res+2):
+        if math.isnan(interp_cdf.GetPointX(i)):
+            interp_cdf.SetPoint(i,0.,0.)
+        elif i != 0 and interp_cdf.GetPointX(i) == 0:
+            interp_cdf.RemovePoint(i)
+    
+    interp_list.append(interp_cdf)
+    interp_cdf.Draw("SAME")
+    canv.Update()
+    interp_cdf.Print()
+
+def interp_parameter():
+    pass
 
 if __name__ == '__main__':
     fit_names = ['gaus','crystalball','landau','landxgaus']
