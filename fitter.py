@@ -22,8 +22,6 @@ class fitter:
     fits = {
         'gaus': 'gaus',
         'gaus_cdf': '[0]*ROOT::Math::normal_cdf(x[0],[2],[1])',
-        'dbl_gaus': 'gaus(0)+gaus(3)',
-        'dbl_gaus_cdf': '',
         'crystalball': 'crystalball',
         'crystalball_fn': '[0]*ROOT::Math::crystalball_function(x[0],[3],[4],[2],[1])',
         'crystalball_cdf': '[0]*ROOT::Math::crystalball_cdf(x[0],[3],[4],[2],[1])',
@@ -35,6 +33,8 @@ class fitter:
 
     def __init__(self, file_name, fit_name='gaus',
         fitted=False, fit_info='fitter-init.json'):
+
+        self.fit_info = fit_info
 
         with open(fit_info) as json_file:
             info = json.load(json_file)
@@ -85,12 +85,12 @@ class fitter:
             self.chiprob = None
 
     def __str__(self):
-        with open('fitter-init.json') as json_file:
+        with open(self.fit_info) as json_file:
             info = json.load(json_file)
             return str(info)
 
     def __repr__(self):
-        with open('fitter-init.json') as json_file:
+        with open(self.fit_info) as json_file:
             info = json.load(json_file)
             return repr(info)
 
@@ -119,7 +119,7 @@ class fitter:
         hist.SetLineWidth(3)
 
         mean_est = 0
-        omega_scaling = 1  # scale start parameters of fit by 1/100 for omega analysis,
+        omega_scaling = 1.  # scale start parameters of fit by 1/100 for omega analysis,
         # try to remove this par by using better/more general seeds
 
         if self.user_data:
@@ -139,13 +139,13 @@ class fitter:
             elif self.pname == 'omega':
                 pprime = bool(re.search("prime", file_name) is not None)
                 mean_est = 0.95 if pprime else 0.55
-                omega_scaling = 1 / 100
+                omega_scaling = 1. / 1000
             if self.normalized:
                 hist = ROOT.TH1D(hist.DrawNormalized("HIST"))
             if debug >= 1:
                 print "RECO MASS MODELLING FOR:", self.pname, mean_est
         else:
-            hist.FillRandom(fit_str, nEntries)
+            hist.FillRandom(self.fit_name, self.nEntries)
             if debug >= 2:
                 print "DRAWING RANDOM FILL HISTOGRAM"
                 hist.Draw()
@@ -163,8 +163,19 @@ class fitter:
                 print "FIT NOT COMPATIBLE...exiting"
             exit
 
+        if self.seed == 'file':
+            seed_file_str = "./fit-files/%sfitter-%s-%s-%s.json"
+            eta_start = self.file_name.find('eta')
+            num_match = re.search("\\d+(?=\\.root)",self.file_name[eta_start:])
+            num = int(num_match.group())
+            num_start = int(num_match.start())
+            seed_file = seed_file_str%(
+                    "norm" if self.normalized else "",
+                    self.fit_name,self.pname,
+                    (self.file_name[eta_start:eta_start + num_start] + "%04i"%(num)))
+            print "USING SEED: " + seed_file
         # set up and create random seeds for fn parameters
-        if fit_name in ['gaus', 'gaus_pdf', 'gaus_cdf']:
+        if fit_name in ['gaus', 'gaus_cdf']:
             fn.SetParName(0, 'Constant')
             fn.SetParName(1, 'Mean')
             fn.SetParName(2, 'Sigma')
@@ -173,46 +184,16 @@ class fitter:
                         1. / 30, 1. / 3) if self.normalized else self.nEntries * random.uniform(1. / 30, 1. / 3))
                 fn.SetParameter('Mean', mean_est + mean_est *
                         random.uniform(-0.05, 0.05))
-                fn.SetParameter('Sigma', random.uniform(0.001, 0.25)
-                        if self.pname == 'omega' else random.randint(1, 25))
+                fn.SetParameter('Sigma', random.randint(1, 25) * omega_scaling)
                 #fn.SetParLimits(0, 0., self.nEntries)
                 fn.SetParLimits(1, 0., mean_est * 2)
             elif self.seed == 'file':
-                seed_file = "./fit-files/%sfitter-%s-%s-%s.json"%(
-                        "norm" if self.normalized else "",
-                        self.fit_name,self.pname,
-                        self.file_name[self.file_name.find('eta'):-5])
-                print seed_file
                 with open(seed_file) as json_file:
                     seed_info = json.load(json_file)
                     for i in range(fn.GetNpar()):
                         fn.SetParameter(i, seed_info['pars']['%i' % (i)])
                         fn.SetParName(i, seed_info['names']['%i' % (i)])
-        elif fit_name in ['dbl_gaus', 'dbl_gaus_cdf']:
-            fn.SetParName(0, 'Constant-1')
-            fn.SetParName(1, 'Mean-1')
-            fn.SetParName(2, 'Sigma-1')
-            fn.SetParName(3, 'Constant-2')
-            fn.SetParName(4, 'Mean-2')
-            fn.SetParName(5, 'Sigma-2')
-            if self.seed == 'rand':
-                fn.SetParameters(random.uniform(1. / 30, 1. / 3) if self.normalized else self.nEntries * random.uniform(1. / 30, 1. / 3), mean_est + mean_est * random.uniform(-0.05, 0.05), random.randint(0, 100),
-                        random.uniform(1. / 30, 1. / 3) if self.normalized else self.nEntries * random.uniform(1. / 30, 1. / 3), mean_est + mean_est * random.uniform(-0.05, 0.05), random.randint(0, 100))
-                #fn.SetParLimits(0, 0., self.nEntries)
-                #fn.SetParLimits(3, 0., self.nEntries)
-                fn.SetParLimits(1, 0., mean_est * 2)
-                # fn.SetParLimits(4,0.,mean_est*2)
-            elif self.seed == 'file':
-                seed_file = "./fit-files/%sfitter-%s-%s-%s.json"%(
-                        "norm" if self.normalized else "",
-                        self.fit_name,self.pname,
-                        self.file_name[self.file_name.find('eta'):-5])
-                with open(seed_file) as json_file:
-                    seed_info = json.load(json_file)
-                    for i in range(fn.GetNpar()):
-                        fn.SetParameter(i, seed_info['pars']['%i' % (i)])
-                        fn.SetParName(i, seed_info['names']['%i' % (i)])
-        elif fit_name in ['crystalball', 'crys_ball_fn', 'crys_ball_pdf', 'crys_ball_cdf']:
+        elif fit_name in ['crystalball', 'crys_ball_fn', 'crys_ball_cdf']:
             fn.SetParName(0, 'Constant')
             fn.SetParName(1, 'Mean')
             fn.SetParName(2, 'Sigma')
@@ -223,24 +204,19 @@ class fitter:
                         1. / 30, 1. / 3) if self.normalized else self.nEntries * random.uniform(1. / 30, 1. / 3))
                 fn.SetParameter('Mean', mean_est + mean_est *
                         random.uniform(-0.05, 0.05))
-                fn.SetParameter('Sigma', random.uniform(0.001, 0.25)
-                        if self.pname == 'omega' else random.randint(0, 25))
+                fn.SetParameter('Sigma', random.randint(0, 25) * omega_scaling)
                 fn.SetParameter('Alpha', random.random() * 25)
                 fn.SetParameter('n', random.randint(1, 10))
                 #fn.SetParLimits(0, 0., self.nEntries)
                 fn.SetParLimits(1, 0., mean_est * 2)
                 fn.SetParLimits(4, 0., 10e6)
             elif self.seed == 'file':
-                seed_file = "./fit-files/%sfitter-%s-%s-%s.json"%(
-                        "norm" if self.normalized else "",
-                        self.fit_name,self.pname,
-                        self.file_name[self.file_name.find('eta'):-5])
                 with open(seed_file) as json_file:
                     seed_info = json.load(json_file)
                     for i in range(fn.GetNpar()):
                         fn.SetParameter(i, seed_info['pars']['%i' % (i)])
                         fn.SetParName(i, seed_info['names']['%i' % (i)])
-        elif fit_name in ['landau', 'landau_pdf', 'landau_cdf']:
+        elif fit_name in ['landau', 'landau_cdf']:
             fn.SetParName(0, 'Constant')
             fn.SetParName(1, 'MPV')
             fn.SetParName(2, 'Eta')
@@ -249,15 +225,10 @@ class fitter:
                         1. / 30, 1. / 3) if self.normalized else self.nEntries * random.uniform(1. / 30, 1. / 3))
                 fn.SetParameter('MPV', mean_est + mean_est *
                         random.uniform(-0.05, 0.05))
-                fn.SetParameter('Eta', random.uniform(0.001, 0.1)
-                        if self.pname == 'omega' else random.randint(0, 100))
+                fn.SetParameter('Eta', random.randint(0, 100) * omega_scaling)
                 #fn.SetParLimits(0, 0., self.nEntries)
                 fn.SetParLimits(1, 0., mean_est * 2)
             elif self.seed == 'file':
-                seed_file = "./fit-files/%sfitter-%s-%s-%s.json"%(
-                        "norm" if self.normalized else "",
-                        self.fit_name,self.pname,
-                        self.file_name[self.file_name.find('eta'):-5])
                 with open(seed_file) as json_file:
                     seed_info = json.load(json_file)
                     for i in range(fn.GetNpar()):
@@ -274,20 +245,14 @@ class fitter:
                         1. / 30, 1. / 3) if self.normalized else self.nEntries * random.uniform(1. / 30, 1. / 3))
                 fn.SetParameter('MPV', mean_est + mean_est *
                         random.uniform(-0.05, 0.05))
-                fn.SetParameter('Eta', random.uniform(0.001, 0.1)
-                        if self.pname == 'omega' else random.randint(0, 100))
+                fn.SetParameter('Eta', random.randint(0, 100) * omega_scaling)
                 fn.SetParameter('Mean', mean_est + mean_est *
                         random.uniform(-0.05, 0.05))
-                fn.SetParameter('Sigma', random.uniform(0.001, 0.25)
-                        if self.pname == 'omega' else random.randint(1, 25))
+                fn.SetParameter('Sigma', random.randint(1, 25) * omega_scaling)
                 #fn.SetParLimits(0, 0., self.nEntries)
                 fn.SetParLimits(1, 0., mean_est * 2)
                 fn.SetParLimits(3, 0., mean_est * 2)
             elif self.seed == 'file':
-                seed_file = "./fit-files/%sfitter-%s-%s-%s.json"%(
-                        "norm" if self.normalized else "",
-                        self.fit_name,self.pname,
-                        self.file_name[self.file_name.find('eta'):-5])
                 with open(seed_file) as json_file:
                     seed_info = json.load(json_file)
                     for i in range(fn.GetNpar()):
@@ -369,8 +334,14 @@ class fitter:
 
     def jsonify(self,fit_info=""):
         if fit_info == "":
+            eta_start = self.file_name.find('eta')
+            num_match = re.search("\\d+(?=\\.root)",self.file_name[eta_start:])
+            num = int(num_match.group())
+            num_start = int(num_match.start())
+            padded_num_name = re.sub("\\d+(?=\\.json)","%04i"%(num),self.file_name)
             fit_info = "./fit-files/fitter-%s-%s-%s.json" % (self.fit_name,self.pname,
-                    self.file_name[self.file_name.find('eta'):-5])
+                    self.file_name[eta_start:eta_start + num_start] + "%04i"%(num))
+            print fit_info
         with open(fit_info, 'w') as json_out:
             info = {}
 
@@ -392,7 +363,7 @@ class fitter:
                 pars.update({i: self.func.GetParameter(i)})
                 names.update({i: self.func.GetParName(i)})
 
-            print self.normalized
+            # print self.normalized
             info['normalized'] = self.normalized
             info['pars'] = pars
             info['names'] = names
