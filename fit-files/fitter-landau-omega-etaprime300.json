@@ -1,0 +1,22 @@
+{
+    "file_name": "./root/TwoProngNtuplizer_etaprime300.root", 
+    "pars": {
+        "0": 193.77018699892872, 
+        "1": 1.0011818286123229, 
+        "2": 0.0667970761464494
+    }, 
+    "NDF": 8, 
+    "chiprob": 0.0037909458779459074, 
+    "pname": "omega", 
+    "normalized": false, 
+    "cuts": "nTwoProngs>0 && nIDPhotons>0 && Obj_PhotonTwoProng.dR>0.1 && Obj_PhotonTwoProng.part2_pt>150", 
+    "var": "TwoProng_MassEta[0]", 
+    "fit_name": "landau", 
+    "chi": 22.686500358960394, 
+    "bins": "50,0.000000,5.000000", 
+    "names": {
+        "0": "Constant", 
+        "1": "MPV", 
+        "2": "Eta"
+    }
+}

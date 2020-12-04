@@ -164,6 +164,7 @@ class fitter:
             exit
 
         if self.seed == 'file':
+            # format file name to appropriate convention
             seed_file_str = "./fit-files/%sfitter-%s-%s-%s.json"
             eta_start = self.file_name.find('eta')
             num_match = re.search("\\d+(?=\\.root)",self.file_name[eta_start:])
@@ -332,6 +333,26 @@ class fitter:
 
         return self.func
 
+    def __gaus_seed(self,):
+        fn.SetParName(0, 'Constant')
+        fn.SetParName(1, 'Mean')
+        fn.SetParName(2, 'Sigma')
+        if self.seed == 'rand':
+            fn.SetParameter('Constant', random.uniform(
+                    1. / 30, 1. / 3) if self.normalized else self.nEntries * random.uniform(1. / 30, 1. / 3))
+            fn.SetParameter('Mean', mean_est + mean_est *
+                    random.uniform(-0.05, 0.05))
+            fn.SetParameter('Sigma', random.randint(1, 25) * omega_scaling)
+            #fn.SetParLimits(0, 0., self.nEntries)
+            fn.SetParLimits(1, 0., mean_est * 2)
+        elif self.seed == 'file':
+            with open(seed_file) as json_file:
+                seed_info = json.load(json_file)
+                for i in range(fn.GetNpar()):
+                    fn.SetParameter(i, seed_info['pars']['%i' % (i)])
+                    fn.SetParName(i, seed_info['names']['%i' % (i)])
+
+    
     def jsonify(self,fit_info=""):
         if fit_info == "":
             eta_start = self.file_name.find('eta')
