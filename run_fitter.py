@@ -1251,7 +1251,7 @@ def cdf_derivative(point,interp_flist,interp_cdflist,canv,**kwargs):
     # interp_mg.Draw("AC")
     return interp_flist
 
-def view_fits(fit_info_list,opt="HIST",q=deque()):
+def view_fits(fit_info_list,num_mass_pts=2,saveViews=False,opt="HIST",q=deque()):
     
     interp_flist = []
 
@@ -1277,7 +1277,8 @@ def view_fits(fit_info_list,opt="HIST",q=deque()):
             masspts.append(masspt)
             
     normalized = 'norm' in fit_info_list[0]
-    pdf_color = 5
+    # num_mass_pts = 2
+    pdf_color = kBlack
     Npx = ftr.bins
     cmd = " "
 
@@ -1302,9 +1303,9 @@ def view_fits(fit_info_list,opt="HIST",q=deque()):
         file_name = info['file_name']
 
         ftr = fitter(file_name,fitted=True,fit_info=i)
-        if pdf_color == 5:
+        if num_mass_pts == 5:
             ftr.func.SetLineColor((ROOTCOLORS2[count%5] + (-4 if count > 4 else 2)))
-        elif pdf_color == 2:
+        elif num_mass_pts == 2:
             ftr.func.SetLineColor(ROOTCOLORS2[count//5 + 1] + 1 - 2*(count%5))
         else:
             ftr.func.SetLineColor(pdf_color)
@@ -1327,7 +1328,7 @@ def view_fits(fit_info_list,opt="HIST",q=deque()):
     hasDrawn = False
     if opt == "HIST":
         print hstack.GetNhists()
-        hstack.GetHists().Print()
+        # hstack.GetHists().Print()
         hstack.Draw("HIST nostack")
         canv.Update()
         hasDrawn = True
@@ -1347,7 +1348,7 @@ def view_fits(fit_info_list,opt="HIST",q=deque()):
     # print("[' ', 's']")
     # cmd = raw_input("cmd: ")
     # if cmd == 's':
-    if True:
+    if saveViews:
         eta_idx = fit_info_list[0].find('eta')
         p = r'^(\.\/.+)\/(\w*fitter)'
         fitter_idx = re.search(p,fit_info_list[0]).start(2)
@@ -1378,7 +1379,6 @@ def list_pars(fit_info_list):
         # print par_names
         # print "p - ",pars
         # print "p - Chi-Squared",ftr.chi
-
 
 if __name__ == '__main__':
     fit_names = ['gaus','crystalball','landau','landxgaus']
@@ -1464,7 +1464,7 @@ if __name__ == '__main__':
                     './fit-files/normfitter-%s-%s-etaprime0750.json'%(fit_name,ptcl),
                     './fit-files/normfitter-%s-%s-etaprime1000.json'%(fit_name,ptcl)
                     ]
-            view_fits(fit_info_list_view,"HIST")
+            view_fits(fit_info_list_view,num_mass_pts=2,saveViews=False,opt="FUNC")
         elif cmd in ['l','list']:
             fit_info_list_list = [
                     './fit-files/normfitter-%s-%s-eta0125.json'%(fit_name,ptcl),
