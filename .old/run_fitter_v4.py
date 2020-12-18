@@ -600,11 +600,13 @@ def interpolate_fit(fit_info_list,q=deque()):
     color = kOrange+1
     pdf_color = kBlack
     cdf_color = kBlack
+    animate = False
     hasStack = False
     hasPoint = False
+    draw_lines = True
     Npx = ftr.bins
     res = 20
-    interp_method = "HIST"
+    interp_method = "PCT"
     cmd = " "
     interp_cdflist = []
     interp_flist = []
@@ -614,10 +616,13 @@ def interpolate_fit(fit_info_list,q=deque()):
         if len(q) > 0:
             cmd = q.pop()
         else:
-            print ['+','c','c.pdf','c.cdf','npx','pt','i-pdf','i-cdf','pdf','cdf','n']
+            print ['a','+','c','c.pdf','c.cdf','lines','npx','pt','i-pdf','i-cdf','pdf','cdf','n']
             cmd = raw_input("cmd: ")
         c = ROOT.TCanvas()
-        if cmd == '+':
+        if cmd == 'a':
+            print "a - %sANIMATING"%("NOT " if animate else "")
+            animate = not animate
+        elif cmd == '+':
             print "+ - [%sAPPEND INTERPS]"%("DO NOT " if interp_append else "")
             interp_append = not interp_append
         elif cmd == 'c':
@@ -638,6 +643,9 @@ def interpolate_fit(fit_info_list,q=deque()):
                 cdf_color = eval(q.pop())
             else:
                 cdf_color = eval(raw_input("c.cdf - pick your color (0-40) or kColor+-10: "))
+        elif cmd == 'lines':
+            print "lines - [%sDRAWING LINES]"%("NOT " if draw_lines else "")
+            draw_lines = not draw_lines
         elif cmd == 'npx':
             print "pt - [SPECIFY NUMBER OF POINTS IN FUNCTION]"
             if len(q) > 0:
@@ -657,7 +665,7 @@ def interpolate_fit(fit_info_list,q=deque()):
                 res_str = raw_input("pt - data resolution (num pts): ")
                 if res_str != "":
                     res = int(res_str)
-                interp_method_str = raw_input("pt - choose interpolation method: ['HIST','PARAM']: ")
+                interp_method_str = raw_input("pt - choose interpolation method: ['PCT','PARAM','HIST']: ")
                 if interp_method_str != "":
                     interp_method = interp_method_str
             hasPoint = True
@@ -667,9 +675,8 @@ def interpolate_fit(fit_info_list,q=deque()):
                 print "i-pdf - must build cdfs from interpolating methods available [i-cdf]"
             else:
                 print "i-pdf - [INTERPOLATING PDF]"
-                if interp_method == "HIST":
-                    print interp_flist
-                    print interp_cdflist
+                if interp_method == "PCT":
+                    # interp_flist = cdf_derivative(point,interp_flist,interp_cdflist,canv,color=color)
                     cdf_derivative(point,interp_flist,interp_cdflist,canv,color=color)
                 elif interp_method == "PARAM":
                     for n,interp_f in enumerate(interp_flist):
@@ -677,12 +684,16 @@ def interpolate_fit(fit_info_list,q=deque()):
                             print "i-pdf[PARAM] - interp_f#%i param %i %4.3f"%(n,p,interp_f.GetParameter(p))
                         # interp_f.SetParameter(3,1.4)
                         # interp_f.SetParameter(4,5.)
+                elif interp_method == "HIST":
+                    print interp_flist
+                    print interp_cdflist
+                    cdf_derivative(point,interp_flist,interp_cdflist,canv,color=color)
                 first = True
                 for interp_f in interp_flist:
                     interp_f.Draw(
                             "L" + 
                             ("SAME" if not first else "") +
-                            ("A" if interp_method == "HIST" else ""))
+                            ("A" if interp_method == "percent" or interp_method == "PCT" else ""))
                     canv.Update()
                     first = False
         elif cmd == 'i-cdf':
@@ -692,7 +703,18 @@ def interpolate_fit(fit_info_list,q=deque()):
                 print "i-cdf - need histograms/functions: use 'pdf or 'cdf' to generate"
             else:
                 print "i-cdf - [INTERPOLATING CDF - %s]"%(interp_method)
-                if interp_method == "HIST":
+                if interp_method == "PCT":
+                    canv.cd()
+                    interp_percent(
+                            flist,point,res,Npx,interp_cdflist,interp_append,canv,
+                            ftr=ftr,color=color,draw_lines=draw_lines,animate=animate,
+                            masspts=masspts)
+                    print "post"
+                    # for interp_cdf in interp_cdflist:
+                    #     interp_cdf.Draw("C" + "SAME" if not first else "")
+                    #     canv.Update()
+                    #     interp_cdf.Print()
+                elif interp_method == "HIST":
                     c = ROOT.TCanvas("name","temp",300,300)
                     interp_hist(fit_info_list,res,point,interp_cdflist,canv,c,ftr=ftr,cdf_color=cdf_color)
                     print "post"
@@ -866,6 +888,118 @@ def stats(st=None,option="ON",**kwargs):
         return None
     else: return None
 
+def interp_percent(flist,point,res,Npx,interp_cdflist,interp_append,canv,**kwargs):
+    cdflist = ROOT.TList()
+
+    ftr = kwargs['ftr']
+    lo = ftr.lo
+    hi = ftr.hi
+    var = ftr.var
+    pname = ftr.pname
+    color = kwargs['color']
+    draw_lines = kwargs['draw_lines']
+    animate = kwargs['animate']
+    masspts = None if 'masspts' not in kwargs.keys() else kwargs['masspts']
+
+    for num,f in enumerate(flist):
+        cum_fit_name = f.GetName() + "_cdf"
+        cum_func = ROOT.TF1("cum"+str(num)+"_interp"+str(len(interp_cdflist)),fitter.fits[cum_fit_name],lo,hi)
+        cum_func.SetLineColor(f.GetLineColor())
+        cum_func.SetLineWidth(f.GetLineWidth())
+        cum_func.SetNpx(Npx)
+        cum_func.SetParName(0,f.GetParName(0))
+        cum_func.SetParameter(0,1.0)
+        for i in range(1,f.GetNpar()):
+            cum_func.SetParName(i,f.GetParName(i))
+            cum_func.SetParameter(i,f.GetParameter(i))
+        par_names = list(cum_func.GetParName(i) for i in range(cum_func.GetNpar()))
+        par_values = list(cum_func.GetParameter(i) for i in range(cum_func.GetNpar()))
+        pars = zip(par_names,par_values)
+        print "i-cdf[PCT] - ",pars
+        cdflist.Add(cum_func)
+    cdflist.Print()
+
+    pcts = []
+    for num,cdf in enumerate(cdflist):
+        x = cdf.GetX(0.5)
+        print "i-cdf[PCT] - mean value for cdf #%i (x): %4.3f"%(num,x)
+        pcts.append(x)
+
+    idx = 0
+    if masspts is not None:
+        for jdx,m in enumerate(masspts):
+            if point < m:
+                idx = jdx
+                break
+    d = abs(pcts[idx] - pcts[idx-1])
+    pct = (point - pcts[idx-1])/d
+    print "i-cdf[PCT] - pcts[idx-1],pcts[idx]:",pcts[idx-1],",",pcts[idx]
+    print "i-cdf[PCT] - pct:",pct
+    del pcts
+
+    outerfirst = True
+    innerfirst = True
+    interp_cdf = ROOT.TGraph()
+    interp_cdf.SetLineColor(color if color is not None else ROOTCOLORS[len(interp_cdflist)])
+    interp_cdf.SetLineWidth(5)
+    interp_cdf.SetNameTitle("interp_cdf_"+str(len(interp_cdflist)),"morphed cdf for %4.3f"%(point))
+    interp_cdf.SetPoint(0,0.,0.)
+
+    # get x values for both interpolating cdfs from equal y-values at some step determined by Npx
+    for y in [float(i) / res for i in range(res+1)]:
+        print "i-cdf[PCT] - step: %i ; level: y=%4.3f"%(int(round(y*res)),y)
+        pts = []
+        for num,cdf in enumerate(cdflist[idx-1:idx+1]):
+            if outerfirst and draw_lines:
+                cdf.Draw("C SAME" if interp_append or not innerfirst else "C")
+                canv.Update()
+            x = cdf.GetX(y)
+            # if math.isnan(x):
+            #     x = 0
+            pts.append(x)
+            print "i-cdf[PCT] - cdf_%i @ %1.3f = %4.3f (%s %s)"%(
+                    num+idx,y,x,var,"MeV" if pname == 'phi' else "GeV")
+            innerfirst = False
+        
+        interp_x = pts[0] + pct * (pts[1] - pts[0])
+        interp_cdf.SetPoint(int(round(y*res)+1),interp_x,y)
+        
+        if draw_lines:
+            if not outerfirst:
+                del line
+            line = ROOT.TLine(pts[0],y,pts[len(pts)-1],y)
+            line.SetLineColor(color-1 if color is not None else ROOTCOLORS[len(interp_cdflist)])
+            line.SetLineWidth(3 if res < 100 else 2)
+            line.Clone().Draw("SAME")
+            canv.Update()
+
+        if animate:
+            interp_cdf.Draw("SAME")
+            canv.Update()
+
+        outerfirst = False
+    
+    remove_pts = []
+    if math.isnan(interp_cdf.GetX()[0]):
+        interp_cdf.SetPoint(0,0.,0.)
+    for i in range(res+1):
+        p = interp_cdf.GetX()[i]
+        # print i,p
+        if i != 0 and (math.isnan(p) or p <= 0):
+            remove_pts.append(i)
+
+    remove_count = 0
+    for r_n,r_pt in enumerate(remove_pts):
+        print "removed",r_pt
+        interp_cdf.RemovePoint(r_pt-r_n)
+    interp_cdf.SetPoint(interp_cdf.GetN(),hi,1.0)
+    interp_cdflist.append(interp_cdf)
+    interp_cdf.Draw("SAME")
+    canv.Update()
+    cdflist[idx-1].Print()
+    cdflist[idx].Print()
+    # interp_cdf.Print()
+
 def interp_hist(fit_info_list,res,point,interp_cdflist,canv,c,**kwargs):
     cdflist = ROOT.TList()
     # canv.Clear()
@@ -953,23 +1087,41 @@ def interp_hist(fit_info_list,res,point,interp_cdflist,canv,c,**kwargs):
     interp_cdf.SetNameTitle("interp_cdf_"+str(len(interp_cdflist)),"morphed cdf for %4.3f"%(point))
     interp_cdf.SetPoint(0,0.,0.)
 
+    draw_lines = False
     # get x values for both interpolating cdfs from equal y-values at some step determined by Npx
     for y in [float(i) / res for i in range(res+1)]:
-        print "i-cdf[HIST] - step: %i ; level: y=%4.3f"%(int(round(y*res)),y)
+        print "i-cdf[PCT] - step: %i ; level: y=%4.3f"%(int(round(y*res)),y)
         pts = []
         for num,cdf in enumerate(inv_graph_list):
+            if outerfirst and draw_lines:
+                cdf.Draw("C SAME" if interp_append or not innerfirst else "C")
+                canv.Update()
             x = cdf.Eval(y)
             # print x,y
             # if math.isnan(x):
             #     x = 0
             pts.append(x)
-            print "i-cdf[HIST] - cdf_%i @ %1.3f = %4.3f (%s %s)"%(
+            print "i-cdf[PCT] - cdf_%i @ %1.3f = %4.3f (%s %s)"%(
                     (num+idx-1)%hstack.GetNhists(),y,x,var,"MeV" if pname == 'phi' else "GeV")
             innerfirst = False
         # print pts
         # print pct
         interp_x = pts[0] + pct * (pts[1] - pts[0])
         interp_cdf.SetPoint(int(round(y*res)+1),interp_x,y)
+        
+        if draw_lines:
+            if not outerfirst:
+                del line
+            line = ROOT.TLine(pts[0],y,pts[len(pts)-1],y)
+            line.SetLineColor(color-1 if color is not None else ROOTCOLORS[len(interp_cdflist)])
+            line.SetLineWidth(3 if res < 100 else 2)
+            line.Clone().Draw("SAME")
+            canv.Update()
+
+        animate = False
+        if animate:
+            interp_cdf.Draw("SAME")
+            canv.Update()
 
         outerfirst = False
     
@@ -1021,7 +1173,7 @@ def interp_parameter(flist,masspts,point,interp_flist,canv,**kwargs):
         par_names = list(flist[i].GetParName(j) for j in range(flist[i].GetNpar()))
         par_values = list(flist[i].GetParameter(j) for j in range(flist[i].GetNpar()))
         pars = zip(par_names,par_values)
-        print "i-cdf[PARAM] - ",pars
+        print "i-cdf[PCT] - ",pars
 
         pts = {}
         # gather each fn's parameter value for current parameter
@@ -1089,7 +1241,7 @@ def cdf_derivative(point,interp_flist,interp_cdflist,canv,**kwargs):
     interp_f.SetLineWidth(5)
     for i in range(interp_cdf.GetN()-1):
         dydx = (interp_cdf.GetPointY(i+1)-interp_cdf.GetPointY(i))/(interp_cdf.GetPointX(i+1)-interp_cdf.GetPointX(i))
-        print "i-pdf[HIST] - dydx[%i]=%2.4f"%(i,dydx)
+        print "i-pdf[PCT] - dydx[%i]=%2.4f"%(i,dydx)
         interp_f.SetPoint(i,interp_cdf.GetPointX(i),dydx)
     interp_f.SetPoint(interp_cdf.GetN()-1,interp_cdf.GetPointX(interp_cdf.GetN()-1),0.)
     print "INTERP_F#"+str(num)
@@ -1304,8 +1456,9 @@ if __name__ == '__main__':
                     './fit-files/normfitter-%s-phi-eta0750.json'%(fit_name),
                     './fit-files/normfitter-%s-phi-eta1000.json'%(fit_name)
                     ]
-            q = deque(['i-cdf','cdf','HIST','500','550','pt','500','npx'])
-            # q = deque(['i-cdf','cdf','PARAM','500','550','pt','500','npx'])
+            # q = deque(['i-cdf','cdf','lines','PARAM','500','550','pt','500','npx'])
+            q = deque(['i-cdf','cdf','lines','HIST','500','550','pt','500','npx'])
+            # q = deque(['cdf','PCT','500','550','pt','500','npx'])
             # q = deque([])
             # name = raw_input("name of normalized fit info file [ENTER or q to EXIT]: ")
             # while name != "" and name != "q" and len(fit_info_list) > 0:
