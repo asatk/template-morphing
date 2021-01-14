@@ -1,0 +1,26 @@
+{
+    "file_name": "./root/TwoProngNtuplizer_etaprime125.root", 
+    "pars": {
+        "0": 7.153839916732692, 
+        "1": 134.79588085813597, 
+        "2": 22.995803546869638, 
+        "3": -33916.25335022373, 
+        "4": 8.000000000230045
+    }, 
+    "NDF": 0, 
+    "chiprob": 0.0, 
+    "pname": "phi", 
+    "normalized": false, 
+    "cuts": "nTwoProngs>0 && nIDPhotons>0 && Obj_PhotonTwoProng.dR>0.1 && Obj_PhotonTwoProng.part2_pt>150", 
+    "var": "Obj_PhotonTwoProng.mass", 
+    "fit_name": "crystalball", 
+    "chi": 1.1314308243191803e-09, 
+    "bins": "100,0.000000,2000.000000", 
+    "names": {
+        "0": "Constant", 
+        "1": "Mean", 
+        "2": "Sigma", 
+        "3": "Alpha", 
+        "4": "n"
+    }
+}

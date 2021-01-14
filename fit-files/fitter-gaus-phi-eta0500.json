@@ -1,0 +1,22 @@
+{
+    "file_name": "./root/TwoProngNtuplizer_eta500.root", 
+    "pars": {
+        "0": 424.95444388145893, 
+        "1": 491.07826813194924, 
+        "2": 16.99966172768693
+    }, 
+    "NDF": 23, 
+    "chiprob": 6.06590315781985e-05, 
+    "pname": "phi", 
+    "normalized": false, 
+    "cuts": "nTwoProngs>0 && nIDPhotons>0 && Obj_PhotonTwoProng.dR>0.1 && Obj_PhotonTwoProng.part2_pt>150", 
+    "var": "Obj_PhotonTwoProng.mass", 
+    "fit_name": "gaus", 
+    "chi": 58.60337682828262, 
+    "bins": "100,0.000000,2000.000000", 
+    "names": {
+        "0": "Constant", 
+        "1": "Mean", 
+        "2": "Sigma"
+    }
+}
