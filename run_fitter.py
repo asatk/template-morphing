@@ -650,10 +650,12 @@ def interpolate_fit(fit_info_list,q=deque()):
             print "pt - [SPECIFYING POINT OF INTERPOLATION]"
             if len(q) > 2:
                 point = float(q.pop())
+                axis = bool(q.pop())
                 res = int(q.pop())
                 interp_method = q.pop()
             else:
                 point = float(raw_input("pt - data point for %s: "%(ftr.var)))
+                axis = float(raw_input("pt - axis of interpolation [MAJOR (True) or MINOR (False)]:"))
                 res_str = raw_input("pt - data resolution (num pts): ")
                 if res_str != "":
                     res = int(res_str)
@@ -693,11 +695,12 @@ def interpolate_fit(fit_info_list,q=deque()):
             else:
                 print "i-cdf - [INTERPOLATING CDF - %s]"%(interp_method)
                 if interp_method == "HIST":
-                    c = ROOT.TCanvas("name","temp",300,300)
-                    interp_hist(fit_info_list,res,point,interp_cdflist,canv,c,ftr=ftr,cdf_color=cdf_color)
+                    c = ROOT.TCanvas("name","temp",600,600)
+                    thing = interp_hist(fit_info_list,res,point,axis,interp_cdflist,canv,c,ftr=ftr,cdf_color=cdf_color)
+                    print thing
                     print "post"
                 elif interp_method == "PARAM":
-                    interp_parameter(flist,masspts,point,interp_flist,canv,ftr=ftr,Npx=Npx)
+                    interp_parameter(flist,masspts,point,axis,interp_flist,canv,ftr=ftr,Npx=Npx)
                     print "post"
                     # first = True
                     # for f in interp_flist:
@@ -866,7 +869,7 @@ def stats(st=None,option="ON",**kwargs):
         return None
     else: return None
 
-def interp_hist(fit_info_list,res,point,interp_cdflist,canv,c,**kwargs):
+def interp_hist(fit_info_list,res,point,axis,interp_cdflist,canv,c,**kwargs):
     cdflist = ROOT.TList()
     # canv.Clear()
     # c = ROOT.TCanvas()
@@ -882,7 +885,7 @@ def interp_hist(fit_info_list,res,point,interp_cdflist,canv,c,**kwargs):
 
     c.cd()
     first = True
-    for (num,f) in enumerate(fit_info_list):
+    for num,f in enumerate(fit_info_list):
         with open(f) as json_file:
             info = json.load(json_file)
 
@@ -1000,74 +1003,85 @@ def interp_hist(fit_info_list,res,point,interp_cdflist,canv,c,**kwargs):
     # hist_list[idx].Print()
     # interp_cdf.Print()
     canv.cd()
-    time.sleep(1)
+    # time.sleep(10)
+    return 1
 
-def interp_parameter(flist,masspts,point,interp_flist,canv,**kwargs):
+def interp_parameter(flist,masspts,point,axis,interp_flist,canv,**kwargs):
     print "i-cdf[PARAM] - [INTERPOLATING PARAMETERS WITH OLS]"
     
-    param_flist = []
+    param_flist = ROOT.TList()
+    param_masspts = []
+
+    # print i,point
+    for i,m in enumerate(masspts):
+        # print m
+        if point <= m:
+            param_flist.Add(flist[i-1])
+            param_flist.Add(flist[i])
+            param_masspts.append(masspts[i-1])
+            param_masspts.append(masspts[i])
+            break
+        if i == len(masspts) - 1:
+            print "ERR - CANNOT EXTRAPOLATE"
+    
+    # param_flist.Print()
+    # print param_masspts
+
+    param_lines = []
     interp_params = []
     mg = ROOT.TMultiGraph()
     ftr = kwargs['ftr']
     Npx = kwargs['Npx']
     # iterate through parameters - make one fit per parameter for all functions
-    for i in range(flist[0].GetNpar()):
+    for i in range(param_flist[0].GetNpar()):
         g = ROOT.TGraph()
         g.SetLineWidth(5)
         g.SetLineColor(ROOTCOLORS[i+5])
-        g.SetNameTitle("OLS - %s#%i"%(flist[0].GetParameter(i),i))
+        g.SetNameTitle("OLS - %s#%i"%(param_flist[0].GetParName(i),i))
 
-
-        par_names = list(flist[i].GetParName(j) for j in range(flist[i].GetNpar()))
-        par_values = list(flist[i].GetParameter(j) for j in range(flist[i].GetNpar()))
+        par_names = list(param_flist[j].GetParName(i) for j in range(2))
+        par_values = list(param_flist[j].GetParameter(i) for j in range(2))
         pars = zip(par_names,par_values)
         print "i-cdf[PARAM] - ",pars
 
         pts = {}
+        param_vals = []
         # gather each fn's parameter value for current parameter
-        for num,f in enumerate(flist):
+        for num,f in enumerate(param_flist):
             print "i-cdf[PARAM] - %s#%i: %s = %6.4f"%(f.GetName(),num,f.GetParName(i),f.GetParameter(i))
+            param_vals.append(f.GetParameter(i))
             pts[num] = f.GetParameter(i)
-            g.SetPoint(num,masspts[num],f.GetParameter(i))
+            g.SetPoint(num,param_masspts[num],f.GetParameter(i))
         g.Print()
-        pts = sorted(pts.items(), key = lambda kv:(kv[1],kv[0]))
-        idxs = [idx[0] for idx in pts]
-        pts = [pt[1] for pt in pts]
-        q1 = pts[int(math.floor(len(pts)*0.25))]
-        q3 = pts[int(math.floor(len(pts)*0.75))]
-        iqr = q3 - q1
-        if pts[0] < q1 - 1.5*(iqr):
-            print "i-cdf[PARAM] - EXCLUDING POINT %4.3f from MASS %4.3f %s"%(
-                    pts[0],masspts[num],"MeV" if ftr.pname == 'phi' else "GeV")
-            g.RemovePoint(idxs[0])
-            g.Print()
-        elif pts[len(pts)-1] > q3 + 1.5*(iqr):
-            print "i-cdf[PARAM] - EXCLUDING POINT %4.3f from MASS %4.3f %s"%(
-                    pts[len(pts)-1],masspts[num],"MeV" if ftr.pname == 'phi' else "GeV")
-            g.RemovePoint(idxs[len(idxs)-1])
-            g.Print()
-        param_f = ROOT.TF1("OLS#%i"%(i),"pol1",ftr.lo,ftr.hi)
-        param_f.SetLineColor(kRed)
-        param_f.SetLineWidth(3)
-        g.Fit(param_f,"SM0Q rob=0.8")
-        param_OLS = g.GetFunction("OLS#%i"%(i))
-        param_flist.append(param_OLS)
-        interp_params.append(param_OLS.Eval(point))
+        
+        param_line = ROOT.TF1("Line#%i"%(i),"[m]*x[0]+[b]",ftr.lo,ftr.hi)
+        param_line.SetLineColor(kRed)
+        param_line.SetLineWidth(3)
+        line_m = (param_vals[1] - param_vals[0]) / (param_masspts[1] - param_masspts[0])
+        line_b = param_vals[0] - line_m * param_masspts[0]
+        # g.Fit(param_line,"SM0Q rob=0.8")
+        # param_OLS = g.GetFunction("OLS#%i"%(i))
+        param_line.SetParameter("m",line_m)
+        param_line.SetParameter("b",line_b)
+        param_lines.append(param_line)
+        interp_params.append(param_line.Eval(point))
+        # param_lines.append(param_OLS)
+        # interp_params.append(param_OLS.Eval(point))
         mg.Add(g)
 
     mg.Draw("AL")
     canv.Update()
-    interp_f = ROOT.TF1("param interp",str(flist[0].GetExpFormula()),ftr.lo,ftr.hi)
+    interp_f = ROOT.TF1("param interp",str(param_flist[0].GetExpFormula()),ftr.lo,ftr.hi)
     interp_f.SetLineWidth(5)
 
     print "i-cdf[PARAM] - formula",interp_f.GetExpFormula()
     for j in range(interp_f.GetNpar()):
-        print "i-cdf[PARAM] - param",j,interp_params[j]
-        interp_f.SetParameter(flist[0].GetParName(j),interp_params[j])
-        param_flist[j].Draw("SAME")
+        print "i-cdf[PARAM] - param",j,param_flist[0].GetParName(j),interp_params[j]
+        interp_f.SetParameter(param_flist[0].GetParName(j),interp_params[j])
+        param_lines[j].Draw("SAME")
         canv.Update()
 
-    interp_f.SetNpx(Npx)
+    interp_f.SetNpx(ftr.bins)
     print "i-cdf[PARAM] - interp_f integral",interp_f.GetHistogram().Integral()
     print "i-cdf[PARAM] - norm factor",(1. / interp_f.GetHistogram().Integral())
     interp_f.SetParameter('Constant',interp_f.GetParameter('Constant') * 1. / interp_f.GetHistogram().Integral())
@@ -1304,8 +1318,44 @@ if __name__ == '__main__':
                     './fit-files/normfitter-%s-phi-eta0750.json'%(fit_name),
                     './fit-files/normfitter-%s-phi-eta1000.json'%(fit_name)
                     ]
-            q = deque(['i-cdf','cdf','HIST','500','550','pt','500','npx'])
-            # q = deque(['i-cdf','cdf','PARAM','500','550','pt','500','npx'])
+            # fit_info_list = [
+            #         './fit-files/normfitter-%s-omega-eta0500.json'%(fit_name),
+            #         './fit-files/normfitter-%s-omega-etaprime0500.json'%(fit_name),
+            #         ]
+            q = deque(['i-cdf','cdf','PARAM','500','True','150','pt','500','npx'])
+            # q = deque(['i-cdf','cdf','HIST','500','True','750','pt','500','npx'])
+
+            # q = deque([
+            #     'i-cdf','PARAM','500','True','1000','pt',
+            #     'i-cdf','PARAM','500','True','750','pt',
+            #     'i-cdf','PARAM','500','True','500','pt',
+            #     'i-cdf','PARAM','500','True','300','pt',
+            #     'i-cdf','PARAM','500','True','125','pt',
+            #     'cdf','500','npx'])
+
+            q = deque([
+                'i-cdf','PARAM','500','True','750','pt',
+                'i-cdf','PARAM','500','True','800','pt',
+                'i-cdf','PARAM','500','True','850','pt',
+                'i-cdf','PARAM','500','True','900','pt',
+                'i-cdf','PARAM','500','True','950','pt',
+                'i-cdf','PARAM','500','True','1000','pt',
+                'cdf','500','npx'])
+
+
+            # q = deque(['i-cdf','PARAM','500','0.7','pt','cdf','500','npx'])
+
+            # q = deque([
+            #     'i-cdf','PARAM','500','0.55','pt',
+            #     # 'i-cdf','PARAM','500','0.60','pt',
+            #     'i-cdf','PARAM','500','0.65','pt',
+            #     # 'i-cdf','PARAM','500','0.70','pt',
+            #     'i-cdf','PARAM','500','0.75','pt',
+            #     # 'i-cdf','PARAM','500','0.80','pt',
+            #     'i-cdf','PARAM','500','0.85','pt',
+            #     # 'i-cdf','PARAM','500','0.90','pt',
+            #     'i-cdf','PARAM','500','0.95','pt',
+            # 'cdf','500','npx'])
             # q = deque([])
             # name = raw_input("name of normalized fit info file [ENTER or q to EXIT]: ")
             # while name != "" and name != "q" and len(fit_info_list) > 0:
@@ -1325,7 +1375,7 @@ if __name__ == '__main__':
                     './fit-files/normfitter-%s-%s-etaprime0750.json'%(fit_name,ptcl),
                     './fit-files/normfitter-%s-%s-etaprime1000.json'%(fit_name,ptcl)
                     ]
-            view_fits(fit_info_list_view,num_mass_pts=5,saveViews=False,opt="FUNC")
+            view_fits(fit_info_list_view,num_mass_pts=2,saveViews=False,opt="FUNC")
         elif cmd in ['l','list']:
             fit_info_list_list = [
                     './fit-files/normfitter-%s-%s-eta0125.json'%(fit_name,ptcl),
