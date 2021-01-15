@@ -32,7 +32,7 @@ class fitter:
     }
 
     def __init__(self, file_name, fit_name='gaus',
-        fitted=False, fit_info='fitter-init.json'):
+        fit_info='fitter-init.json',fitted=False):
 
         self.fit_info = fit_info
 
@@ -165,7 +165,7 @@ class fitter:
 
         if self.seed == 'file':
             # format file name to appropriate convention
-            seed_file_str = "./fit-files/%sfitter-%s-%s-%s.json"
+            seed_file_str = "../out/fits/%sfitter-%s-%s-%s.json"
             eta_start = self.file_name.find('eta')
             num_match = re.search("\\d+(?=\\.root)",self.file_name[eta_start:])
             num = int(num_match.group())
