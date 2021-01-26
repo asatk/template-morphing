@@ -1,73 +1,48 @@
 import ROOT
 import time
-import random
-import json
 import os
 import sys
-import math
-import re
 
 from collections import deque
 
-from ROOT import Math
-from ROOT import TMath
-
-from ROOT import kRed
-from ROOT import kWhite
-from ROOT import kBlack
-from ROOT import kGray
-from ROOT import kRed
-from ROOT import kGreen 
-from ROOT import kBlue 
-from ROOT import kYellow 
-from ROOT import kMagenta 
-from ROOT import kCyan 
-from ROOT import kOrange 
-from ROOT import kSpring 
-from ROOT import kTeal 
 from ROOT import kAzure 
-from ROOT import kViolet 
 from ROOT import kPink
 
 from fitter import fitter
 
-ROOTCOLORS = [
-    kPink+1,
-    kOrange+1,
-    kYellow,
-    kGreen-9,
-    kRed,
-    kGreen,
-    kBlue,
-    kCyan,
-    kMagenta,
-    kYellow,
-    kGray,
-    kBlack,
-    kOrange,
-    kSpring,
-    kTeal,
-    kAzure,
-    kViolet,
-    kPink]
-
-ROOTCOLORS2 = [
-    kRed,
-    kGreen,
-    kBlue-3,
-    kViolet,
-    kOrange
-]
-
 class builder:
-    def __init__(self,file_name,fit_name,fit_info,fitted=False,q=deque()):
+    def __init__(self,file_name,fit_info,fitted=False,q=deque()):
         self.q = q
-        self.ftr = fitter(file_name,fit_name,fit_info,fitted=fitted)
+        if fitted:
+            self.ftr = fitter(fit_info)
+        else:
+            self.ftr = fitter(file_name,fit_info,"gaus")
+        self.canv = ROOT.TCanvas("canv","title",1200,900)
+        self.canv.DrawCrosshair()
 
+    #enter fit building with cmd prompt
+    def build(self):
+        self.build_fit()
+        cmd = " "
+        while not cmd == "":
+            self.canv.cd()
+            if len(self.q) > 0:
+                cmd = self.q.pop()
+            else:
+                cmd = raw_input("cmd: ")
+            if cmd == 's':
+                print "[SAVING]"
+                self.__save()
+            elif cmd == 'r' or cmd == 'refit':
+                print "[REFITTING]"
+                self.__refit()
+            elif cmd == 'rebin':
+                print "[REBINNING]"
+                self.__rebin()
+
+    #build fit with fitter
     def build_fit(self):
-        canv = ROOT.TCanvas("canv","title",1200,900)
-        canv.DrawCrosshair()
-        canv.cd()
+        self.canv.cd()        
 
         self.ftr.fit()
         self.ftr.func.SetLineColor(kPink)
@@ -88,26 +63,14 @@ class builder:
 
         hist.Draw("HIST")
         func.Draw("C SAME")
+
+        ROOT.gROOT.GetListOfSpecials().Add(hist)
+        ROOT.gROOT.GetListOfSpecials().Add(func)
+
+        self.canv.Update()
         #func.Draw("HIST SAME")
 
-        cmd = " "
-        while not cmd == "" and\
-            not cmd[(cmd.rfind('/') if cmd.rfind('/') != -1 else 0):] == "/run_fitter.py":
-            if len(self.q) > 0:
-                cmd = self.q.pop()
-            else:
-                cmd = raw_input("cmd: ")
-            if cmd == 's':
-                print "[SAVING]"
-                self.save()
-            elif cmd == 'r' or cmd == 'refit':
-                print "[REFITTING]"
-                self.__refit__()
-            elif cmd == 'rebin':
-                print "[REBINNING]"
-                self.__rebin__()
-
-    def __rebin__(self):
+    def __rebin(self):
         if len(self.q) < 3:
             tempbins = raw_input("new bin size: ")
             templo = raw_input("new lo: ")
@@ -123,48 +86,27 @@ class builder:
         if temphi is not '':
             self.ftr.hi = float(temphi)
 
-    def __refit__(self):
-        if len(self.q) > 0:
-            affirm = self.q.pop()
+    def __refit(self):
+        if len(self.q) < 3:
+            file_name2 = raw_input("new data: ")
+            fit_name2 = raw_input("new fit function: ")
+            fit_info2 = raw_input("new fit info: ")
         else:
-            affirm = raw_input("are you sure you want to REFIT? [y/n]")
-        if affirm == 'y':
-            if len(self.q) < 3:
-                file_name2 = raw_input("new data: ")
-                fit_name2 = raw_input("new fit function: ")
-                fit_info2 = raw_input("new fit info: ")
-            else:
-                file_name2 = self.q.pop()
-                fit_name2 = self.q.pop()
-                fit_info = self.q.pop()
+            file_name2 = self.q.pop()
+            fit_name2 = self.q.pop()
+            fit_info2 = self.q.pop()
 
         file_name = file_name if file_name2 == "" else file_name2
         fit_name = fit_name if fit_name2 == "" else fit_name2
         fit_info = fit_info if fit_info2 == "" else fit_info2
 
-        if affirm == 'y':
-            canv.Clear()
-            self.ftr = fitter(file_name,fit_name,fit_info)
-            self.ftr.fit()
-            self.ftr.func.SetLineColor(kPink)
-            self.ftr.func.SetLineWidth(5)
-            self.ftr.func.SetNpx(self.ftr.bins)
-            func = self.ftr.func.Clone()
-            hist = self.ftr.hist.Clone()
-            hist.GetXaxis().SetTitle("%s (GeV)"%(self.ftr.var))
-            hist.GetXaxis().CenterTitle(True)
-            hist.GetYaxis().SetTitle("Events")
-            hist.GetYaxis().CenterTitle(True)
-            hist.SetStats(1)
-            hist.SetFillColor(kAzure-8)
-            hist.SetLineColor(kAzure-7)
-            hist.SetLineWidth(3)
-            hist.Draw()
-            func.Draw("c same")
-            #func.Draw("hist same")
-            canv.Update()
+        ftr.file_name = file_name
+        ftr.fit_info = fit_info
+        ftr.fit_name = fit_name
+        
+        self.build_fit()
 
-    def __save__(self):
+    def __save(self):
         if len(self.q) > 0:
             affirm = self.q.pop()
         else:
@@ -176,4 +118,4 @@ if __name__ == "__main__":
     print sys.argv
     print sys.path
     bldr = builder(sys.argv[1],sys.argv[2],sys.argv[3],bool(sys.argv[4]),deque())
-    bldr.build_fit()
+    bldr.build()

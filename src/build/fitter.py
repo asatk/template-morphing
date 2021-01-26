@@ -1,8 +1,4 @@
-import sys
-import os
 import ROOT
-import math
-import string
 import time
 import random
 import json
@@ -15,7 +11,6 @@ from ROOT import TMath
 from ROOT import kAzure
 from ROOT import kRed
 from ROOT import kPink
-
 
 class fitter:
 
@@ -31,58 +26,68 @@ class fitter:
         'landxgaus_cdf': ''
     }
 
-    def __init__(self, file_name, fit_name='gaus',
-        fit_info='fitter-init.json',fitted=False):
+    #unfitted fitter
+    def __init__(self,*args):
+        if len(args) == 1:
+            self.__init_fitted(*args)
+        else:
+            self.__init_new(*args)
 
-        self.fit_info = fit_info
-
-        with open(fit_info) as json_file:
+    #unfitted fitter
+    def __init_new(self,*args):
+        self.file_name = args[0]
+        self.fit_info = args[1]
+        self.fit_name = args[2]
+        
+        with open(self.fit_info) as json_file:
             info = json.load(json_file)
-            
-            self.file_name = file_name
-            self.cuts = info['cuts']
-            self.pname = info['pname']
-            
-            if fitted == True:
-                self.fit_name = info['fit_name']
-                self.var = info['var']
-                s = info['bins'].split(',')
-                self.bins = int(s[0])
-                self.lo = float(s[1])
-                self.hi = float(s[2])
-                self.func = ROOT.TF1(self.fit_name, self.fits[self.fit_name], self.lo, self.hi)
-                self.func.SetNpx(self.bins)
-                self.normalized = bool(info['normalized'] == "True" or info['normalized'] == "true")
-                for i in range(self.func.GetNpar()):
-                    self.func.SetParameter(i, info['pars']['%i' % (i)])
-                    self.func.SetParName(i, info['names']['%i' % (i)])
-                self.chi = info['chi']
-                self.NDF = info['NDF']
-                self.chiprob = info['chiprob']
-                return
+        
+        self.cuts = info['cuts']
+        self.pname = info['pname']
 
-            self.fit_name = fit_name
+        p_info = info[self.pname][0]
+        self.var = p_info['var'] if not 'prime' in self.file_name or self.pname != 'omega' else p_info['var'][:-6]+"Eta[0]"
+        s = p_info['bins'].split(',')
+        self.bins = int(s[0])
+        self.lo = float(s[1])
+        self.hi = float(s[2])
+        self.normalized = info['normalized']
+        self.nEntries = int(info['nEntries'])
+        self.seed = info['seed']
+        self.debug = int(info['debug'])
+        self.window_time = int(info['window_time'])
+        self.func = None
+        self.hist = None
+        self.chi = None
+        self.NDF = None
+        self.chiprob = None
 
-            p_info = info[self.pname][0]
-            self.var = p_info['var'] if not 'prime' in self.file_name or self.pname != 'omega' else p_info['var'][:-6]+"Eta[0]"
-            s = p_info['bins'].split(',')
-            self.bins = int(s[0])
-            self.lo = float(s[1])
-            self.hi = float(s[2])
-            self.user_data = info['user_data'] == 'y'
-            self.normalized = info['normalized'] == 'y'
-            self.cum = info['cum'] == 'y'
-            self.nEntries = int(info['nEntries'])
-            self.seed = info['seed']
-            self.debug = int(info['debug'])
-            self.window_time = int(info['window_time'])
-            self.seed_func = None
-            self.func = None
-            self.hist = None
-            self.cum_func = None
-            self.chi = None
-            self.NDF = None
-            self.chiprob = None
+    #fitted fitter
+    def __init_fitted(self,*args):
+        self.fit_info = args[0]
+
+        with open(self.fit_info) as json_file:
+            info = json.load(json_file)
+        
+        self.file_name = info['file_name']
+        self.fit_name = info['fit_name']
+        self.cuts = info['cuts']
+        self.pname = info['pname']
+        self.fit_name = info['fit_name']
+        self.var = info['var']
+        s = info['bins'].split(',')
+        self.bins = int(s[0])
+        self.lo = float(s[1])
+        self.hi = float(s[2])
+        self.func = ROOT.TF1(self.fit_name, self.fits[self.fit_name], self.lo, self.hi)
+        self.func.SetNpx(self.bins)
+        self.normalized = info['normalized']
+        for i in range(self.func.GetNpar()):
+            self.func.SetParameter(i, info['pars']['%i' % (i)])
+            self.func.SetParName(i, info['names']['%i' % (i)])
+        self.chi = info['chi']
+        self.NDF = info['NDF']
+        self.chiprob = info['chiprob']
 
     def __str__(self):
         with open(self.fit_info) as json_file:
@@ -122,33 +127,27 @@ class fitter:
         omega_scaling = 1.  # scale start parameters of fit by 1/100 for omega analysis,
         # try to remove this par by using better/more general seeds
 
-        if self.user_data:
-            # get data from .ROOT file, store in histogram
-            chain = ROOT.TChain("twoprongNtuplizer/fTree")
-            chain.Add(file_name)
-            draw_s = self.var + ">>hist"
-            cut_s = self.cuts
-            if debug >= 2:
-                print "DRAWING ROOT DATA HISTOGRAM"
-            chain.Draw(draw_s, cut_s, "goff" if debug <= 1 else "")
-            self.nEntries = hist.Integral()
-            # get reco mass estimate for particle
-            if self.pname == 'phi':
-                pmass = re.search("(\d+)(?=\.root)", file_name).group()
-                mean_est = float(pmass)
-            elif self.pname == 'omega':
-                pprime = bool(re.search("prime", file_name) is not None)
-                mean_est = 0.95 if pprime else 0.55
-                omega_scaling = 1. / 1000
-            if self.normalized:
-                hist = ROOT.TH1D(hist.DrawNormalized("HIST"))
-            if debug >= 1:
-                print "RECO MASS MODELLING FOR:", self.pname, mean_est
-        else:
-            hist.FillRandom(self.fit_name, self.nEntries)
-            if debug >= 2:
-                print "DRAWING RANDOM FILL HISTOGRAM"
-                hist.Draw()
+        # get data from .ROOT file, store in histogram
+        chain = ROOT.TChain("twoprongNtuplizer/fTree")
+        chain.Add(file_name)
+        draw_s = self.var + ">>hist"
+        cut_s = self.cuts
+        if debug >= 2:
+            print "DRAWING ROOT DATA HISTOGRAM"
+        chain.Draw(draw_s, cut_s, "goff" if debug <= 1 else "")
+        self.nEntries = hist.Integral()
+        # get reco mass estimate for particle
+        if self.pname == 'phi':
+            pmass = re.search("(\d+)(?=\.root)", file_name).group()
+            mean_est = float(pmass)
+        elif self.pname == 'omega':
+            pprime = bool(re.search("prime", file_name) is not None)
+            mean_est = 0.95 if pprime else 0.55
+            omega_scaling = 1. / 1000
+        if self.normalized:
+            hist = ROOT.TH1D(hist.DrawNormalized("HIST"))
+        if debug >= 1:
+            print "RECO MASS MODELLING FOR:", self.pname, mean_est
 
         # get TFormula expression for given fit keyword from available fits
         fit_str = ""
@@ -267,13 +266,6 @@ class fitter:
                 print "PAR %i:\t %s \t| %s" % (i, fn.GetParName(i)[:4], fn.GetParameter(i))
             print "\n"
 
-        # if doing cumulative fit - not working properly
-        if self.cum:
-            hist = hist.GetCumulative()
-            if debug >= 2:
-                print "DRAWING CUM HISTOGRAM"
-                hist.Draw()
-
         # perform fit with options
         fit_opts = "SM0"
         if debug == 0:
@@ -360,7 +352,8 @@ class fitter:
             num = int(num_match.group())
             num_start = int(num_match.start())
             padded_num_name = re.sub("\\d+(?=\\.json)","%04i"%(num),self.file_name)
-            fit_info = "./fit-files/fitter-%s-%s-%s.json" % (self.fit_name,self.pname,
+            fit_info = "../out/fits/%sfitter-%s-%s-%s.json" % (
+                    "norm" if self.normalized else "",self.fit_name,self.pname,
                     self.file_name[eta_start:eta_start + num_start] + "%04i"%(num))
             print fit_info
         with open(fit_info, 'w') as json_out:

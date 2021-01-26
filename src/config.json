@@ -10,8 +10,16 @@
         "../out/fits/normfitter-crystalball-phi-eta0750.json",
         "../out/fits/normfitter-crystalball-phi-eta1000.json"
     ],
-    "Qbuild": "",
-    "Qanalyze": "analyze",
-    "Qview": "view",
-    "Qinterpolate": "interp"
+    "Qbuild": [
+        " "
+    ],
+    "Qanalyze": [
+        "analyze"
+    ],
+    "Qview": [
+        "view"
+    ],
+    "Qinterpolate": [
+        "interp"
+    ]
 }
