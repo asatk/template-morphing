@@ -55,7 +55,8 @@ ROOTCOLORS2 = [
 
 class viewer:
 
-    def __init__(self,fit_info_list):
+    def __init__(self,fit_info_list,q=deque()):
+        self.q = q
         self.fit_info_list = fit_info_list
         self.ftr = self.__fitter()
 
@@ -196,7 +197,7 @@ class viewer:
 if __name__ == "__main__":
     print sys.argv
     print sys.path
-    fit_info_list = json.load(open(os.getcwd()[:os.getcwd().rfind('src')+3]+'config.json','r'))['fits']
+    fit_info_list = json.load(open(os.getcwd()[:os.getcwd().rfind('src')+3]+'config.json','r'))['fit_info_list']
     vwr = viewer(fit_info_list)
     vwr.view_fits()
     vwr.list_pars()

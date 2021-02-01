@@ -3,6 +3,7 @@ import time
 import random
 import json
 import re
+import os
 from datetime import datetime
 
 from ROOT import Math
@@ -26,25 +27,36 @@ class fitter:
         'landxgaus_cdf': ''
     }
 
+    class FitterInitializeException(Exception):
+        """
+        Exception notifying when a build.fitter instance
+        has not been initialized correctly
+        """
+        def __init__ (self, message):
+            self.message = ("builder.fitter initialized with:"+
+                            "\n - 0 args (fit with src/build/fitter-init.json))"+
+                            "\n - 1 arg (fit with path to fit information file provided)")
+
     #unfitted fitter
     def __init__(self,*args):
-        if len(args) == 1:
-            self.__init_fitted(*args)
+        if len(args) == 0:
+            self.__init_new()
+        elif len(args) == 1:
+            self.__init_fitted(args[0])
         else:
-            self.__init_new(*args)
+            raise FitterInitializeException()
 
     #unfitted fitter
-    def __init_new(self,*args):
-        self.file_name = args[0]
-        self.fit_info = args[1]
-        self.fit_name = args[2]
-        
-        with open(self.fit_info) as json_file:
+    def __init_new(self):
+        self.fit_info = "./build/fitter-init.json"
+        with open(self.fit_info,'r') as json_file:
             info = json.load(json_file)
         
+        self.file_name = info['file_name']
+        self.fit_name = info['fit_name']
+
         self.cuts = info['cuts']
         self.pname = info['pname']
-
         p_info = info[self.pname][0]
         self.var = p_info['var'] if not 'prime' in self.file_name or self.pname != 'omega' else p_info['var'][:-6]+"Eta[0]"
         s = p_info['bins'].split(',')
@@ -63,14 +75,14 @@ class fitter:
         self.chiprob = None
 
     #fitted fitter
-    def __init_fitted(self,*args):
-        self.fit_info = args[0]
-
-        with open(self.fit_info) as json_file:
+    def __init_fitted(self,fit_info):
+        self.fit_info = fit_info
+        with open(self.fit_info,'r') as json_file:
             info = json.load(json_file)
         
         self.file_name = info['file_name']
         self.fit_name = info['fit_name']
+
         self.cuts = info['cuts']
         self.pname = info['pname']
         self.fit_name = info['fit_name']
@@ -343,7 +355,6 @@ class fitter:
                 for i in range(fn.GetNpar()):
                     fn.SetParameter(i, seed_info['pars']['%i' % (i)])
                     fn.SetParName(i, seed_info['names']['%i' % (i)])
-
     
     def jsonify(self,fit_info=""):
         if fit_info == "":
@@ -352,37 +363,50 @@ class fitter:
             num = int(num_match.group())
             num_start = int(num_match.start())
             padded_num_name = re.sub("\\d+(?=\\.json)","%04i"%(num),self.file_name)
-            fit_info = "../out/fits/%sfitter-%s-%s-%s.json" % (
+
+            print "1",os.getcwd()[:os.getcwd().rfind('/')]
+            pname_dir = os.getcwd()[:os.getcwd().rfind('/')]+"/out/"+self.pname
+            fit_name_dir = pname_dir+"/"+self.fit_name
+            #pname directory
+            if not os.path.isdir(pname_dir):
+                os.mkdir(pname_dir)
+                print "2",pname_dir
+            #fit_name directory
+            if not os.path.isdir(fit_name_dir):
+                os.mkdir(fit_name_dir)
+                print "3",fit_name_dir
+            
+            fit_info = fit_name_dir+"/%sfitter-%s-%s-%s.json" % (
                     "norm" if self.normalized else "",self.fit_name,self.pname,
                     self.file_name[eta_start:eta_start + num_start] + "%04i"%(num))
+            
             print fit_info
+        
+        info = {}
+
+        info['file_name'] = self.file_name
+        info['fit_name'] = self.fit_name
+        info['pname'] = self.pname
+        info['cuts'] = self.cuts
+        info['var'] = self.var
+        info['bins'] = "%i,%f,%f"%(self.bins,self.lo,self.hi)
+        par_names = list(self.func.GetParName(i)
+                        for i in range(self.func.GetNpar()))
+        par_values = list(self.func.GetParameter(i)
+                        for i in range(self.func.GetNpar()))
+        pars = {}
+        names = {}
+
+        for i in range(self.func.GetNpar()):
+            pars.update({i: self.func.GetParameter(i)})
+            names.update({i: self.func.GetParName(i)})
+
+        info['normalized'] = self.normalized
+        info['pars'] = pars
+        info['names'] = names
+        info['chi'] = self.chi
+        info['NDF'] = self.NDF
+        info['chiprob'] = self.chiprob
+        
         with open(fit_info, 'w') as json_out:
-            info = {}
-
-            info['file_name'] = self.file_name
-            info['fit_name'] = self.fit_name
-            info['pname'] = self.pname
-            info['cuts'] = self.cuts
-            info['var'] = self.var
-            info['bins'] = "%i,%f,%f"%(self.bins,self.lo,self.hi)
-            par_names = list(self.func.GetParName(i)
-                             for i in range(self.func.GetNpar()))
-            par_values = list(self.func.GetParameter(i)
-                              for i in range(self.func.GetNpar()))
-            # pars = zip(par_names,par_values)
-            pars = {}
-            names = {}
-
-            for i in range(self.func.GetNpar()):
-                pars.update({i: self.func.GetParameter(i)})
-                names.update({i: self.func.GetParName(i)})
-
-            # print self.normalized
-            info['normalized'] = self.normalized
-            info['pars'] = pars
-            info['names'] = names
-            info['chi'] = self.chi
-            info['NDF'] = self.NDF
-            info['chiprob'] = self.chiprob
-
             json.dump(info, json_out, indent=4)

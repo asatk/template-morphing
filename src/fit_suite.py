@@ -6,14 +6,15 @@ from collections import deque
 
 import build
 from build.builder import builder
-# import analyze
+import analyze
+from analyze.analyzer import analyzer
 import view
 from view.viewer import viewer
 # import interpolate
 
-print sys.path
+# print sys.path
 sys.path.append(os.getcwd())
-print sys.path
+# print sys.path
 
 if __name__ == "__main__":
     config_file = sys.argv[1]
@@ -26,23 +27,29 @@ if __name__ == "__main__":
     # BUILD
     print "[BUILDING]"
     builder_q = deque(json_obj['Qbuild'])
-    file_name = json_obj['file_name']
-    fit_name = json_obj['fit_name']
-    fit_info = json_obj['fit_info']
-    B = builder(file_name,fit_info,fitted=False,q=builder_q)
+    B = builder(q=builder_q)
     print "Builder Command Queue:",B.q
     B.build()
 
-    analyzer_args = json_obj['Qanalyze']
+    # ANALYZE
+    # analyzer_q = deque(json_obj['Qanalyze'])
+    # fit_info_list = json_obj['fit_info_list']
+    # fit_info0 = fit_info_list[0]
+    # A = analyzer(fit_info0,q=analyzer_q)
+    # print "Analyzer Command Queue:",A.q
+    # A.analyze()
+    # print "Analyzer Fit Info List:",A.ftr.
 
     # VIEW
-    print "[VIEWING]"
-    viewer_q = deque(json_obj['Qview'])
-    fit_info_list = json.load(open(os.getcwd()[:os.getcwd().rfind('src')+3]+'/config.json','r'))['fits']
-    vwr = viewer(fit_info_list)
-    vwr.view_fits()
-    vwr.list_pars()
+    # print "[VIEWING]"
+    # viewer_q = deque(json_obj['Qview'])
+    # fit_info_list = json.load(open(os.getcwd()[:os.getcwd().rfind('src')+3]+'/config.json','r'))['fit_info_list']
+    # vwr = viewer(fit_info_list,q=viewer_q)
+    # print "Viewer Fit Info List:",vwr.fit_info_list
+    # vwr.view_fits()
+    # vwr.list_pars()
 
-    interpolater_args = json_obj['Qinterpolate']
+    # INTERPOLATE
+    # interpolater_q = deque(json_obj['Qinterpolate'])
 
     print "[END]"

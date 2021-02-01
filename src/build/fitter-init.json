@@ -1,5 +1,7 @@
 {
-    "pname":"omega",
+    "file_name": "../root/TwoProngNtuplizer_eta750.root",
+    "fit_name": "crystalball",
+    "pname":"phi",
     "phi": [
         {
         "var": "Obj_PhotonTwoProng.mass",
@@ -13,7 +15,7 @@
         }
     ],
     "cuts": "nTwoProngs>0 && nIDPhotons>0 && Obj_PhotonTwoProng.dR>0.1 && Obj_PhotonTwoProng.part2_pt>150",
-    "normalized":false,
+    "normalized":true,
     "nEntries":"10000",
     "seed":"file",
     "debug":"1",

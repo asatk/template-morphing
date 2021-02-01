@@ -11,12 +11,9 @@ from ROOT import kPink
 from fitter import fitter
 
 class builder:
-    def __init__(self,file_name,fit_info,fitted=False,q=deque()):
+    def __init__(self,q=deque()):
         self.q = q
-        if fitted:
-            self.ftr = fitter(fit_info)
-        else:
-            self.ftr = fitter(file_name,fit_info,"gaus")
+        self.ftr = fitter()
         self.canv = ROOT.TCanvas("canv","title",1200,900)
         self.canv.DrawCrosshair()
 
@@ -117,5 +114,5 @@ class builder:
 if __name__ == "__main__":
     print sys.argv
     print sys.path
-    bldr = builder(sys.argv[1],sys.argv[2],sys.argv[3],bool(sys.argv[4]),deque())
+    bldr = builder(q=deque(sys.argv))
     bldr.build()

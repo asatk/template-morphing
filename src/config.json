@@ -1,9 +1,9 @@
 {
-    "file_name": "../root/TwoProngNtuplizer_eta750.root",
     "fit_name": "crystalball",
-    "fit_info": "./build/fitter-init.json",
+    "fit_info_build": "./build/fitter-init.json",
+    "fit_info_analyze": "../out/fits/normfitter-crystalball-phi-eta0750.json",
     "var": "phi",
-    "fits": [
+    "fit_info_list": [
         "../out/fits/normfitter-crystalball-phi-eta0125.json",
         "../out/fits/normfitter-crystalball-phi-eta0300.json",
         "../out/fits/normfitter-crystalball-phi-eta0500.json",
@@ -11,15 +11,16 @@
         "../out/fits/normfitter-crystalball-phi-eta1000.json"
     ],
     "Qbuild": [
-        " "
+        "y",
+        "s"
     ],
     "Qanalyze": [
-        "analyze"
+        ""
     ],
     "Qview": [
-        "view"
+        ""
     ],
     "Qinterpolate": [
-        "interp"
+        ""
     ]
 }
