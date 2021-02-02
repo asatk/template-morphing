@@ -1,7 +1,7 @@
 {
-    "file_name": "../root/TwoProngNtuplizer_eta750.root",
-    "fit_name": "crystalball",
-    "pname":"phi",
+    "file_name": "${PROJECT_DIR}/root/TwoProngNtuplizer_eta500.root",
+    "fit_name": "landxgaus",
+    "pname":"omega",
     "phi": [
         {
         "var": "Obj_PhotonTwoProng.mass",

@@ -13,6 +13,9 @@ from ROOT import kAzure
 from ROOT import kRed
 from ROOT import kPink
 
+from defs import PROJECT_DIR
+from defs import file_path_check as ck
+
 class fitter:
 
     fits = {
@@ -33,11 +36,11 @@ class fitter:
         has not been initialized correctly
         """
         def __init__ (self, message):
-            self.message = ("builder.fitter initialized with:"+
-                            "\n - 0 args (fit with src/build/fitter-init.json))"+
-                            "\n - 1 arg (fit with path to fit information file provided)")
+            self.message = ("builder.fitter initialized with:"
+                            /"\n - 0 args (fit with src/build/fitter-init.json))"
+                            /"\n - 1 arg (fit with path to fit information file provided)")
 
-    #unfitted fitter
+    #create fitter instance (two different methods)
     def __init__(self,*args):
         if len(args) == 0:
             self.__init_new()
@@ -48,11 +51,11 @@ class fitter:
 
     #unfitted fitter
     def __init_new(self):
-        self.fit_info = "./build/fitter-init.json"
+        self.fit_info = PROJECT_DIR+"/src/build/fitter-init.json"
         with open(self.fit_info,'r') as json_file:
             info = json.load(json_file)
         
-        self.file_name = info['file_name']
+        self.file_name = ck(info['file_name'])
         self.fit_name = info['fit_name']
 
         self.cuts = info['cuts']
@@ -76,11 +79,11 @@ class fitter:
 
     #fitted fitter
     def __init_fitted(self,fit_info):
-        self.fit_info = fit_info
+        self.fit_info = ck(fit_info)
         with open(self.fit_info,'r') as json_file:
             info = json.load(json_file)
         
-        self.file_name = info['file_name']
+        self.file_name = ck(info['file_name'])
         self.fit_name = info['fit_name']
 
         self.cuts = info['cuts']
@@ -176,7 +179,7 @@ class fitter:
 
         if self.seed == 'file':
             # format file name to appropriate convention
-            seed_file_str = "../out/fits/%sfitter-%s-%s-%s.json"
+            seed_file_str = PROJECT_DIR+"/out/fits/%sfitter-%s-%s-%s.json"
             eta_start = self.file_name.find('eta')
             num_match = re.search("\\d+(?=\\.root)",self.file_name[eta_start:])
             num = int(num_match.group())
@@ -364,27 +367,24 @@ class fitter:
             num_start = int(num_match.start())
             padded_num_name = re.sub("\\d+(?=\\.json)","%04i"%(num),self.file_name)
 
-            print "1",os.getcwd()[:os.getcwd().rfind('/')]
-            pname_dir = os.getcwd()[:os.getcwd().rfind('/')]+"/out/"+self.pname
+            pname_dir = PROJECT_DIR+"/out/"+self.pname
             fit_name_dir = pname_dir+"/"+self.fit_name
             #pname directory
             if not os.path.isdir(pname_dir):
                 os.mkdir(pname_dir)
-                print "2",pname_dir
             #fit_name directory
             if not os.path.isdir(fit_name_dir):
                 os.mkdir(fit_name_dir)
-                print "3",fit_name_dir
             
             fit_info = fit_name_dir+"/%sfitter-%s-%s-%s.json" % (
                     "norm" if self.normalized else "",self.fit_name,self.pname,
                     self.file_name[eta_start:eta_start + num_start] + "%04i"%(num))
             
-            print fit_info
+            print "SAVED ftr DATA TO JSON:",fit_info
         
         info = {}
 
-        info['file_name'] = self.file_name
+        info['file_name'] = re.sub(PROJECT_DIR,"${PROJECT_DIR}",self.file_name)
         info['fit_name'] = self.fit_name
         info['pname'] = self.pname
         info['cuts'] = self.cuts

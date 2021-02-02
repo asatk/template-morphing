@@ -1,21 +1,24 @@
 {
     "fit_name": "crystalball",
-    "fit_info_build": "./build/fitter-init.json",
-    "fit_info_analyze": "../out/fits/normfitter-crystalball-phi-eta0750.json",
+    "fit_info_build": "${PROJECT_DIR}/src/build/fitter-init.json",
+    "fit_info_analyze": "${PROJECT_DIR}/out/phi/crystalball/normfitter-crystalball-phi-eta0750.json",
     "var": "phi",
     "fit_info_list": [
-        "../out/fits/normfitter-crystalball-phi-eta0125.json",
-        "../out/fits/normfitter-crystalball-phi-eta0300.json",
-        "../out/fits/normfitter-crystalball-phi-eta0500.json",
-        "../out/fits/normfitter-crystalball-phi-eta0750.json",
-        "../out/fits/normfitter-crystalball-phi-eta1000.json"
+        "${PROJECT_DIR}/out/fits/normfitter-crystalball-phi-eta0125.json",
+        "${PROJECT_DIR}/out/fits/normfitter-crystalball-phi-eta0300.json",
+        "${PROJECT_DIR}/out/fits/normfitter-crystalball-phi-eta0500.json",
+        "${PROJECT_DIR}/out/fits/normfitter-crystalball-phi-eta0750.json",
+        "${PROJECT_DIR}/out/fits/normfitter-crystalball-phi-eta1000.json"
     ],
     "Qbuild": [
         "y",
         "s"
     ],
     "Qanalyze": [
-        ""
+        "n",
+        "h",
+        "c",
+        "d"
     ],
     "Qview": [
         ""

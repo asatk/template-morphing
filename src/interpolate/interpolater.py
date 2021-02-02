@@ -58,18 +58,28 @@ ROOTCOLORS2 = [
     kOrange
 ]
 
+class interpolater:
+    def __init__(self,q=deque()):
+        self.q = q
+
+        #set up fitter
+        self.ftr = fitter()
+
+        #set up canvas
+        self.canv = ROOT.TCanvas("canv","interpolater analysis",1200,900)
+        self.canv.DrawCrosshair()
+
+    def interpolate(self):
+        pass
+
 def interpolate_fit(fit_info_list,q=deque()):
-    #set up canvas
-    if 'canv' in locals():
-        canv.Clear()
-    canv = ROOT.TCanvas("canv","plot analysis",1200,900)
-    canv.DrawCrosshair()
-    canv.cd()
+    
+    self.canv.cd()
 
     with open(fit_info_list[0],'r') as json_file:
         info = json.load(json_file)
         file_name = info['file_name']
-        ftr = fitter(file_name,fitted=True,fit_info=fit_info_list[0])
+        ftr = fitter(fit_info_list[0])
 
     masspts = []
     for f in fit_info_list:
@@ -156,7 +166,7 @@ def interpolate_fit(fit_info_list,q=deque()):
                 if interp_method == "HIST":
                     print interp_flist
                     print interp_cdflist
-                    cdf_derivative(point,interp_flist,interp_cdflist,canv,color=color)
+                    cdf_derivative(point,interp_flist,interp_cdflist,self.canv,color=color)
                 elif interp_method == "PARAM":
                     for n,interp_f in enumerate(interp_flist):
                         for p in range(interp_f.GetNpar()):
@@ -169,7 +179,7 @@ def interpolate_fit(fit_info_list,q=deque()):
                             "L" + 
                             ("SAME" if not first else "") +
                             ("A" if interp_method == "HIST" else ""))
-                    canv.Update()
+                    self.canv.Update()
                     first = False
         elif cmd == 'i-cdf':
             if not hasPoint:
@@ -180,16 +190,16 @@ def interpolate_fit(fit_info_list,q=deque()):
                 print "i-cdf - [INTERPOLATING CDF - %s]"%(interp_method)
                 if interp_method == "HIST":
                     c = ROOT.TCanvas("name","temp",600,600)
-                    thing = interp_hist(fit_info_list,res,point,axis,interp_cdflist,canv,c,ftr=ftr,cdf_color=cdf_color)
+                    thing = interp_hist(fit_info_list,res,point,axis,interp_cdflist,self.canv,c,ftr=ftr,cdf_color=cdf_color)
                     print thing
                     print "post"
                 elif interp_method == "PARAM":
-                    interp_parameter(flist,masspts,point,axis,interp_flist,canv,ftr=ftr,Npx=Npx)
+                    interp_parameter(flist,masspts,point,axis,interp_flist,self.canv,ftr=ftr,Npx=Npx)
                     print "post"
                     # first = True
                     # for f in interp_flist:
                     #     f.Draw("C" + "SAME" if not first else "")
-                    #     canv.Update()
+                    #     self.canv.Update()
                     #     f.Print()
                     #     for p in range(f.GetNpar()):
                     #         print f.GetParameter(p)
@@ -222,10 +232,10 @@ def interpolate_fit(fit_info_list,q=deque()):
             print hstack.GetNhists()
             hstack.GetHists().Print()
             hstack.Draw("hist nostack")
-            canv.Update()
+            self.canv.Update()
             for interp_f in interp_flist:
                 interp_f.Draw("C SAME")
-                canv.Update()
+                self.canv.Update()
             hasStack = True
         elif cmd == 'cdf':
             print "cdf - [CDFs]"
@@ -253,10 +263,10 @@ def interpolate_fit(fit_info_list,q=deque()):
                 hstack.Add(fhist)
                 json_file.close()
             
-            canv.Clear()
+            self.canv.Clear()
             first = True
             hstack.Draw("hist nostack")
-            canv.Update()
+            self.canv.Update()
             hasStack = True
         elif cmd == 'n':
             if not normalized:
@@ -272,9 +282,9 @@ def interpolate_fit(fit_info_list,q=deque()):
                     fit_info_list[count] = name[:idx+1] + name[idx+5:]
                 normalized = False
 
-def interp_hist(fit_info_list,res,point,axis,interp_cdflist,canv,c,**kwargs):
+def interp_hist(fit_info_list,res,point,axis,interp_cdflist,c,**kwargs):
     cdflist = ROOT.TList()
-    # canv.Clear()
+    # self.canv.Clear()
     # c = ROOT.TCanvas()
     ftr = kwargs['ftr']
     cdf_color = kwargs['cdf_color']
@@ -405,11 +415,11 @@ def interp_hist(fit_info_list,res,point,axis,interp_cdflist,canv,c,**kwargs):
     # hist_list[idx-1].Print()
     # hist_list[idx].Print()
     # interp_cdf.Print()
-    canv.cd()
+    self.canv.cd()
     # time.sleep(10)
     return 1
 
-def interp_parameter(flist,masspts,point,axis,interp_flist,canv,**kwargs):
+def interp_parameter(flist,masspts,point,axis,interp_flist,**kwargs):
     print "i-cdf[PARAM] - [INTERPOLATING PARAMETERS WITH OLS]"
     
     param_flist = ROOT.TList()
@@ -473,7 +483,7 @@ def interp_parameter(flist,masspts,point,axis,interp_flist,canv,**kwargs):
         mg.Add(g)
 
     mg.Draw("AL")
-    canv.Update()
+    self.canv.Update()
     interp_f = ROOT.TF1("param interp",str(param_flist[0].GetExpFormula()),ftr.lo,ftr.hi)
     interp_f.SetLineWidth(5)
 
@@ -482,7 +492,7 @@ def interp_parameter(flist,masspts,point,axis,interp_flist,canv,**kwargs):
         print "i-cdf[PARAM] - param",j,param_flist[0].GetParName(j),interp_params[j]
         interp_f.SetParameter(param_flist[0].GetParName(j),interp_params[j])
         param_lines[j].Draw("SAME")
-        canv.Update()
+        self.canv.Update()
 
     interp_f.SetNpx(ftr.bins)
     print "i-cdf[PARAM] - interp_f integral",interp_f.GetHistogram().Integral()
@@ -493,9 +503,9 @@ def interp_parameter(flist,masspts,point,axis,interp_flist,canv,**kwargs):
     interp_flist.append(interp_f)
     ROOT.gDirectory.Append(mg)
 
-def cdf_derivative(point,interp_flist,interp_cdflist,canv,**kwargs):
+def cdf_derivative(point,interp_flist,interp_cdflist,**kwargs):
     color = kwargs['color']
-    # canv.Clear()
+    # self.canv.Clear()
     interp_mg = ROOT.TMultiGraph()
     num = 0
     interp_cdf = interp_cdflist[0]

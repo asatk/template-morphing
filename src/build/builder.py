@@ -85,9 +85,9 @@ class builder:
 
     def __refit(self):
         if len(self.q) < 3:
-            file_name2 = raw_input("new data: ")
+            file_name2 = "${PROJECT_DIR}/"+raw_input("new data: ${PROJECT_DIR}/")
             fit_name2 = raw_input("new fit function: ")
-            fit_info2 = raw_input("new fit info: ")
+            fit_info2 = "${PROJECT_DIR}/"+raw_input("new fit info: ${PROJECT_DIR}/")
         else:
             file_name2 = self.q.pop()
             fit_name2 = self.q.pop()

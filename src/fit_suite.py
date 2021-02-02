@@ -12,6 +12,8 @@ import view
 from view.viewer import viewer
 # import interpolate
 
+from defs import PROJECT_DIR
+
 # print sys.path
 sys.path.append(os.getcwd())
 # print sys.path
@@ -32,13 +34,11 @@ if __name__ == "__main__":
     B.build()
 
     # ANALYZE
-    # analyzer_q = deque(json_obj['Qanalyze'])
-    # fit_info_list = json_obj['fit_info_list']
-    # fit_info0 = fit_info_list[0]
-    # A = analyzer(fit_info0,q=analyzer_q)
-    # print "Analyzer Command Queue:",A.q
-    # A.analyze()
-    # print "Analyzer Fit Info List:",A.ftr.
+    analyzer_q = deque(json_obj['Qanalyze'])
+    fit_info = json_obj['fit_info_analyze']
+    A = analyzer(fit_info,q=analyzer_q)
+    print "Analyzer Command Queue:",A.q
+    A.analyze()
 
     # VIEW
     # print "[VIEWING]"

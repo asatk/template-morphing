@@ -1,5 +1,5 @@
 {
-    "file_name": "../root/TwoProngNtuplizer_eta750.root", 
+    "file_name": "${PROJECT_DIR}/root/TwoProngNtuplizer_eta750.root", 
     "pars": {
         "0": 0.3744100052171815, 
         "1": 742.3269656078816, 

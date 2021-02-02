@@ -353,7 +353,7 @@ class analyzer:
             self.func.SetParameter(0,self.func.GetParameter(0)*norm_factor)
             if self.drawing_params['hist']:
                 self.hist.GetYaxis().SetTitle("Event Probability Density")
-                self.hist = ROOT.TH1D(hist.DrawNormalized("HIST"))
+                self.hist = ROOT.TH1D(self.hist.DrawNormalized("HIST"))
                 self.canv.Update()
                 if self.drawing_params['func'] or self.drawing_params['fhist']:
                     y_ax_max = float(1.05*max([self.func.GetMaximum(),self.hist.GetMaximum()]))
@@ -368,25 +368,6 @@ class analyzer:
                 self.func.DrawCopy("C"+("SAME" if self.drawing_params['fhist'] or self.drawing_params['hist'] else ""))
                 self.canv.Update()
             self.drawing_params['norm'] = True
-        else:
-            print "n - [DE-NORMALIZING]"
-            hscale_factor = 1. / hscale_factor
-            norm_factor = 1. / norm_factor
-            self.func.SetParameter(0,self.func.GetParameter(0)*norm_factor)
-            if self.drawing_params['hist']:
-                self.hist.GetYaxis().SetTitle("Events")
-                self.hist.Scale(hscale_factor)
-                if self.drawing_params['func'] or self.drawing_params['fhist']:
-                    hist.SetMaximum(float(1.05*max([self.func.GetMaximum(),self.hist.GetMaximum()])))
-                self.hist.Draw("HIST")
-                self.canv.Update()
-            if self.drawing_params['fhist']:
-                self.func.GetHistogram().Draw("HIST"+("SAME" if self.drawing_params['hist'] else ""))
-                self.canv.Update()
-            if self.drawing_params['func']:
-                self.func.Draw("C"+("SAME" if self.drawing_params['hist'] or self.drawing_params['fhist'] else ""))
-                self.canv.Update()
-            self.drawing_params['norm'] = False
         if self.drawing_params['legend']:
             if self.drawing_params['hist']:
                 self.lgn.list_hists(hist=self.hist,file_name=self.ftr.file_name)
@@ -507,9 +488,8 @@ class analyzer:
 
     #CMD:"+"
     def __add(self):
-        file_name2 = raw_input("+ - new fit data to add: ")
-        fit_info2 = raw_input("+ - new fit init file to add: ")
-        ftr2 = fitter(file_name2,fitted=True,fit_info=fit_info2)
+        fit_info2 = "${PROJECT_DIR}/"+raw_input("+ - new fit init file to add: ${PROJECT_DIR}/")
+        ftr2 = fitter(fit_info2)
         ftr2.func.SetNpx(ftr2.bins)
         func2 = ftr2.func.Clone()
         func2.SetLineColor(kBlue-3)
@@ -541,7 +521,7 @@ class analyzer:
         if affirm == 'y':
             del self.lgn
             self.canv.Clear()
-            fit_info = raw_input("* - name of fit info .json: ")
+            fit_info = "${PROJECT_DIR}/"+raw_input("* - name of fit info .json: ${PROJECT_DIR}/")
             print "USING FIT INFO",fit_info
             self.ftr = fitter(fit_info)
             self.ftr.func.SetNpx(self.ftr.bins)
