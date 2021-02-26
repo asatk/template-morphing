@@ -34,11 +34,11 @@ if __name__ == "__main__":
     B.build()
 
     # ANALYZE
-    analyzer_q = deque(json_obj['Qanalyze'])
-    fit_info = json_obj['fit_info_analyze']
-    A = analyzer(fit_info,q=analyzer_q)
-    print "Analyzer Command Queue:",A.q
-    A.analyze()
+    # analyzer_q = deque(json_obj['Qanalyze'])
+    # fit_info = json_obj['fit_info_analyze']
+    # A = analyzer(fit_info,q=analyzer_q)
+    # print "Analyzer Command Queue:",A.q
+    # A.analyze()
 
     # VIEW
     # print "[VIEWING]"
