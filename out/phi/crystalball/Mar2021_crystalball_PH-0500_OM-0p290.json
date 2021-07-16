@@ -1,0 +1,25 @@
+{
+    "run_file": "${PROJECT_DIR}/root/Mar2021_PH-0500_OM-0p290.root", 
+    "particle": "phi", 
+    "chi": 143.3173630287911, 
+    "NDF": 85, 
+    "chiprob": 7.883478951873598e-05, 
+    "pars": {
+        "0": 56.78798212282855, 
+        "1": 507.8203151206324, 
+        "2": 27.331884731410202, 
+        "3": 1.0100228815529444, 
+        "4": 1.3121186228470445
+    }, 
+    "names": {
+        "0": "Constant", 
+        "1": "Mean", 
+        "2": "Sigma", 
+        "3": "Alpha", 
+        "4": "N"
+    }, 
+    "cuts": "nTwoProngs>0 && nIDPhotons>0 && Obj_PhotonTwoProng.dR>0.1 && Obj_PhotonTwoProng.part2_pt>150", 
+    "var": "Obj_PhotonTwoProng.mass", 
+    "fit_name": "crystalball", 
+    "bins": "100,0.000000,1000.000000"
+}

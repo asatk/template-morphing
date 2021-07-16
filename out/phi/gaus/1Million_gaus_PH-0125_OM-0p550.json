@@ -1,0 +1,21 @@
+{
+    "file_name": "${PROJECT_DIR}/root/1Million_PH-0125_OM-0p550.root", 
+    "pars": {
+        "0": 0.21171956289664148, 
+        "1": 123.31314722865194, 
+        "2": 4.3322764659354736
+    }, 
+    "NDF": 33, 
+    "chiprob": 9.02494960248637e-24, 
+    "pname": "phi", 
+    "names": {
+        "0": "Constant", 
+        "1": "Mean", 
+        "2": "Sigma"
+    }, 
+    "cuts": "nTwoProngs>0 && nIDPhotons>0 && Obj_PhotonTwoProng.dR>0.1 && Obj_PhotonTwoProng.part2_pt>150", 
+    "var": "Obj_PhotonTwoProng.mass", 
+    "fit_name": "gaus", 
+    "chi": 188.91487701990894, 
+    "bins": "100,0.000000,250.000000"
+}

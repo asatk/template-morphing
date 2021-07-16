@@ -1,0 +1,21 @@
+{
+    "file_name": "${PROJECT_DIR}/root/Feb2021_PH-0500_OM-0p550.root", 
+    "pars": {
+        "0": 0.4376399387964165, 
+        "1": 492.1691759134828, 
+        "2": 16.89750303685314
+    }, 
+    "NDF": 59, 
+    "chiprob": 0.0, 
+    "pname": "phi", 
+    "names": {
+        "0": "Constant", 
+        "1": "Mean", 
+        "2": "Sigma"
+    }, 
+    "cuts": "nTwoProngs>0 && nIDPhotons>0 && Obj_PhotonTwoProng.dR>0.1 && Obj_PhotonTwoProng.part2_pt>150", 
+    "var": "Obj_PhotonTwoProng.mass", 
+    "fit_name": "gaus", 
+    "chi": 47110.82374863204, 
+    "bins": "100,0.000000,2000.000000"
+}
