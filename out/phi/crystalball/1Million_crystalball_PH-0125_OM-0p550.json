@@ -1,0 +1,25 @@
+{
+    "file_name": "${PROJECT_DIR}/root/1Million_PH-0125_OM-0p550.root", 
+    "pars": {
+        "0": 0.14312727356323607, 
+        "1": 123.65194424335156, 
+        "2": 3.669874203248027, 
+        "3": 1.0404563651905674, 
+        "4": 24.3890321917678
+    }, 
+    "NDF": 34, 
+    "chiprob": 2.5973227126391158e-09, 
+    "pname": "phi", 
+    "names": {
+        "0": "Constant", 
+        "1": "Mean", 
+        "2": "Sigma", 
+        "3": "Alpha", 
+        "4": "n"
+    }, 
+    "cuts": "nTwoProngs>0 && nIDPhotons>0 && Obj_PhotonTwoProng.dR>0.1 && Obj_PhotonTwoProng.part2_pt>150", 
+    "var": "Obj_PhotonTwoProng.mass", 
+    "fit_name": "crystalball", 
+    "chi": 105.91536193318586, 
+    "bins": "100,50.000000,200.000000"
+}

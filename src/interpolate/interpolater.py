@@ -59,61 +59,74 @@ ROOTCOLORS2 = [
 ]
 
 class interpolater:
-    def __init__(self,q=deque()):
+    def __init__(self,fit_info_list,q=deque()):
         self.q = q
 
         #set up fitter
-        self.ftr = fitter()
+        self.ftr = fitter(fit_info_list[0])
+
+        # self.__funcs(fit_info_list)
+
+        # self.fit_info_list = fit_info_list
+
+        #set up dictionary between mass points and fits
+        self.__mass_pts(fit_info_list)
+
+        #set drawing parameters
+        self.drawing_params = {
+            'color':kOrange+1,
+            'pdf_color':kBlack,
+            'cdf_color':kBlack
+        }
 
         #set up canvas
         self.canv = ROOT.TCanvas("canv","interpolater analysis",1200,900)
         self.canv.DrawCrosshair()
 
     def interpolate(self):
-        pass
-
-    def interpolate_fit(self,fit_info_list,q=deque()):
-        
         self.canv.cd()
 
-        with open(fit_info_list[0],'r') as json_file:
-            info = json.load(json_file)
-            file_name = info['file_name']
-            ftr = fitter(fit_info_list[0])
-
-        masspts = []
-        for f in fit_info_list:
-            if ftr.pname == 'phi':
-                masspt = float(re.search("(\d+)(?=\.json)", f).group())
-            elif ftr.pname == 'omega':
-                masspt = 0.95 if bool(re.search("prime", f) is not None) else 0.55
-            if masspt not in masspts:
-                masspts.append(masspt)
-                
-        normalized = 'norm' in fit_info_list[0]
-        color = kOrange+1
-        pdf_color = kBlack
-        cdf_color = kBlack
         hasStack = False
         hasPoint = False
-        Npx = ftr.bins
+        Npx = self.ftr.bins
         res = 20
-        interp_method = "HIST"
-        cmd = " "
+        method = ""
+        
         interp_cdflist = []
         interp_flist = []
         interp_append = False
-        while not cmd == "" and\
-            not cmd[(cmd.rfind('/') if cmd.rfind('/') != -1 else 0):] == "/run_fitter.py":
-            if len(q) > 0:
-                cmd = q.pop()
+        cmd = " "
+        while not cmd == "":
+            if len(self.q) > 0:
+                cmd = self.q.pop()
             else:
                 print ['+','c','c.pdf','c.cdf','npx','pt','i-pdf','i-cdf','pdf','cdf','n']
                 cmd = raw_input("cmd: ")
-            c = ROOT.TCanvas()
-            if cmd == '+':
-                print "+ - [%sAPPEND INTERPS]"%("DO NOT " if interp_append else "")
-                interp_append = not interp_append
+
+            if cmd == 'i':
+                print "[INTERPOLATING WITH SPECIFIED METHOD]"
+                
+                if method == "hist":
+                    self.__interp_hist()
+                elif method == "param":
+                    self.__interp_parameter(ptcl1,ptcl1_mass,ptcl2_mass)
+                else:
+                    print "INTERPOLATION METHOD NOT VALID - Choose from: [HIST, PARAM]"
+            elif cmd == 'l':
+                print "[LOADING TOOL WITH PARAMETERS]"
+                ptcl1 = raw_input("Particle 1 Name (phi, omega): ").lower()
+                ptcl1_mass = float(raw_input("%s Mass (float): "%(ptcl1)))
+                ptcl2_mass = float(raw_input("%s Mass (float): "%(list(set(['phi','omega'])-set([ptcl1]))[0])))
+                method = raw_input("Interpolation Method (hist, param): ").lower()
+                formula = raw_input("Interpolation Function (gaus, crystalball, landau, landxgaus): ")
+                run = raw_input("Which Run (Jun2020, Feb2021, Mar2021, 1Million, ALL): ")
+                self.__funcs(ptcl1,ptcl1_mass,ptcl2_mass,formula,run)
+
+
+
+
+
+
             elif cmd == 'c':
                 print "c - [PICK COLOR]"
                 if len(q) > 0:
@@ -208,15 +221,14 @@ class interpolater:
                 hstack = ROOT.THStack("hs","%s of %s for %s"
                         %("Probability Distributions" if normalized else "Event Distributions",ftr.var,ftr.pname))
                 flist = ROOT.TList()
-
                 for count,i in enumerate(fit_info_list):
                     # set up fitter and fit info
                     print "using fit model #%i: %s"%(count,i)
                     json_file = open(i,'r')
                     info = json.load(json_file)
-                    file_name = info['file_name']
+                    run_file = info['run_file']
 
-                    ftr = fitter(file_name,fitted=True,fit_info=i)
+                    ftr = fitter(run_file,fitted=True,fit_info=i)
                     if pdf_color is None:
                         ftr.func.SetLineColor(ROOTCOLORS[count])
                     else:
@@ -248,9 +260,9 @@ class interpolater:
                     print "using fit model #%i: %s"%(count,i)
                     json_file = open(i,'r')
                     info = json.load(json_file)
-                    file_name = info['file_name']
+                    run_file = info['run_file']
 
-                    ftr = fitter(file_name,fitted=True,fit_info=i)
+                    ftr = fitter(run_file,fitted=True,fit_info=i)
                     if cdf_color is None:
                         ftr.func.SetLineColor(ROOTCOLORS[count])
                     else:
@@ -282,7 +294,54 @@ class interpolater:
                         fit_info_list[count] = name[:idx+1] + name[idx+5:]
                     normalized = False
 
-    def interp_hist(self,fit_info_list,res,point,axis,interp_cdflist,c,**kwargs):
+    # def __funcs(self,fit_info_list):
+    #     self.__func_list = []
+    #     for f in fit_info_list:
+    #         with json.open(f) as json_file:
+    #             info = json.load(json_file)
+    #             temp_func = ROOT.TF1(f,)
+
+    def __funcs(self,ptcl1,ptcl1_mass,ptcl2_mass,formula,run):
+        self.__func_list = []
+        directory = r"../out/%s/%s/"%(ptcl,formula)
+        if ptcl1 == 'phi':
+            ph_mass = ptcl1_mass
+            om_mass = ptcl2_mass
+        else:
+            ph_mass = ptcl2_mass
+            om_mass = ptcl1_mass
+        # p = r"%s_PH-%04i_OM-%sp%s\.root"%(run,int(ph_mass),str("{:.3f}".format(om_mass)[0],str("{:.3f}".format(om_mass)[2:]))
+        # dir_list = list([file for file in os.listdir(directory) if re.search(p,file) is not None])
+
+
+
+
+    def __mass_pts(self,fit_info_list):
+        #get list of mass points
+        self.ph_mass_pts = dict()
+        self.om_mass_pts = dict()
+        for f in fit_info_list:
+            p = r"\w+_PH-(\d{4})_OM-(\d)p(\d{3}).json$"
+            reg = re.search(p,f)
+            
+            ph_mass = float(reg.group(1))
+            if ph_mass not in self.ph_mass_pts:
+                self.ph_mass_pts[ph_mass] = set([f])
+            else:
+                self.ph_mass_pts[ph_mass].add(f)
+            
+            om_mass = float(reg.group(2)+"."+reg.group(3)) 
+            if om_mass not in self.om_mass_pts:
+                self.om_mass_pts[om_mass] = set([f])
+            else:
+                self.om_mass_pts[om_mass].add(f)
+
+        print "*ph",self.ph_mass_pts
+        print "*ph keys",list(self.ph_mass_pts)
+        print "*om",self.om_mass_pts
+        print "*om keys",list(self.om_mass_pts)
+
+    def __interp_hist(self,fit_info_list,res,point,axis,interp_cdflist,c,**kwargs):
         cdflist = ROOT.TList()
         # self.canv.Clear()
         # c = ROOT.TCanvas()
@@ -328,7 +387,7 @@ class interpolater:
                 hist.SetStats(0)
 
                 chain = ROOT.TChain("twoprongNtuplizer/fTree")
-                chain.Add(info['file_name'])
+                chain.Add(info['run_file'])
                 draw_s = info['var'] + ">>hist"+str(num)
                 cut_s = info['cuts']
                 chain.Draw(draw_s, cut_s, "goff")
@@ -419,23 +478,16 @@ class interpolater:
         # time.sleep(10)
         return 1
 
-    def interp_parameter(self,flist,masspts,point,axis,interp_flist,**kwargs):
-        print "i-cdf[PARAM] - [INTERPOLATING PARAMETERS WITH OLS]"
+    def __interp_parameter(self,ptcl1,ptcl1_mass,ptcl2_mass,formula,run,**kwargs):
+        print "[INTERPOLATING PARAMETERS WITH OLS]"
         
+        # for f in 
+
+
         param_flist = ROOT.TList()
         param_masspts = []
 
-        # print i,point
-        for i,m in enumerate(masspts):
-            # print m
-            if point <= m:
-                param_flist.Add(flist[i-1])
-                param_flist.Add(flist[i])
-                param_masspts.append(masspts[i-1])
-                param_masspts.append(masspts[i])
-                break
-            if i == len(masspts) - 1:
-                print "ERR - CANNOT EXTRAPOLATE"
+        
         
         # param_flist.Print()
         # print param_masspts

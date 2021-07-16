@@ -11,10 +11,10 @@ from ROOT import kPink
 from fitter import fitter
 
 class builder:
-    def __init__(self,q=deque()):
-        self.q = q
+    def __init__(self,q=None):
+        self.q = deque() if q is None else q
         self.ftr = fitter()
-        self.canv = ROOT.TCanvas("canv","title",1200,900)
+        self.canv = ROOT.TCanvas("canv","Builder Plots",1200,900)
         self.canv.DrawCrosshair()
 
     #enter fit building with cmd prompt
@@ -49,7 +49,7 @@ class builder:
         hist = self.ftr.hist.Clone()
         hist.GetXaxis().SetTitle("%s (GeV)"%(self.ftr.var))
         hist.GetXaxis().CenterTitle(True)
-        hist.GetYaxis().SetTitle("Events")
+        hist.GetYaxis().SetTitle("Event Density")
         hist.GetYaxis().CenterTitle(True)
         hist.SetStats(1)
         ROOT.gStyle.SetOptFit(1111)
@@ -59,7 +59,7 @@ class builder:
         hist.SetLineWidth(3)
 
         hist.Draw("HIST")
-        func.Draw("C SAME")
+        func.Draw("L SAME")
 
         ROOT.gROOT.GetListOfSpecials().Add(hist)
         ROOT.gROOT.GetListOfSpecials().Add(func)
@@ -76,30 +76,29 @@ class builder:
             tempbins = self.q.pop()
             templo = self.q.pop()
             temphi = self.q.pop()
-        if tempbins is not '':
+        if tempbins != '':
             self.ftr.bins = int(tempbins)
-        if templo is not '':
+        if templo != '':
             self.ftr.lo = float(templo)
-        if temphi is not '':
+        if temphi != '':
             self.ftr.hi = float(temphi)
 
     def __refit(self):
         if len(self.q) < 3:
-            file_name2 = "${PROJECT_DIR}/"+raw_input("new data: ${PROJECT_DIR}/")
+            run_file2 = raw_input("new data: ${PROJECT_DIR}/")
             fit_name2 = raw_input("new fit function: ")
-            fit_info2 = "${PROJECT_DIR}/"+raw_input("new fit info: ${PROJECT_DIR}/")
+            fit_info2 = raw_input("new fit info: ${PROJECT_DIR}/")
         else:
-            file_name2 = self.q.pop()
+            run_file2 = self.q.pop()
             fit_name2 = self.q.pop()
             fit_info2 = self.q.pop()
 
-        file_name = file_name if file_name2 == "" else file_name2
-        fit_name = fit_name if fit_name2 == "" else fit_name2
-        fit_info = fit_info if fit_info2 == "" else fit_info2
-
-        ftr.file_name = file_name
-        ftr.fit_info = fit_info
-        ftr.fit_name = fit_name
+        if run_file2 != "":
+            self.ftr.run_file = "${PROJECT_DIR}/"+run_file2
+        if fit_name2 != "":
+            self.ftr.fit_name = fit_name2
+        if fit_info2 != "":
+            self.ftr.fit_info = "${PROJECT_DIR}/"+fit_info2
         
         self.build_fit()
 
@@ -109,7 +108,8 @@ class builder:
         else:
             affirm = raw_input("are you sure you want to SAVE this model? [y/n]")
         if affirm == 'y':
-            self.ftr.jsonify()
+            name = self.ftr.jsonify()
+            self.canv.SaveAs(name[:-4]+'jpg')
 
 if __name__ == "__main__":
     print sys.argv

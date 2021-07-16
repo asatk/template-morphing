@@ -21,8 +21,8 @@ from build.fitter import fitter
 
 class analyzer:
 
-    def __init__(self,fit_info,q=deque()):
-        self.q = q
+    def __init__(self,fit_info,q=None):
+        self.q = deque() if q is None else q
 
         #set up fitter
         self.ftr = fitter(fit_info)
@@ -74,7 +74,7 @@ class analyzer:
                 if self.drawing_params['func'] or self.drawing_params['fhist']:
                     self.__legend(func=self.func,chi=self.ftr.chi)
                 elif self.drawing_params['hist']:
-                    self.__legend(hist=self.hist,file_name=self.ftr.file_name)
+                    self.__legend(hist=self.hist,run_file=self.ftr.run_file)
                 self.canv.Update()
             elif cmd == 'lstats':
                 print "lstats - [STATS BOX]"
@@ -119,13 +119,8 @@ class analyzer:
         if self.drawing_params['norm']: keyword = "norm"
         elif self.drawing_params['cum']: keyword = "cum"
         else: keyword = ""
-        eta_start = self.ftr.file_name.find('eta')
-        num_match = re.search("\\d+(?=\\.root)",self.ftr.file_name[eta_start:])
-        num = int(num_match.group())
-        num_start = int(num_match.start())
-        padded_num_name = re.sub("\\d+(?=\\.json)","%04i"%(num),ftr.file_name)
         json_name = "../out/fits/%sfitter-%s-%s-%s.json" % (keyword,self.ftr.fit_name,self.ftr.pname,
-                self.ftr.file_name[eta_start:eta_start + num_start] + "%04i"%(num))
+                self.ftr.run_file[eta_start:eta_start + num_start] + "%04i"%(num))
         if len(self.q) > 0:
             affirm1 = self.q.pop()
         else:
@@ -136,7 +131,7 @@ class analyzer:
                 self.ftr.func.SetParameter(0,self.ftr.func.GetParameter(0))
             self.ftr.jsonify(fit_info=json_name)
         jpg_name = "../out/plots/%sfitter-%s-%s-%s.jpg" % (keyword,self.ftr.fit_name,self.ftr.pname,
-                self.ftr.file_name[eta_start:eta_start + num_start] + "%04i"%(num))
+                self.ftr.run_file[eta_start:eta_start + num_start] + "%04i"%(num))
         if len(self.q) > 0:
             affirm2 = self.q.pop()
         else:
@@ -209,15 +204,15 @@ class analyzer:
                 lgn_func.SetLineWidth(4)
                 lgn_func.SetLineColor(func.GetLineColor())
 
-        def list_hists(self,hist,file_name):
+        def list_hists(self,hist,run_file):
             lgn_entry_list = lgn.GetListOfPrimitives()
             entry_printed = False
             for obj in lgn_entry_list:
                 entry = ROOT.TLegendEntry(obj)
-                if entry.GetLabel() == file_name[file_name.rfind('/')+1:]:
+                if entry.GetLabel() == run_file[run_file.rfind('/')+1:]:
                     entry_printed = True
             if not entry_printed:
-                lgn_hist = lgn.AddEntry(hist,file_name[file_name.rfind('/')+1:],"f")
+                lgn_hist = lgn.AddEntry(hist,run_file[run_file.rfind('/')+1:],"f")
                 lgn_hist.SetLineWidth(4)
                 lgn_hist.SetLineColor(hist.GetLineColor())
                 lgn_hist.SetFillColor(hist.GetFillColor())
@@ -237,7 +232,7 @@ class analyzer:
                 self.lgn.draw()
                 self.canv.Update()
             if self.drawing_params['hist']:
-                self.lgn.list_hists(kwargs['hist'],kwargs['file_name'])
+                self.lgn.list_hists(kwargs['hist'],kwargs['run_file'])
                 self.lgn.Draw()
                 self.canv.Update()
         else:
@@ -370,7 +365,7 @@ class analyzer:
             self.drawing_params['norm'] = True
         if self.drawing_params['legend']:
             if self.drawing_params['hist']:
-                self.lgn.list_hists(hist=self.hist,file_name=self.ftr.file_name)
+                self.lgn.list_hists(hist=self.hist,run_file=self.ftr.run_file)
                 self.lgn.Draw()
                 self.canv.Update()
         if self.drawing_params['stats']:
@@ -410,8 +405,11 @@ class analyzer:
         self.hist.SetLineWidth(3)
         self.hist.SetStats(0)
 
+        print self.ftr.fit_info
+        print self.ftr.run_file
+
         chain = ROOT.TChain("twoprongNtuplizer/fTree")
-        chain.Add(self.ftr.file_name)
+        chain.Add(self.ftr.run_file)
         draw_s = self.ftr.var + ">>hist"
         cut_s = self.ftr.cuts
         chain.Draw(draw_s, cut_s,"HIST")
@@ -428,7 +426,7 @@ class analyzer:
             self.func.Draw("C SAME")
             self.canv.Update()
         if self.drawing_params['legend']:
-            self.lgn.list_hists(self.hist,self.ftr.file_name)
+            self.lgn.list_hists(self.hist,self.ftr.run_file)
             self.lgn.Draw()
             self.canv.Update()
         if self.drawing_params['stats']:

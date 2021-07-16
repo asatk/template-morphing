@@ -1,0 +1,21 @@
+{
+    "run_file": "${PROJECT_DIR}/root/Mar2021_PH-0500_OM-0p290.root", 
+    "particle": "phi", 
+    "chi": 156.60161903327008, 
+    "NDF": 85, 
+    "chiprob": 3.689428522587746e-06, 
+    "pars": {
+        "0": 285.9917871871157, 
+        "1": 516.0736587828499, 
+        "2": 19.33784199265014
+    }, 
+    "names": {
+        "0": "p0", 
+        "1": "p1", 
+        "2": "p2"
+    }, 
+    "cuts": "nTwoProngs>0 && nIDPhotons>0 && Obj_PhotonTwoProng.dR>0.1 && Obj_PhotonTwoProng.part2_pt>150", 
+    "var": "Obj_PhotonTwoProng.mass", 
+    "fit_name": "landrefl", 
+    "bins": "100,0.000000,1000.000000"
+}

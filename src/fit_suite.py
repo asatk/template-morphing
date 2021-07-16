@@ -10,13 +10,16 @@ import analyze
 from analyze.analyzer import analyzer
 import view
 from view.viewer import viewer
-# import interpolate
+import interpolate
+from interpolate.interpolater import interpolater
 
 from defs import PROJECT_DIR
 
-# print sys.path
 sys.path.append(os.getcwd())
-# print sys.path
+
+# make option -c which  can be [bavi] in random order
+# title plots better
+# file seeding, function seeding, etc
 
 if __name__ == "__main__":
     config_file = sys.argv[1]
@@ -40,16 +43,19 @@ if __name__ == "__main__":
     # print "Analyzer Command Queue:",A.q
     # A.analyze()
 
+    fit_info_list = json.load(open(os.getcwd()[:os.getcwd().rfind('src')+3]+'/config.json','r'))['fit_info_list']
+
     # VIEW
     # print "[VIEWING]"
     # viewer_q = deque(json_obj['Qview'])
-    # fit_info_list = json.load(open(os.getcwd()[:os.getcwd().rfind('src')+3]+'/config.json','r'))['fit_info_list']
     # vwr = viewer(fit_info_list,q=viewer_q)
-    # print "Viewer Fit Info List:",vwr.fit_info_list
-    # vwr.view_fits()
-    # vwr.list_pars()
+    # # print "Viewer Fit Info List:",vwr.fit_info_list
+    # vwr.view()
 
     # INTERPOLATE
+    # print "[INTERPOLATING]"
     # interpolater_q = deque(json_obj['Qinterpolate'])
+    # ITP = interpolater(fit_info_list,q=interpolater_q)
+    # ITP.interpolate()
 
     print "[END]"

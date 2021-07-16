@@ -20,14 +20,11 @@ class fitter:
 
     fits = {
         'gaus': 'gaus',
-        'gaus_cdf': '[0]*ROOT::Math::normal_cdf(x[0],[2],[1])',
         'crystalball': 'crystalball',
-        'crystalball_fn': '[0]*ROOT::Math::crystalball_function(x[0],[3],[4],[2],[1])',
-        'crystalball_cdf': '[0]*ROOT::Math::crystalball_cdf(x[0],[3],[4],[2],[1])',
         'landau': 'landau',
-        'landau_cdf': '[0]*ROOT::Math::landau_cdf(x[0],[2],[1])',
         'landxgaus': 'CONV(landau,gaus)',
-        'landxgaus_cdf': ''
+        'landrefl': '[0]*TMath::Landau(-x,-[1],[2])',
+        'gausgaus': 'NSUM(gaus,gaus)'
     }
 
     class FitterInitializeException(Exception):
@@ -36,7 +33,7 @@ class fitter:
         has not been initialized correctly
         """
         def __init__ (self, message):
-            self.message = ("builder.fitter initialized with:"
+            self.message = ("builder.fitter is initialized with:"
                             /"\n - 0 args (fit with src/build/fitter-init.json))"
                             /"\n - 1 arg (fit with path to fit information file provided)")
 
@@ -55,22 +52,27 @@ class fitter:
         with open(self.fit_info,'r') as json_file:
             info = json.load(json_file)
         
-        self.file_name = ck(info['file_name'])
+        run_info = info['run_info']
+        self.run_file = run_info['run_file']
+        self.run_name = run_info['run_name']
+        self.phi = run_info['run_parameters']['phi']
+        self.omega = run_info['run_parameters']['omega']
+
+        self.run_file = ck(info['run_info']['run_file'])
         self.fit_name = info['fit_name']
 
         self.cuts = info['cuts']
-        self.pname = info['pname']
-        p_info = info[self.pname][0]
-        self.var = p_info['var'] if not 'prime' in self.file_name or self.pname != 'omega' else p_info['var'][:-6]+"Eta[0]"
-        s = p_info['bins'].split(',')
+        self.particle = info['particle']
+        self.mean_estimate = run_info['run_parameters'][self.particle]
+        particle_info = info[self.particle]
+        self.var = particle_info['var'] if not (self.particle == 'omega' and self.omega == 0.950) else particle_info['var'][:-6]+"Eta[0]"
+        s = particle_info['bins'].split(',')
         self.bins = int(s[0])
         self.lo = float(s[1])
         self.hi = float(s[2])
-        self.normalized = info['normalized']
-        self.nEntries = int(info['nEntries'])
-        self.seed = info['seed']
+
         self.debug = int(info['debug'])
-        self.window_time = int(info['window_time'])
+        self.fix_constant = info['fix_constant']
         self.func = None
         self.hist = None
         self.chi = None
@@ -83,11 +85,11 @@ class fitter:
         with open(self.fit_info,'r') as json_file:
             info = json.load(json_file)
         
-        self.file_name = ck(info['file_name'])
+        self.run_file = ck(info['run_info']['run_file'])
         self.fit_name = info['fit_name']
 
         self.cuts = info['cuts']
-        self.pname = info['pname']
+        self.particle = info['particle']
         self.fit_name = info['fit_name']
         self.var = info['var']
         s = info['bins'].split(',')
@@ -96,13 +98,13 @@ class fitter:
         self.hi = float(s[2])
         self.func = ROOT.TF1(self.fit_name, self.fits[self.fit_name], self.lo, self.hi)
         self.func.SetNpx(self.bins)
-        self.normalized = info['normalized']
         for i in range(self.func.GetNpar()):
             self.func.SetParameter(i, info['pars']['%i' % (i)])
             self.func.SetParName(i, info['names']['%i' % (i)])
         self.chi = info['chi']
         self.NDF = info['NDF']
         self.chiprob = info['chiprob']
+        self.fix_constant = info['fix_constant']
 
     def __str__(self):
         with open(self.fit_info) as json_file:
@@ -116,179 +118,124 @@ class fitter:
 
     def fit(self):
 
-        file_name = self.file_name
+        run_file = self.run_file
         fit_name = self.fit_name
         debug = self.debug
 
-        random.seed(datetime.now())
+        # test a consistent seed for generating random parameters
+        # random.seed(datetime.now())
+        random.seed(1000)
 
-        if debug >= 1:
-            print "TESTING %s FIT\n" % (fit_name)
-        hist = ROOT.TH1D("hist", "plot %s fit" %
-                         (fit_name), self.bins, self.lo, self.hi)
+        # prepare the plot, axes, and name of histogram for display
+        self.hist = self.__setup_hist()
+
+        # import data from .root file to fit and display on hist
+        self.__import_data(run_file,self.var,self.cuts,debug=debug)
+
+        self.hist.Draw()
+        temp = raw_input()
+
+        # threshold for too-low events - focus on peak, not tails
+        # self.__adjust_hist()
+
+        # get TFormula expression for given fit keyword from available fits
+        if fit_name in self.fits.keys():
+            fit_formula = self.fits[fit_name]
+            print "MODELLING %s %.3f GEV WITH %s" % (self.particle,self.mean_estimate,fit_formula)
+            func = ROOT.TF1("func", fit_formula, self.lo, self.hi)
+            func.SetNpx(self.bins)
+            func.SetLineWidth(5)
+        else:
+            print "FIT NOT COMPATIBLE...exiting"
+            exit
+
+        # initial seed of func parameters with gaussian parameters
+        # before fitting each parameter individually
+        gaus_func = self.__gaus_seed(self.hist,self.mean_estimate)
+        fit_func = self.__fit_all_parameters(gaus_func,func,self.hist,fit_name)
+
+
+
+
+        self.chi = fit_func.GetChisquare()
+        self.NDF = fit_func.GetNDF()
+        self.chiprob = fit_func.GetProb()
+        self.func = fit_func
+
+    # create histogram to be filled with data from input .root file
+    def __setup_hist(self):
+        hist = ROOT.TH1D("hist", "%s fit - %s, phi=%.0f, omega=%.3f" %
+                        (self.fit_name,self.run_name,self.phi,self.omega), self.bins, self.lo, self.hi)
         hist.GetXaxis().SetTitle("Mass (GeV)")
         hist.GetXaxis().CenterTitle(True)
-        if self.normalized:
-            hist.GetYaxis().SetTitle("Normalized Distribution")
-        else:
-            hist.GetYaxis().SetTitle("Events")
+        hist.GetYaxis().SetTitle("Events")
         hist.GetYaxis().CenterTitle(True)
         hist.SetStats(0)
         hist.SetFillColor(kAzure-8)
         hist.SetLineColor(kAzure-7)
         hist.SetLineWidth(3)
+        return hist
 
-        mean_est = 0
-        omega_scaling = 1.  # scale start parameters of fit by 1/100 for omega analysis,
-        # try to remove this par by using better/more general seeds
-
-        # get data from .ROOT file, store in histogram
+    # import data from .root file for fitting and drawing. 
+    # requires __setup_hist() to be run and/or instance of TH1D 'hist'
+    def __import_data(self,run_file,var,cuts,debug=0):
         chain = ROOT.TChain("twoprongNtuplizer/fTree")
-        chain.Add(file_name)
-        draw_s = self.var + ">>hist"
-        cut_s = self.cuts
+        chain.Add(run_file)
+        draw_string = var + ">>hist"
+        cut_string = cuts
         if debug >= 2:
             print "DRAWING ROOT DATA HISTOGRAM"
-        chain.Draw(draw_s, cut_s, "goff" if debug <= 1 else "")
-        self.nEntries = hist.Integral()
-        # get reco mass estimate for particle
-        if self.pname == 'phi':
-            pmass = re.search("(\d+)(?=\.root)", file_name).group()
-            mean_est = float(pmass)
-        elif self.pname == 'omega':
-            pprime = bool(re.search("prime", file_name) is not None)
-            mean_est = 0.95 if pprime else 0.55
-            omega_scaling = 1. / 1000
-        if self.normalized:
-            hist = ROOT.TH1D(hist.DrawNormalized("HIST"))
-        if debug >= 1:
-            print "RECO MASS MODELLING FOR:", self.pname, mean_est
+        chain.Draw(draw_string, cut_string, "goff" if debug <= 1 else "")
 
-        # get TFormula expression for given fit keyword from available fits
-        fit_str = ""
-        if fit_name in self.fits.keys():
-            fit_str = self.fits[fit_name]
-            if debug >= 1:
-                print "MODELLING WITH %s" % (fit_str)
-            fn = ROOT.TF1("fit", fit_str, self.lo, self.hi)
-            fn.SetNpx(self.bins)
-        else:
-            if debug >= 1:
-                print "FIT NOT COMPATIBLE...exiting"
-            exit
+    # cut out extraneous/low-event bins
+    # function currently NOT IN USE
+    def __adjust_hist(self):
+        # cut out small bins
+        for bin in range(self.hist.GetNbinsX()):
+            if self.hist.GetBinContent(bin) < self.thresh:
+                self.hist.SetBinContent(bin,0.)
 
-        if self.seed == 'file':
-            # format file name to appropriate convention
-            seed_file_str = PROJECT_DIR+"/out/fits/%sfitter-%s-%s-%s.json"
-            eta_start = self.file_name.find('eta')
-            num_match = re.search("\\d+(?=\\.root)",self.file_name[eta_start:])
-            num = int(num_match.group())
-            num_start = int(num_match.start())
-            seed_file = seed_file_str%(
-                    "norm" if self.normalized else "",
-                    self.fit_name,self.pname,
-                    (self.file_name[eta_start:eta_start + num_start] + "%04i"%(num)))
-            print "USING SEED: " + seed_file
-        # set up and create random seeds for fn parameters
-        if fit_name in ['gaus', 'gaus_cdf']:
-            fn.SetParName(0, 'Constant')
-            fn.SetParName(1, 'Mean')
-            fn.SetParName(2, 'Sigma')
-            if self.seed == 'rand':
-                fn.SetParameter('Constant', random.uniform(
-                        1. / 30, 1. / 3) if self.normalized else self.nEntries * random.uniform(1. / 30, 1. / 3))
-                fn.SetParameter('Mean', mean_est + mean_est *
-                        random.uniform(-0.05, 0.05))
-                fn.SetParameter('Sigma', random.randint(1, 25) * omega_scaling)
-                #fn.SetParLimits(0, 0., self.nEntries)
-                fn.SetParLimits(1, 0., mean_est * 2)
-            elif self.seed == 'file':
-                with open(seed_file) as json_file:
-                    seed_info = json.load(json_file)
-                    for i in range(fn.GetNpar()):
-                        fn.SetParameter(i, seed_info['pars']['%i' % (i)])
-                        fn.SetParName(i, seed_info['names']['%i' % (i)])
-        elif fit_name in ['crystalball', 'crys_ball_fn', 'crys_ball_cdf']:
-            fn.SetParName(0, 'Constant')
-            fn.SetParName(1, 'Mean')
-            fn.SetParName(2, 'Sigma')
-            fn.SetParName(3, 'Alpha')
-            fn.SetParName(4, 'n')
-            if self.seed == 'rand':
-                fn.SetParameter('Constant', random.uniform(
-                        1. / 30, 1. / 3) if self.normalized else self.nEntries * random.uniform(1. / 30, 1. / 3))
-                fn.SetParameter('Mean', mean_est + mean_est *
-                        random.uniform(-0.05, 0.05))
-                fn.SetParameter('Sigma', random.randint(0, 25) * omega_scaling)
-                fn.SetParameter('Alpha', random.random() * 25)
-                fn.SetParameter('n', random.randint(1, 10))
-                #fn.SetParLimits(0, 0., self.nEntries)
-                fn.SetParLimits(1, 0., mean_est * 2)
-                fn.SetParLimits(4, 0., 10e6)
-            elif self.seed == 'file':
-                with open(seed_file) as json_file:
-                    seed_info = json.load(json_file)
-                    for i in range(fn.GetNpar()):
-                        fn.SetParameter(i, seed_info['pars']['%i' % (i)])
-                        fn.SetParName(i, seed_info['names']['%i' % (i)])
-        elif fit_name in ['landau', 'landau_cdf']:
-            fn.SetParName(0, 'Constant')
-            fn.SetParName(1, 'MPV')
-            fn.SetParName(2, 'Eta')
-            if self.seed == 'rand':
-                fn.SetParameter('Constant', random.uniform(
-                        1. / 30, 1. / 3) if self.normalized else self.nEntries * random.uniform(1. / 30, 1. / 3))
-                fn.SetParameter('MPV', mean_est + mean_est *
-                        random.uniform(-0.05, 0.05))
-                fn.SetParameter('Eta', random.randint(0, 100) * omega_scaling)
-                #fn.SetParLimits(0, 0., self.nEntries)
-                fn.SetParLimits(1, 0., mean_est * 2)
-            elif self.seed == 'file':
-                with open(seed_file) as json_file:
-                    seed_info = json.load(json_file)
-                    for i in range(fn.GetNpar()):
-                        fn.SetParameter(i, seed_info['pars']['%i' % (i)])
-                        fn.SetParName(i, seed_info['names']['%i' % (i)])
-        elif fit_name in ['landxgaus', 'landxgaus_cdf']:
-            fn.SetParName(0, 'Constant')
-            fn.SetParName(1, 'MPV')
-            fn.SetParName(2, 'Eta')
-            fn.SetParName(3, 'Mean')
-            fn.SetParName(4, 'Sigma')
-            if self.seed == 'rand':
-                fn.SetParameter('Constant', random.uniform(
-                        1. / 30, 1. / 3) if self.normalized else self.nEntries * random.uniform(1. / 30, 1. / 3))
-                fn.SetParameter('MPV', mean_est + mean_est *
-                        random.uniform(-0.05, 0.05))
-                fn.SetParameter('Eta', random.randint(0, 100) * omega_scaling)
-                fn.SetParameter('Mean', mean_est + mean_est *
-                        random.uniform(-0.05, 0.05))
-                fn.SetParameter('Sigma', random.randint(1, 25) * omega_scaling)
-                #fn.SetParLimits(0, 0., self.nEntries)
-                fn.SetParLimits(1, 0., mean_est * 2)
-                fn.SetParLimits(3, 0., mean_est * 2)
-            elif self.seed == 'file':
-                with open(seed_file) as json_file:
-                    seed_info = json.load(json_file)
-                    for i in range(fn.GetNpar()):
-                        fn.SetParameter(i, seed_info['pars']['%i' % (i)])
-                        fn.SetParName(i, seed_info['names']['%i' % (i)])
+    # need better seeding methods
+
+    def __gaus_seed(self,hist,mean_estimate):
+        gaus_func = ROOT.TF1("gaus_seed","gaus",self.lo,self.hi)
+        gaus_func.SetNpx(self.bins)
+        gaus_func.SetLineWidth(5)
+        hist.Fit(gaus_func,"SM0")
+        gaus_func = hist.GetFunction("gaus_seed").Clone()
+        print "gaus chi-square",gaus_func.GetChisquare()
+        return gaus_func
+    
+    def __fit_all_parameters(self,gaus_func,func,hist,fit_name):
         
-        # print seed parameters for given fit set previously
-        if debug >= 2:
-            print "SEED PARAMETERS:"
-            for i in range(fn.GetNpar()):
-                print "PAR %i:\t %s \t| %s" % (i, fn.GetParName(i)[:4], fn.GetParameter(i))
-            print "\n"
+        ctemp = ROOT.TCanvas("ctemp","Temp Fitter Plots",1200,900)
+        print "GAUS PRE-FIT:\nConst - %.4f\nMean - %4.4f\nWidth - %3.4f"%(
+            gaus_const,gaus_mean,gaus_width)
 
-        # perform fit with options
-        fit_opts = "SM0"
-        if debug == 0:
-            fit_opts += "Q"
-        elif debug == 3:
-            fit_opts += "V"
-        fit_res = hist.Fit("fit", fit_opts)
-        fit_fn = hist.GetFunction("fit")
+        hist.Draw()
+        gaus_func.Draw("SAME")
+        ctemp.Update()
+        temp = raw_input()
+
+        if fit_name in ['gaus','crystalball','landau','landxgaus','landrefl'] :
+            func.SetParameter(0,gaus_const)
+            func.SetParameter(1,gaus_mean)
+            func.SetParameter(2,gaus_width)
+        if fit_name == "crystalball":
+            func.SetParameter("Alpha",5)
+            func.SetParameter("N",5)
+        if fit_name == 'landxgaus':
+            func.SetParameter(3,gaus_mean)
+            func.SetParameter(4,gaus_width)
+        if fit_name == 'gausgaus':
+            func.SetParameters(gaus_const,gaus_const,
+                gaus_mean,gaus_mean,gaus_width,gaus_width)
+        
+        fit_options = "SM0B"
+        if self.debug == 0:
+            fit_options += "Q"
+        elif self.debug == 3:
+            fit_options += "V"
 
         '''
         S for Save function in histogram fit
@@ -301,99 +248,73 @@ class fitter:
         B for fixing parameters to those defined in fn pre-fit
         '''
 
-        # normalize histogram POST-fit
-        if self.normalized:
-            # norm_factor = 1. / fit_fn.GetHistogram().Integral()
-            # fit_fn.SetParameter(0,fit_fn.GetParameter(0)*norm_factor)
-            if debug >= 2:
-                #print "\nNORMALIZING HIST BY FACTOR OF %f" % (1. / self.nEntries)
-                #print "intg", self.nEntries
-                print "NORMALIZING FUNC BY FACTOR OF %f" % (norm_factor)
-                print "intg func", 1. / norm_factor
-                # fhist.DrawNormalized("same HIST")
-                fit_fn.Draw("same C")
+        n = func.GetNpar()
 
-        # show plots and fit info during fitting
-        if debug >= 2:
-            fit_fn.SetLineColor(kPink)
-            print "\nDRAWING FIT"
-            # hist.Draw("HIST")
-            # fit_fn.Draw("same")
-            print "VALUE AT THEORETICAL MEAN ", fit_fn.Eval(mean_est)
-            print "\nFIT FORMULA"
-            #print fit_fn.GetFormula().Print()
-            print "\nFIT PARAMETERS FOR %s" % (fit_str)
-            for i in range(fit_fn.GetNpar()):
-                print "PAR %i:\t %s \t| %s" % (i, fit_fn.GetParName(i)[:4], fit_fn.GetParameter(i))
-            time.sleep(self.window_time)
+        for i in range(n):
+            print func.GetParName(i),func.GetParameter(i)
+        temp = raw_input()
 
-        self.chi = fit_fn.GetChisquare()
-        self.NDF = fit_fn.GetNDF()
-        self.chiprob = fit_fn.GetProb()
+        hist.Fit("func",fit_options)
+        hist.Draw()
+        func.Draw("SAME")
+        ctemp.Update()
+        temp = raw_input()
+        print "chi-square",func.GetChisquare()
 
-        if debug >= 1:
-            print "CHI SQUARED FOR FIT ", self.chi
-            print "\nTEST %s - END\n" % (fit_name)
+        # fit the function to the histogram while sequentially fixing each parameter
+        # always refit the constant for best results
+        for i in range(1 if fit_name != 'gausgaus' else 2,n):
+            # start fitting by fixing constant first to hold the peak of the distribution
+            if self.fix_constant:
+                func_max = func.GetMaximum(self.lo,self.hi)
+                hist_max = hist.GetBinContent(hist.GetMaximumBin())
+                print "func_max:",func_max,"\thist_max",hist_max
+                scale = hist_max/func_max
+                print "scale",scale
+                func.FixParameter(0,scale*func.GetParameter(0))
+            
+            # if no fixing constant, start fitting by fixing mean first, constant last
+            p = func.GetParameter(i)
+            func.FixParameter(i,p)
+            print "%s fit - fix parameter#%i = %4.4f"%(fit_name,i,p)
+            hist.Fit("func",fit_options)
+            hist.Draw()
+            func.Draw("SAME")
+            ctemp.Update()
+            print "chi-square",func.GetChisquare()
+            temp = raw_input()
+        
+                
 
-        self.func = fit_fn
-        self.hist = hist
+        return func
+            
 
-        return self.func
-
-    def __gaus_seed(self,):
-        fn.SetParName(0, 'Constant')
-        fn.SetParName(1, 'Mean')
-        fn.SetParName(2, 'Sigma')
-        if self.seed == 'rand':
-            fn.SetParameter('Constant', random.uniform(
-                    1. / 30, 1. / 3) if self.normalized else self.nEntries * random.uniform(1. / 30, 1. / 3))
-            fn.SetParameter('Mean', mean_est + mean_est *
-                    random.uniform(-0.05, 0.05))
-            fn.SetParameter('Sigma', random.randint(1, 25) * omega_scaling)
-            #fn.SetParLimits(0, 0., self.nEntries)
-            fn.SetParLimits(1, 0., mean_est * 2)
-        elif self.seed == 'file':
-            with open(seed_file) as json_file:
-                seed_info = json.load(json_file)
-                for i in range(fn.GetNpar()):
-                    fn.SetParameter(i, seed_info['pars']['%i' % (i)])
-                    fn.SetParName(i, seed_info['names']['%i' % (i)])
-    
     def jsonify(self,fit_info=""):
         if fit_info == "":
-            eta_start = self.file_name.find('eta')
-            num_match = re.search("\\d+(?=\\.root)",self.file_name[eta_start:])
-            num = int(num_match.group())
-            num_start = int(num_match.start())
-            padded_num_name = re.sub("\\d+(?=\\.json)","%04i"%(num),self.file_name)
 
-            pname_dir = PROJECT_DIR+"/out/"+self.pname
-            fit_name_dir = pname_dir+"/"+self.fit_name
-            #pname directory
-            if not os.path.isdir(pname_dir):
-                os.mkdir(pname_dir)
+            particle_dir = PROJECT_DIR+"/out/"+self.particle
+            fit_name_dir = particle_dir+"/"+self.fit_name
+            #particle directory
+            if not os.path.isdir(particle_dir):
+                os.mkdir(particle_dir)
             #fit_name directory
             if not os.path.isdir(fit_name_dir):
                 os.mkdir(fit_name_dir)
             
-            fit_info = fit_name_dir+"/%sfitter-%s-%s-%s.json" % (
-                    "norm" if self.normalized else "",self.fit_name,self.pname,
-                    self.file_name[eta_start:eta_start + num_start] + "%04i"%(num))
+            fit_info = fit_name_dir+"/%s_%s_PH-%04i_OM-%sp%s.json" % (
+                self.run_name,self.fit_name,self.phi,str(self.omega)[0:1],str("%04i"%(int(self.omega*1000)))[1:4])
             
             print "SAVED ftr DATA TO JSON:",fit_info
         
         info = {}
 
-        info['file_name'] = re.sub(PROJECT_DIR,"${PROJECT_DIR}",self.file_name)
+        info['run_file'] = re.sub(PROJECT_DIR,r"${PROJECT_DIR}",self.run_file)
+        print info['run_file']
         info['fit_name'] = self.fit_name
-        info['pname'] = self.pname
+        info['particle'] = self.particle
         info['cuts'] = self.cuts
         info['var'] = self.var
         info['bins'] = "%i,%f,%f"%(self.bins,self.lo,self.hi)
-        par_names = list(self.func.GetParName(i)
-                        for i in range(self.func.GetNpar()))
-        par_values = list(self.func.GetParameter(i)
-                        for i in range(self.func.GetNpar()))
         pars = {}
         names = {}
 
@@ -401,12 +322,20 @@ class fitter:
             pars.update({i: self.func.GetParameter(i)})
             names.update({i: self.func.GetParName(i)})
 
-        info['normalized'] = self.normalized
         info['pars'] = pars
         info['names'] = names
         info['chi'] = self.chi
         info['NDF'] = self.NDF
         info['chiprob'] = self.chiprob
+
+        run_info = {}
+        run_info['run_name'] = self.run_name
+        run_info['phi_mass'] = self.phi
+        run_info['omega_mass'] = self.omega
+
+        info['fix_constant'] = self.fix_constant
         
         with open(fit_info, 'w') as json_out:
             json.dump(info, json_out, indent=4)
+
+        return fit_info

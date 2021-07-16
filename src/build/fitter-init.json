@@ -1,23 +1,23 @@
 {
-    "file_name": "${PROJECT_DIR}/root/TwoProngNtuplizer_eta125.root",
-    "fit_name": "gaus",
-    "pname":"phi",
-    "phi": [
-        {
-        "var": "Obj_PhotonTwoProng.mass",
-        "bins": "100,0,2000"
+    "run_info": {
+        "run_file": "${PROJECT_DIR}/root/Feb2021_PH-0300_OM-0p950.root",
+        "run_name": "Feb2021",
+        "run_parameters": {
+            "phi": 300,
+            "omega": 0.950
         }
-    ],
-    "omega": [
-        {
+    },
+    "fit_name": "crystalball",
+    "particle":"phi",
+    "cuts": "nTwoProngs>0 && nIDPhotons>0 && Obj_PhotonTwoProng.dR>0.1 && Obj_PhotonTwoProng.part2_pt>150",
+    "phi": {
+        "var": "Obj_PhotonTwoProng.mass",
+        "bins": "100,200,400"
+    },
+    "omega": {
         "var": "TwoProng_MassPi0[0]",
         "bins": "50,0,5"
-        }
-    ],
-    "cuts": "nTwoProngs>0 && nIDPhotons>0 && Obj_PhotonTwoProng.dR>0.1 && Obj_PhotonTwoProng.part2_pt>150",
-    "normalized":true,
-    "nEntries":"10000",
-    "seed":"file",
-    "debug":"1",
-    "window_time":"1"
+    },
+    "debug":1,
+    "fix_constant":true
 }

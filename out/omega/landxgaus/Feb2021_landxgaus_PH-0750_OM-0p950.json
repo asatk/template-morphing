@@ -1,0 +1,25 @@
+{
+    "file_name": "${PROJECT_DIR}/root/Feb2021_PH-0750_OM-0p950.root", 
+    "pars": {
+        "0": 7.129693252704944, 
+        "1": 0.6340270058667516, 
+        "2": 0.036076848043796655, 
+        "3": 0.6217134840641496, 
+        "4": 0.14738927789392936
+    }, 
+    "NDF": 30, 
+    "chiprob": 3.798020353123227e-96, 
+    "pname": "omega", 
+    "names": {
+        "0": "Constant", 
+        "1": "MPV", 
+        "2": "Eta", 
+        "3": "Mean", 
+        "4": "Sigma"
+    }, 
+    "cuts": "nTwoProngs>0 && nIDPhotons>0 && Obj_PhotonTwoProng.dR>0.1 && Obj_PhotonTwoProng.part2_pt>150", 
+    "var": "TwoProng_MassEta[0]", 
+    "fit_name": "landxgaus", 
+    "chi": 546.2265925032575, 
+    "bins": "50,0.000000,5.000000"
+}
