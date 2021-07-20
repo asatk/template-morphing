@@ -1,31 +1,29 @@
 {
-    "fit_name": "landxgaus",
+    "fit_name": "crystalball",
     "fit_info_build": "${PROJECT_DIR}/src/build/fitter-init.json",
-    "fit_info_analyze": "${PROJECT_DIR}/out/omega/landxgaus/Feb2021_landxgaus_PH-0150_OM-0p550.json",
-    "var": "omega",
+    "fit_info_analyze": "${PROJECT_DIR}/out/phi/crystalball/Feb2021_crystalball_PH-0150_OM-0p550.json",
+    "var": "phi",
     "fit_info_list": [
-        "${PROJECT_DIR}/out/omega/landxgaus/Feb2021_landxgaus_PH-0150_OM-0p550.json",
-        "${PROJECT_DIR}/out/omega/landxgaus/Feb2021_landxgaus_PH-0300_OM-0p550.json",
-        "${PROJECT_DIR}/out/omega/landxgaus/Feb2021_landxgaus_PH-0500_OM-0p550.json",
-        "${PROJECT_DIR}/out/omega/landxgaus/Feb2021_landxgaus_PH-0750_OM-0p550.json",
-        "${PROJECT_DIR}/out/omega/landxgaus/Feb2021_landxgaus_PH-1000_OM-0p550.json",
-        "${PROJECT_DIR}/out/omega/landxgaus/Feb2021_landxgaus_PH-0150_OM-0p950.json",
-        "${PROJECT_DIR}/out/omega/landxgaus/Feb2021_landxgaus_PH-0300_OM-0p950.json",
-        "${PROJECT_DIR}/out/omega/landxgaus/Feb2021_landxgaus_PH-0500_OM-0p950.json",
-        "${PROJECT_DIR}/out/omega/landxgaus/Feb2021_landxgaus_PH-0750_OM-0p950.json",
-        "${PROJECT_DIR}/out/omega/landxgaus/Feb2021_landxgaus_PH-1000_OM-0p950.json"
+        "${PROJECT_DIR}/out/phi/crystalball/Feb2021_crystalball_PH-0150_OM-0p550.json",
+        "${PROJECT_DIR}/out/phi/crystalball/Feb2021_crystalball_PH-0300_OM-0p550.json",
+        "${PROJECT_DIR}/out/phi/crystalball/Feb2021_crystalball_PH-0500_OM-0p550.json",
+        "${PROJECT_DIR}/out/phi/crystalball/Feb2021_crystalball_PH-0750_OM-0p550.json",
+        "${PROJECT_DIR}/out/phi/crystalball/Feb2021_crystalball_PH-1000_OM-0p550.json"
     ],
     "Qbuild": [
+        "s",
+        "y",
+        ""
     ],
     "Qanalyze": [
-        "n",
-        "h"
+        "h",
+        "n"
     ],
     "Qview": [
+        "v",
         "SAME",
         "s",
-        "SAME",
-        "v"
+        "SAME"
     ],
     "Qinterpolate": [
         " "

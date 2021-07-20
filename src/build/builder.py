@@ -8,6 +8,7 @@ from collections import deque
 from ROOT import kAzure 
 from ROOT import kPink
 
+from defs import PROJECT_DIR
 from fitter import fitter
 
 class builder:
@@ -44,16 +45,18 @@ class builder:
         self.ftr.fit()
         self.ftr.func.SetLineColor(kPink)
         self.ftr.func.SetLineWidth(5)
-        self.ftr.func.SetNpx(self.ftr.bins)
-        func = self.ftr.func.Clone()
-        hist = self.ftr.hist.Clone()
+        func = self.ftr.func
+
+        hist = self.ftr.hist
         hist.GetXaxis().SetTitle("%s (GeV)"%(self.ftr.var))
         hist.GetXaxis().CenterTitle(True)
         hist.GetYaxis().SetTitle("Event Density")
         hist.GetYaxis().CenterTitle(True)
+
         hist.SetStats(1)
-        ROOT.gStyle.SetOptFit(1111)
+        ROOT.gStyle.SetOptFit(1112)
         ROOT.gStyle.SetOptStat(1111)
+
         hist.SetFillColor(kAzure-8)
         hist.SetLineColor(kAzure-7)
         hist.SetLineWidth(3)
@@ -94,11 +97,11 @@ class builder:
             fit_info2 = self.q.pop()
 
         if run_file2 != "":
-            self.ftr.run_file = "${PROJECT_DIR}/"+run_file2
+            self.ftr.run_file = "%s/"%(PROJECT_DIR)+run_file2
         if fit_name2 != "":
             self.ftr.fit_name = fit_name2
         if fit_info2 != "":
-            self.ftr.fit_info = "${PROJECT_DIR}/"+fit_info2
+            self.ftr.fit_info = "%s/"%(PROJECT_DIR)+fit_info2
         
         self.build_fit()
 

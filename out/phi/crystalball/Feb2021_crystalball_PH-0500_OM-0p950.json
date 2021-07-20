@@ -1,25 +1,26 @@
 {
-    "file_name": "${PROJECT_DIR}/root/Feb2021_PH-0500_OM-0p950.root", 
-    "pars": {
-        "0": 0.07790808967350366, 
-        "1": 493.5066491870876, 
-        "2": 13.460599358982474, 
-        "3": 1.0803726370289812, 
-        "4": 4.6592323247302
-    }, 
+    "run_file": "${PROJECT_DIR}/root/Feb2021_PH-0500_OM-0p950.root", 
+    "fix_constant": false, 
+    "particle": "phi", 
+    "chi": 147.42521906895294, 
     "NDF": 81, 
-    "chiprob": 9.248121690513754e-06, 
-    "pname": "phi", 
+    "chiprob": 9.24812166795249e-06, 
+    "pars": {
+        "0": 580.8056459705903, 
+        "1": 493.5066712381327, 
+        "2": 13.460574877925831, 
+        "3": 1.0803652716155627, 
+        "4": 4.659307599860514
+    }, 
     "names": {
         "0": "Constant", 
         "1": "Mean", 
         "2": "Sigma", 
         "3": "Alpha", 
-        "4": "n"
+        "4": "N"
     }, 
     "cuts": "nTwoProngs>0 && nIDPhotons>0 && Obj_PhotonTwoProng.dR>0.1 && Obj_PhotonTwoProng.part2_pt>150", 
     "var": "Obj_PhotonTwoProng.mass", 
     "fit_name": "crystalball", 
-    "chi": 147.42521905875003, 
     "bins": "100,350.000000,650.000000"
 }

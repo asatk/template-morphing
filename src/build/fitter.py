@@ -1,6 +1,5 @@
 import ROOT
 import time
-import random
 import json
 import re
 import os
@@ -122,18 +121,11 @@ class fitter:
         fit_name = self.fit_name
         debug = self.debug
 
-        # test a consistent seed for generating random parameters
-        # random.seed(datetime.now())
-        random.seed(1000)
-
         # prepare the plot, axes, and name of histogram for display
         self.hist = self.__setup_hist()
 
         # import data from .root file to fit and display on hist
         self.__import_data(run_file,self.var,self.cuts,debug=debug)
-
-        self.hist.Draw()
-        temp = raw_input()
 
         # threshold for too-low events - focus on peak, not tails
         # self.__adjust_hist()
@@ -144,18 +136,14 @@ class fitter:
             print "MODELLING %s %.3f GEV WITH %s" % (self.particle,self.mean_estimate,fit_formula)
             func = ROOT.TF1("func", fit_formula, self.lo, self.hi)
             func.SetNpx(self.bins)
-            func.SetLineWidth(5)
         else:
             print "FIT NOT COMPATIBLE...exiting"
             exit
 
         # initial seed of func parameters with gaussian parameters
         # before fitting each parameter individually
-        gaus_func = self.__gaus_seed(self.hist,self.mean_estimate)
+        gaus_func = self.__gaus_seed(self.hist.Clone(),self.mean_estimate)
         fit_func = self.__fit_all_parameters(gaus_func,func,self.hist,fit_name)
-
-
-
 
         self.chi = fit_func.GetChisquare()
         self.NDF = fit_func.GetNDF()
@@ -201,21 +189,20 @@ class fitter:
         gaus_func = ROOT.TF1("gaus_seed","gaus",self.lo,self.hi)
         gaus_func.SetNpx(self.bins)
         gaus_func.SetLineWidth(5)
-        hist.Fit(gaus_func,"SM0")
+        hist.Fit(gaus_func,"SM0Q")
         gaus_func = hist.GetFunction("gaus_seed").Clone()
         print "gaus chi-square",gaus_func.GetChisquare()
         return gaus_func
     
     def __fit_all_parameters(self,gaus_func,func,hist,fit_name):
         
+        gaus_const = gaus_func.GetParameter("Constant")
+        gaus_mean = gaus_func.GetParameter("Mean")
+        gaus_width = gaus_func.GetParameter("Sigma")
+
         ctemp = ROOT.TCanvas("ctemp","Temp Fitter Plots",1200,900)
         print "GAUS PRE-FIT:\nConst - %.4f\nMean - %4.4f\nWidth - %3.4f"%(
             gaus_const,gaus_mean,gaus_width)
-
-        hist.Draw()
-        gaus_func.Draw("SAME")
-        ctemp.Update()
-        temp = raw_input()
 
         if fit_name in ['gaus','crystalball','landau','landxgaus','landrefl'] :
             func.SetParameter(0,gaus_const)
@@ -231,7 +218,7 @@ class fitter:
             func.SetParameters(gaus_const,gaus_const,
                 gaus_mean,gaus_mean,gaus_width,gaus_width)
         
-        fit_options = "SM0B"
+        fit_options = "M0BQ"
         if self.debug == 0:
             fit_options += "Q"
         elif self.debug == 3:
@@ -252,13 +239,7 @@ class fitter:
 
         for i in range(n):
             print func.GetParName(i),func.GetParameter(i)
-        temp = raw_input()
-
         hist.Fit("func",fit_options)
-        hist.Draw()
-        func.Draw("SAME")
-        ctemp.Update()
-        temp = raw_input()
         print "chi-square",func.GetChisquare()
 
         # fit the function to the histogram while sequentially fixing each parameter
@@ -278,16 +259,24 @@ class fitter:
             func.FixParameter(i,p)
             print "%s fit - fix parameter#%i = %4.4f"%(fit_name,i,p)
             hist.Fit("func",fit_options)
-            hist.Draw()
-            func.Draw("SAME")
-            ctemp.Update()
             print "chi-square",func.GetChisquare()
-            temp = raw_input()
-        
-                
 
+        print "final fit after unfixing parameters"
+        
+        print "before unfixed fit"
+        for i in range(n):
+            # if self.fix_constant and i == 0:
+            #     continue
+            func.ReleaseParameter(i)
+            print "releasing parameter",func.GetParName(i),func.GetParameter(i)
+        hist.Fit("func",fit_options+"S")
+        print "chi-square",func.GetChisquare()
+        
+        print "after unfixed fit"
+        for i in range(n):
+            print func.GetParName(i),func.GetParameter(i)
+        
         return func
-            
 
     def jsonify(self,fit_info=""):
         if fit_info == "":
@@ -307,9 +296,7 @@ class fitter:
             print "SAVED ftr DATA TO JSON:",fit_info
         
         info = {}
-
-        info['run_file'] = re.sub(PROJECT_DIR,r"${PROJECT_DIR}",self.run_file)
-        print info['run_file']
+        
         info['fit_name'] = self.fit_name
         info['particle'] = self.particle
         info['cuts'] = self.cuts
@@ -329,9 +316,12 @@ class fitter:
         info['chiprob'] = self.chiprob
 
         run_info = {}
+        run_info['run_file'] = re.sub(PROJECT_DIR,r"${PROJECT_DIR}",self.run_file)
         run_info['run_name'] = self.run_name
         run_info['phi_mass'] = self.phi
         run_info['omega_mass'] = self.omega
+
+        info['run_info'] = run_info
 
         info['fix_constant'] = self.fix_constant
         

@@ -31,7 +31,7 @@ if __name__ == "__main__":
 
     # BUILD
     print "[BUILDING]"
-    builder_q = deque(json_obj['Qbuild'])
+    builder_q = deque(list(reversed(json_obj['Qbuild'])))
     B = builder(q=builder_q)
     print "Builder Command Queue:",B.q
     B.build()
@@ -54,7 +54,7 @@ if __name__ == "__main__":
 
     # INTERPOLATE
     # print "[INTERPOLATING]"
-    # interpolater_q = deque(json_obj['Qinterpolate'])
+    # interpolater_q = deque(list(reversed(json_obj['Qinterpolate'])))
     # ITP = interpolater(fit_info_list,q=interpolater_q)
     # ITP.interpolate()
 

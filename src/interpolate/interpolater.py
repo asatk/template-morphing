@@ -59,8 +59,8 @@ ROOTCOLORS2 = [
 ]
 
 class interpolater:
-    def __init__(self,fit_info_list,q=deque()):
-        self.q = q
+    def __init__(self,fit_info_list,q=None):
+        self.q = deque() if q == None else q
 
         #set up fitter
         self.ftr = fitter(fit_info_list[0])
@@ -121,9 +121,8 @@ class interpolater:
                 formula = raw_input("Interpolation Function (gaus, crystalball, landau, landxgaus): ")
                 run = raw_input("Which Run (Jun2020, Feb2021, Mar2021, 1Million, ALL): ")
                 self.__funcs(ptcl1,ptcl1_mass,ptcl2_mass,formula,run)
-
-
-
+            elif cmd == 'OLS':
+                self.__parameter_OLS()
 
 
 
@@ -321,16 +320,17 @@ class interpolater:
         self.ph_mass_pts = dict()
         self.om_mass_pts = dict()
         for f in fit_info_list:
-            p = r"\w+_PH-(\d{4})_OM-(\d)p(\d{3}).json$"
-            reg = re.search(p,f)
+            with open(f,'r') as json_file:
+                info = json.load(json_file)
+                run_info = info['run_info']
+                ph_mass = run_info['phi_mass']
+                om_mass = run_info['omega_mass']
             
-            ph_mass = float(reg.group(1))
             if ph_mass not in self.ph_mass_pts:
                 self.ph_mass_pts[ph_mass] = set([f])
             else:
                 self.ph_mass_pts[ph_mass].add(f)
             
-            om_mass = float(reg.group(2)+"."+reg.group(3)) 
             if om_mass not in self.om_mass_pts:
                 self.om_mass_pts[om_mass] = set([f])
             else:
@@ -554,6 +554,16 @@ class interpolater:
 
         interp_flist.append(interp_f)
         ROOT.gDirectory.Append(mg)
+
+    def __parameter_OLS(self):
+        n = self.ftr.func.GetNpar()
+        g = ROOT.TGraph()
+        g.SetMarkerStyle(34)
+        for i,f in enumerate(self.om_mass_pts[0.55]):
+            g.AddPoint(self.ph_mass_pts.keys()[i],)
+            
+
+
 
     def cdf_derivative(self,point,interp_flist,interp_cdflist,**kwargs):
         color = kwargs['color']
