@@ -52,7 +52,6 @@ mass_list = [
 
 xbins,xlo,xhi,ybins,ylo,yhi = (300,0,3000,200,0,2.000)
 
-file_dict = {}
 if not (len(file_list) == len(mass_list)):
     print "list of root files and list of mass points are not the same length:"
     print "file_list: %i\tmass_list: %i"%(len(file_list),len(mass_list))
