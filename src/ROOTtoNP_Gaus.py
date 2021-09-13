@@ -1,4 +1,5 @@
 import ROOT
+import json
 import numpy as np
 from matplotlib import pyplot as plt
 
@@ -32,6 +33,9 @@ sig_y = 0.02*1/4
 
 xbins,xlo,xhi,ybins,ylo,yhi = (300,0,3000,200,0,2.000)
 
+data_label_map = {}
+data_mapping_path = "data_mapping.json"
+
 # estimate 1st and 2nd gaussian moments for each distribution
 for i in range(len(mass_list)):
 
@@ -42,8 +46,8 @@ for i in range(len(mass_list)):
     hist = xy_gaus_i.CreateHistogram()
     hist.Scale(1/hist.GetMaximum())
     
-    for j in range(xy_gaus_i.GetNpar()):
-        print xy_gaus_i.GetParName(j),xy_gaus_i.GetParameter(j)
+    # for j in range(xy_gaus_i.GetNpar()):
+    #     print xy_gaus_i.GetParName(j),xy_gaus_i.GetParameter(j)
     
     # make np arrays to store, use in py3 with keras
     x = np.zeros(xbins)
@@ -61,19 +65,26 @@ for i in range(len(mass_list)):
             if z_val != 0:
                 arr[bin_x,bin_y] = z_val
 
-    out_file_fstr = PROJECT_DIR+"/out/%s/gaus_%04.0f,%1.2f.%s" 
-    out_file_jpg = out_file_fstr%("hist_jpg",mass_list[i][0],mass_list[i][1],"jpg")
-    out_file_png = out_file_fstr%("hist_png",mass_list[i][0],mass_list[i][1],"png")
-    out_file_npy = out_file_fstr%("hist_npy",mass_list[i][0],mass_list[i][1],"npy")
 
-    hist.Draw("COL")
-    c1 = ROOT.gROOT.FindObject("c1")
-    c1.Update()
-    c1.SaveAs(out_file_jpg)    
+    mass_pair = [mass_list[i][0],mass_list[i][1]]
+    mass_pair_str = "%04.0f,%1.2f"%(mass_pair[0],mass_pair[1])
+    out_file_fstr = PROJECT_DIR+"/out/%s/gaus_%s.%s" 
+    out_file_jpg = out_file_fstr%("hist_jpg",mass_pair_str,"jpg")
+    out_file_png = out_file_fstr%("hist_png",mass_pair_str,"png")
+    out_file_npy = out_file_fstr%("hist_npy",mass_pair_str,"npy")
+
+    # hist.Draw("COL")
+    # c1 = ROOT.gROOT.FindObject("c1")
+    # c1.Update()
+    # c1.SaveAs(out_file_jpg)    
     
-    plt.imsave(out_file_png,arr.T,cmap="gray",vmin=0.,vmax=1.,format="png",origin="lower")
+    # plt.imsave(out_file_png,arr.T,cmap="gray",vmin=0.,vmax=1.,format="png",origin="lower")
     np.save(out_file_npy,arr,allow_pickle=False)
 
+    data_label_map.update({out_file_npy:mass_pair})
     # temp=raw_input()
 
-    c1.Clear()
+    # c1.Clear()
+
+with open(data_mapping_path, 'w') as json_file:
+    json.dump(data_label_map, json_file, indent=4)

@@ -1,4 +1,5 @@
 import argparse
+import argparse
 
 def parse_opts():
     parser = argparse.ArgumentParser()
@@ -11,6 +12,7 @@ def parse_opts():
     parser.add_argument('--seed', type=int, default=2020, metavar='S',
                         help='random seed')
     parser.add_argument('--root_path', type=str, default='')
+    parser.add_argument('--hpars_path', type=str,default='hyperparams.json')
 
     ''' Data Generation '''
     parser.add_argument('--n_gaussians', type=int, default=120,
@@ -25,6 +27,7 @@ def parse_opts():
                         help='number of iterations')
     parser.add_argument('--resume_niters_gan', type=int, default=0)
     parser.add_argument('--save_niters_freq', type=int, default=1000, help='frequency of saving checkpoints')
+    parser.add_argument('--nvars',type=int,default=2,help='number of independent regression variables')
     parser.add_argument('--lr_gan', type=float, default=1e-4,
                         help='learning rate')
     parser.add_argument('--dim_gan', type=int, default=2,
