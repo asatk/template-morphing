@@ -129,32 +129,20 @@ while j < batch_size_D:
     batch_target_label = batch_target_labels[j]
     print("\nbatch target label",batch_target_label)
 
-
     hard_labels = []
     soft_labels = []
 
-    print("TRAIN LABELS",train_labels)
-
-    # print("HARD -> ",np.apply_along_axis(
-    #             vicinity_hard,0,train_labels,sample=batch_target_label))
-    # print("HARD TEST ->",np.apply_along_axis(
-    #             vicinity_hard,0,train_labels,sample=batch_target_label) <= 1)
-
-    # print(np.where(np.apply_along_axis(
-    #     vicinity_hard,0,train_labels,sample=batch_target_label) <= 1))
-
-    label_vicinity = np.ndarray(train_labels.shape)
+    label_vicinity_hard = np.ndarray(train_labels.shape)
+    label_vicinity_soft = np.ndarray(train_labels.shape)
 
     # iterate over every training label to find which are within the vicinity of the batch labels
     for i in range(len(train_labels)):
         train_label = train_labels[i]
-        # print "train label",train_label
-        # print "\nSAMPLE",sample
         hard = np.apply_along_axis(vicinity_hard,0,train_label,sample=batch_target_label)
-        label_vicinity[i] = hard
-        # print "HARD",hard
-        # soft = np.apply_along_axis(vicinity_soft,0,train_label,sample=batch_target_label)
-        # print "SOFT",soft
+        label_vicinity_hard[i] = hard
+        soft = np.apply_along_axis(vicinity_soft,0,train_label,sample=batch_target_label)
+        label_vicinity_soft[i] = soft
+
 
         # if train_label[0] == batch_target_labels_raw[j,0]:
         #     print("%04.0f,%01.3f|H\t%2.2f\t|S\t%1.4f\t|"%(train_label[0],train_label[1],hard,soft))
@@ -163,15 +151,22 @@ while j < batch_size_D:
         # if soft >= soft_threshold:
         #     soft_labels.append(train_label)
     
-    where = set(np.where(label_vicinity <= 1)[0])
-    print("where\n")
-    for i in where:
+    index_hard = set(np.where(label_vicinity_hard <= 1)[0])
+    index_soft = set(np.where(label_vicinity_soft >= soft_threshold)[0])
+    print("index_hard\n")
+    for i in index_hard:
+        print(i)
+        print(train_labels[i])
+        print(train_data[i])
+
+    print("index_soft\n")
+    for i in index_soft:
         print(i)
         print(train_labels[i])
         print(train_data[i])
 
     # reshuffle the batch target labels, redo that sample
-    if len(hard_labels) < 1 or len(soft_labels) < 1:
+    if len(index_hard) < 1 or len(index_soft) < 1:
         reshuffle_count += 1
         print("RESHUFFLE COUNT",reshuffle_count)
         batch_epsilons_j = np.zeros((n_vars))
@@ -182,8 +177,8 @@ while j < batch_size_D:
 
     print("RESHUFFLE COUNT",reshuffle_count)
     print("BATCH SAMPLE",batch_target_label)
-    print("HARD LABELS",hard_labels)
-    print("SOFT LABELS",soft_labels)
+    print("HARD LABELS",index_hard)
+    print("SOFT LABELS",index_soft)
 
     # set the bounds for random draw of possible fake labels
     if threshold_type == "hard":
@@ -198,8 +193,7 @@ while j < batch_size_D:
     for v in range(n_vars):
         batch_fake_labels[j,v] = np.random.uniform(lb[v],ub[v],size=1)[0]
     
-    print("HARD LABELS",hard_labels)
-    print("HARD LABELS INDEX",hard_labels[0])
+    print("HARD LABELS",index_hard)
     print("BATCH FAKE LABELS:\n",batch_fake_labels)
     print("BATCH TARGET LABELS:\n",batch_target_labels)
     j += 1
