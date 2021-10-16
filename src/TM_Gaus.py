@@ -3,20 +3,19 @@
 2D gaussian grid phi x omega ML Generation
 
 '''
-import gc
 import numpy as np
-import matplotlib.pyplot as plt
-import matplotlib as mpl
 import os
+import subprocess
 import json
 import random
 import torch
-import torch.nn as nn
 import torch.backends.cudnn as cudnn
+from PIL import Image
+
+from models import cont_cond_GAN2D as CCGAN
 
 from defs import PROJECT_DIR
 
-plt.ion()
 
 # system
 NGPU = torch.cuda.device_count()
@@ -48,20 +47,23 @@ hpars_path = PROJECT_DIR+"/src/hyperparams.json"
 with open(hpars_path) as hpars_json:
     hpars = json.load(hpars_json)
     vars = hpars['vars']
-    kappas = hpars['kappas']
-    sigmas = hpars['sigmas']
+    kappas = np.array(hpars['kappas'])
+    sigmas = np.array(hpars['sigmas'])
 
 # learning parameters
-n_vars = 2
-assert n_vars == len(vars)
-n_samples = len(os.listdir(PROJECT_DIR+"/out/hist_npy/"))
+# n_vars = 2
+n_vars = 1
+# n_samples = len(os.listdir(PROJECT_DIR+"/out/hist_npy/"))
+n_samples = int(subprocess.check_output('ls -alFh ../out/hist_npy/ | grep "1800" | wc -l',shell=True))
+print(n_samples)
 n_epochs = 10000
 lr_g = 5e-5
 lr_d = 5e-5
 batch_size_D = 5
 batch_size_G = 128
-threshold_type = "hard"
+use_hard_vicinity = True
 soft_threshold = 1e-3
+dim_latent_space = 128
 
 # load data and labels in
 train_data = [0]*n_samples
@@ -72,129 +74,230 @@ data_mapping_path = "data_mapping.json"
 with open(data_mapping_path) as json_file:
     data_label_map = json.load(json_file)
     # load each file from the data mapping
+    count = 0
     for i,f in enumerate(data_label_map.keys()):
-        arr = np.load(f)
-        train_data[i] = np.load(f)
-        train_labels[i] = data_label_map[f]
+        # train_labels[i] = data_label_map[f]
+        # train_data[i] = np.load(f)
+        temp_label = data_label_map[f]
+        if temp_label[0] == 1.8e3:
+            train_labels[count] = float(temp_label[1])
+            train_data[count] = np.load(f)
+            count+=1
+            
 
-# generate a batch of target labels from all real labels
-batch_target_labels_raw = np.ndarray((batch_size_D,n_vars))
-for v in range(n_vars):
-    batch_target_labels_raw[:,v] = np.random.choice(train_labels[:,v],size=batch_size_D,replace=True).transpose()
+train_data = np.array(train_data)
 
-# give each target label some noise
-batch_epsilons = np.ndarray((batch_size_D,n_vars))
-for v in range(n_vars):
-    batch_epsilons[:,v] = np.random.normal(0,sigmas[v],batch_size_D).transpose()
+# for 1-D only
+var = 0
+# label = 1.8e3
+# train_index = np.where(train_labels == 1.8e3)[0]
+# train_labels = train_labels[train_index]
+# train_data = train_data[train_index,:,:]
 
-batch_target_labels = batch_target_labels_raw + batch_epsilons
+output_shape = train_data[0].shape
+out_dim = np.prod(output_shape)
+print(output_shape)
+print(out_dim)
 
-# find real data within bounds
-batch_real_index = np.zeros((batch_size_D,n_vars))
-batch_fake_labels = np.zeros((batch_size_D,n_vars))
+# print(train_index)
+print(train_labels)
+print(train_data)
 
-'''
-train_labels_transpose = train_labels.transpose()
-print "transpose",train_labels_transpose[0]
-target_label = batch_target_labels[:,0]
-print "target label 0",target_label
-diff = train_labels_transpose - batch_target_labels[:,0]
-print "diff",diff[0]
-diff_div = np.divide(diff,kappas)
-print "diff_div",diff_div[0]
-diff_sq = np.square(diff_div)
-print "diff squared",diff_sq[0]
-diff_sum = np.apply_over_axes(np.sum,diff_sq,1)
-print "diff_sum",diff_sum[0]
+noise_dim = 128
 
-# print diff_sum<1
+# gan
+netG = CCGAN.cont_cond_generator(nz=noise_dim,nlabels=1,out_dim=out_dim)
+netD = CCGAN.cont_cond_discriminator(input_dim=out_dim)
+netG.float()
+netD.float()
 
-# print "WHERE",np.where(diff_sum<=1,train_labels_transpose,0)
+def loss_D():
 
-print "kappas",kappas
-'''
+    #-----------TRAIN D-----------#
 
-def vicinity_hard(x,sample):
-    return np.sum(np.square(np.divide(x-sample,kappas)))
+    optimizerD = torch.optim.Adam(netD.parameters(), lr=lr_d, betas=(0.5,0.999))
 
-def vicinity_soft(x,sample):
-    return np.exp(-1*vicinity_hard(x,sample))
-
-# iterate over the whole batch
-j=0
-reshuffle_count = 0
-while j < batch_size_D:
-    print(j)
-    
-    batch_target_label = batch_target_labels[j]
-    print("\nbatch target label",batch_target_label)
-
-    hard_labels = []
-    soft_labels = []
-
-    label_vicinity_hard = np.ndarray(train_labels.shape)
-    label_vicinity_soft = np.ndarray(train_labels.shape)
-
-    # iterate over every training label to find which are within the vicinity of the batch labels
-    for i in range(len(train_labels)):
-        train_label = train_labels[i]
-        hard = np.apply_along_axis(vicinity_hard,0,train_label,sample=batch_target_label)
-        label_vicinity_hard[i] = hard
-        soft = np.apply_along_axis(vicinity_soft,0,train_label,sample=batch_target_label)
-        label_vicinity_soft[i] = soft
-
-
-        # if train_label[0] == batch_target_labels_raw[j,0]:
-        #     print("%04.0f,%01.3f|H\t%2.2f\t|S\t%1.4f\t|"%(train_label[0],train_label[1],hard,soft))
-        # if hard <= 1:
-        #     hard_labels.append(train_label)
-        # if soft >= soft_threshold:
-        #     soft_labels.append(train_label)
-    
-    index_hard = set(np.where(label_vicinity_hard <= 1)[0])
-    index_soft = set(np.where(label_vicinity_soft >= soft_threshold)[0])
-    print("index_hard\n")
-    for i in index_hard:
-        print(i)
-        print(train_labels[i])
-        print(train_data[i])
-
-    print("index_soft\n")
-    for i in index_soft:
-        print(i)
-        print(train_labels[i])
-        print(train_data[i])
-
-    # reshuffle the batch target labels, redo that sample
-    if len(index_hard) < 1 or len(index_soft) < 1:
-        reshuffle_count += 1
-        print("RESHUFFLE COUNT",reshuffle_count)
-        batch_epsilons_j = np.zeros((n_vars))
-        for v in range(n_vars):
-            batch_epsilons_j[v] = np.random.normal(0,sigmas[v],1).transpose()
-        batch_target_labels[j] = batch_target_labels_raw[j] + batch_epsilons_j
-        continue
-
-    print("RESHUFFLE COUNT",reshuffle_count)
-    print("BATCH SAMPLE",batch_target_label)
-    print("HARD LABELS",index_hard)
-    print("SOFT LABELS",index_soft)
-
-    # set the bounds for random draw of possible fake labels
-    if threshold_type == "hard":
-        lb = batch_target_labels[j] - kappas
-        ub = batch_target_labels[j] + kappas
-    else:
-        lb = batch_target_labels[j] - np.sqrt(-1*np.log(soft_threshold)*kappas)
-        ub = batch_target_labels[j] + np.sqrt(-1*np.log(soft_threshold)*kappas)
-
-
-    # generate fake labels
+    # generate a batch of target labels from all real labels
+    batch_target_labels_raw = np.ndarray((batch_size_D,n_vars))
     for v in range(n_vars):
-        batch_fake_labels[j,v] = np.random.uniform(lb[v],ub[v],size=1)[0]
-    
-    print("HARD LABELS",index_hard)
+        batch_target_labels_raw[:,v] = np.random.choice(train_labels[:,v],size=batch_size_D,replace=True).transpose()
+
+    # give each target label some noise
+    batch_epsilons = np.ndarray((batch_size_D,n_vars))
+    for v in range(n_vars):
+        batch_epsilons[:,v] = np.random.normal(0,sigmas[v],batch_size_D).transpose()
+
+    batch_target_labels = batch_target_labels_raw + batch_epsilons
+
+    # find real data within bounds
+    batch_real_index = np.zeros((batch_size_D),dtype=int)
+    batch_fake_labels = np.zeros((batch_size_D,n_vars))
+
+    def vicinity_hard(x,sample):
+        return np.sum(np.square(np.divide(x-sample,kappas)))
+
+    def vicinity_soft(x,sample):
+        return np.exp(-1*vicinity_hard(x,sample))
+
+    # iterate over the whole batch
+    j=0
+    reshuffle_count = 0
+    while j < batch_size_D:
+        print(j)
+        
+        batch_target_label = batch_target_labels[j]
+        print("\n")
+        print("batch target label",batch_target_label)
+
+        label_vicinity = np.ndarray(train_labels.shape)
+
+        # iterate over every training label to find which are within the vicinity of the batch labels
+        for i in range(len(train_labels)):
+            train_label = train_labels[i]
+            if use_hard_vicinity:
+                hard = np.apply_along_axis(vicinity_hard,0,train_label,sample=batch_target_label)
+                label_vicinity[i] = hard
+            else:
+                soft = np.apply_along_axis(vicinity_soft,0,train_label,sample=batch_target_label)
+                label_vicinity[i] = soft
+        
+        if use_hard_vicinity:
+            indices = np.unique(np.where(label_vicinity <= 1)[0])
+        else:
+            indices = np.unique(np.where(label_vicinity >= soft_threshold)[0])
+
+        # reshuffle the batch target labels, redo that sample
+        if len(indices) < 1:
+            reshuffle_count += 1
+            print("RESHUFFLE COUNT",reshuffle_count)
+            batch_epsilons_j = np.zeros((n_vars))
+            for v in range(n_vars):
+                batch_epsilons_j[v] = np.random.normal(0,sigmas[v],1).transpose()
+            batch_target_labels[j] = batch_target_labels_raw[j] + batch_epsilons_j
+            continue
+
+        print("RESHUFFLE COUNT",reshuffle_count)
+        print("BATCH SAMPLE",batch_target_label)
+
+        # set the bounds for random draw of possible fake labels
+        if use_hard_vicinity == "hard":
+            lb = batch_target_labels[j] - kappas
+            ub = batch_target_labels[j] + kappas
+        else:
+            lb = batch_target_labels[j] - np.sqrt(-1*np.log(soft_threshold)*kappas)
+            ub = batch_target_labels[j] + np.sqrt(-1*np.log(soft_threshold)*kappas)
+
+        # pick real sample in vicinity
+        batch_real_index[j] = np.random.choice(indices,size=1)[0]
+
+        # generate fake labels
+        for v in range(n_vars):
+            batch_fake_labels[j,v] = np.random.uniform(lb[v],ub[v],size=1)[0]
+        
+        j += 1
+        reshuffle_count = 0
+
+    batch_real_samples = train_data[batch_real_index]
+    batch_real_labels = train_labels[batch_real_index]
+    batch_real_samples = torch.from_numpy(batch_real_samples).type(torch.float).to(device)
+    batch_real_labels = torch.from_numpy(batch_real_labels).type(torch.float).to(device)
+
+    print("BATCH REAL INDEX:\n",batch_real_index)
+    print("BATCH REAL LABELS:\n",batch_real_labels)
     print("BATCH FAKE LABELS:\n",batch_fake_labels)
     print("BATCH TARGET LABELS:\n",batch_target_labels)
-    j += 1
-    reshuffle_count = 0
+
+    batch_fake_labels = torch.from_numpy(batch_fake_labels).type(torch.float).to(device)
+    z = torch.randn(batch_size_D,dim_latent_space,dtype=torch.float).to(device)
+    batch_fake_samples = netG(z, batch_fake_labels)
+
+    batch_target_labels = torch.from_numpy(batch_target_labels).type(torch.float).to(device)
+
+    if use_hard_vicinity:
+        real_weights = torch.ones(batch_size_D, dtype=torch.float).to(device)
+        fake_weights = torch.ones(batch_size_D, dtype=torch.float).to(device)
+    else:
+        real_weights = np.apply_along_axis(vicinity_hard,0,batch_real_labels,sample=batch_target_label)
+        fake_weights = np.apply_along_axis(vicinity_hard,0,batch_fake_labels,sample=batch_target_label)
+
+    real_dis_out = netD(batch_real_samples, batch_target_labels)
+    fake_dis_out = netD(batch_fake_samples.detach(), batch_target_labels)
+
+    d_loss = - torch.mean(real_weights.view(-1) * torch.log(real_dis_out.view(-1)+1e-20)) - \
+            torch.mean(fake_weights.view(-1) * torch.log(1-fake_dis_out.view(-1)+1e-20))
+
+    optimizerD.zero_grad()
+    d_loss.backward()
+    optimizerD.step()
+
+    return netD
+
+def loss_G():
+
+    #-----------TRAIN G-----------#
+
+    optimizerG = torch.optim.Adam(netG.parameters(), lr=lr_g, betas=(0.5,0.999))
+
+    # generate a batch of target labels from all real labels
+    batch_target_labels_raw = np.ndarray((batch_size_G,n_vars))
+    for v in range(n_vars):
+        batch_target_labels_raw[:,v] = np.random.choice(train_labels[:,v],size=batch_size_G,replace=True).transpose()
+
+    # give each target label some noise
+    batch_epsilons = np.ndarray((batch_size_G,n_vars))
+    for v in range(n_vars):
+        batch_epsilons[:,v] = np.random.normal(0,sigmas[v],batch_size_G).transpose()
+
+    batch_target_labels = batch_target_labels_raw + batch_epsilons
+    batch_target_labels = torch.from_numpy(batch_target_labels).type(torch.float).to(device)
+
+    z = torch.randn(batch_size_G,noise_dim,dtype=torch.float).to(device)
+    batch_fake_samples = netG(z,batch_target_labels)
+
+    dis_out = netD(batch_fake_samples,batch_target_labels)
+    g_loss = - torch.mean(torch.log(dis_out+1e-20))
+
+    optimizerG.zero_grad()
+    g_loss.backward()
+    optimizerG.step()
+
+    return netG
+
+def gen_G(netG,batch_size,label):
+    NFAKE = int(1e2)
+    path = PROJECT_DIR+'/out/1DGAN/'
+
+    fake_samples = np.zeros((NFAKE,output_shape[0],output_shape[1]),dtype=float)
+    netG = netG.to(device)
+    netG.eval()
+    with torch.no_grad():
+        tmp = 0
+        while tmp < NFAKE:
+            print(tmp)
+            z = torch.randn(batch_size,dim_latent_space,dtype=float).to(device)
+            y = np.ones(batch_size) * label
+            y = torch.from_numpy(y).type(torch.float).view(-1,1).to(device)
+            batch_fake_samples = netG(z.float(),y.float())
+            batch_fake_samples = batch_fake_samples.view(-1,output_shape[0],output_shape[1])
+            fake_samples[tmp:(tmp+batch_size)] = batch_fake_samples.cpu().detach().numpy()
+            tmp += batch_size
+
+    fake_samples = fake_samples[0:NFAKE]
+    fake_labels = np.ones(NFAKE) * label
+
+    if path is not None:
+        raw_fake_samples = (fake_samples*0.5 + 0.5)+255.0
+        raw_fake_samples = raw_fake_samples.astype(np.uint8)
+        for i in range(NFAKE):
+            filename = path+str(i)+'.jpg'
+            im = Image.fromarray(raw_fake_samples[i][0],mode='L')
+            im = im.save(filename)
+
+    return fake_samples,fake_labels
+
+
+netD = loss_D()
+netD.float()
+netG = loss_G()
+netG.float()
+gen_G(netG,5,(2e0))

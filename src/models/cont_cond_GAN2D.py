@@ -4,51 +4,48 @@ import numpy as np
 
 
 #########################################################
-# genearator
+# generator
 bias_g = False
 class cont_cond_generator(nn.Module):
-    def __init__(self, ngpu=1, nz=2, out_dim=2, radius=1):
+    def __init__(self, ngpu=1, nz=2, nlabels=1, out_dim=2):
         super(cont_cond_generator, self).__init__()
         self.nz = nz
+        self.nlabels = nlabels
         self.ngpu = ngpu
         self.out_dim = out_dim
-        self.radius = radius
-
-        self.inner_dim = 100
 
         self.linear = nn.Sequential(
-                nn.Linear(nz+2, self.inner_dim, bias=bias_g),
-                nn.BatchNorm1d(self.inner_dim),
+                nn.Linear(nz+nlabels, 128, bias=bias_g),
+                nn.BatchNorm1d(128),
                 nn.ReLU(True),
 
-                nn.Linear(self.inner_dim, self.inner_dim, bias=bias_g),
-                nn.BatchNorm1d(self.inner_dim),
+                nn.Linear(128, 256, bias=bias_g),
+                nn.BatchNorm1d(256),
                 nn.ReLU(True),
 
-                nn.Linear(self.inner_dim, self.inner_dim, bias=bias_g),
-                nn.BatchNorm1d(self.inner_dim),
+                nn.Linear(256, 512, bias=bias_g),
+                nn.BatchNorm1d(512),
                 nn.ReLU(True),
 
-                nn.Linear(self.inner_dim, self.inner_dim, bias=bias_g),
-                nn.BatchNorm1d(self.inner_dim),
+                nn.Linear(512, 1024, bias=bias_g),
+                nn.BatchNorm1d(1024),
                 nn.ReLU(True),
 
-                nn.Linear(self.inner_dim, self.inner_dim, bias=bias_g),
-                nn.BatchNorm1d(self.inner_dim),
+                nn.Linear(1024, 2048, bias=bias_g),
+                nn.BatchNorm1d(2048),
                 nn.ReLU(True),
 
-                nn.Linear(self.inner_dim, self.inner_dim, bias=bias_g),
-                nn.BatchNorm1d(self.inner_dim),
+                nn.Linear(2048, 4096, bias=bias_g),
+                nn.BatchNorm1d(4096),
                 nn.ReLU(True),
 
-                nn.Linear(self.inner_dim, self.out_dim, bias=bias_g),
+                nn.Linear(4096, self.out_dim, bias=bias_g),
             )
 
     def forward(self, input, labels):
         input = input.view(-1, self.nz)
 
-        labels = labels.view(-1, 1)*2*np.pi
-        input = torch.cat((input, self.radius*torch.sin(labels), self.radius*torch.cos(labels)), 1)
+        input = torch.cat((input, labels), 1)
 
         if input.is_cuda and self.ngpu > 1:
             output = nn.parallel.data_parallel(self.linear, input, range(self.ngpu))
@@ -60,30 +57,29 @@ class cont_cond_generator(nn.Module):
 # discriminator
 bias_d=False
 class cont_cond_discriminator(nn.Module):
-    def __init__(self, ngpu=1, input_dim = 2, radius=1):
+    def __init__(self, ngpu=1, nlabels=1, input_dim=2):
         super(cont_cond_discriminator, self).__init__()
         self.ngpu = ngpu
+        self.nlabels = nlabels
         self.input_dim = input_dim
-        self.radius = radius
-
-        self.inner_dim = 100
+        
         self.main = nn.Sequential(
-            nn.Linear(input_dim+2, self.inner_dim, bias=bias_d),
+            nn.Linear(self.input_dim+self.nlabels, 4096, bias=bias_d),
             nn.ReLU(True),
 
-            nn.Linear(self.inner_dim, self.inner_dim, bias=bias_d),
+            nn.Linear(4096, 2048, bias=bias_d),
             nn.ReLU(True),
 
-            nn.Linear(self.inner_dim, self.inner_dim, bias=bias_d),
+            nn.Linear(2048, 1024, bias=bias_d),
             nn.ReLU(True),
 
-            nn.Linear(self.inner_dim, self.inner_dim, bias=bias_d),
+            nn.Linear(1024, 512, bias=bias_d),
             nn.ReLU(True),
 
-            nn.Linear(self.inner_dim, self.inner_dim, bias=bias_d),
+            nn.Linear(512, 256, bias=bias_d),
             nn.ReLU(True),
 
-            nn.Linear(self.inner_dim, 1, bias=bias_d),
+            nn.Linear(256, 1, bias=bias_d),
             nn.Sigmoid()
         )
 
@@ -91,18 +87,13 @@ class cont_cond_discriminator(nn.Module):
     def forward(self, input, labels):
         input = input.view(-1, self.input_dim)
 
-        labels = labels.view(-1, 1)*2*np.pi
-        input = torch.cat((input, self.radius*torch.sin(labels), self.radius*torch.cos(labels)), 1)
+        input = torch.cat((input, labels), 1)
 
         if input.is_cuda and self.ngpu > 1:
             output = nn.parallel.data_parallel(self.main, input, range(self.ngpu))
         else:
             output = self.main(input)
         return output.view(-1, 1)
-
-
-
-
 
 if __name__=="__main__":
     import numpy as np

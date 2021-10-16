@@ -1,5 +1,5 @@
 {
-    "vars": ["phi","omega"],
-    "kappas": [75,0.075],
-    "sigmas": [50,0.05]
+    "vars": ["omega"],
+    "kappas": [0.075],
+    "sigmas": [0.05]
 }
