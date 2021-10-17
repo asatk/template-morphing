@@ -10,7 +10,9 @@ import json
 import random
 import torch
 import torch.backends.cudnn as cudnn
+import matplotlib.pyplot as plt
 from PIL import Image
+import timeit
 
 from models import cont_cond_GAN2D as CCGAN
 
@@ -55,8 +57,7 @@ with open(hpars_path) as hpars_json:
 n_vars = 1
 # n_samples = len(os.listdir(PROJECT_DIR+"/out/hist_npy/"))
 n_samples = int(subprocess.check_output('ls -alFh ../out/hist_npy/ | grep "1800" | wc -l',shell=True))
-print(n_samples)
-n_epochs = 10000
+n_epochs = int(1e2)
 lr_g = 5e-5
 lr_d = 5e-5
 batch_size_D = 5
@@ -69,6 +70,8 @@ dim_latent_space = 128
 train_data = [0]*n_samples
 train_labels = np.zeros((n_samples,n_vars))
 
+second_label = 1e0
+
 # associate each file's data with its label
 data_mapping_path = "data_mapping.json"
 with open(data_mapping_path) as json_file:
@@ -79,8 +82,8 @@ with open(data_mapping_path) as json_file:
         # train_labels[i] = data_label_map[f]
         # train_data[i] = np.load(f)
         temp_label = data_label_map[f]
-        if temp_label[0] == 1.8e3:
-            train_labels[count] = float(temp_label[1])
+        if temp_label[1] == second_label:
+            train_labels[count] = float(temp_label[0])
             train_data[count] = np.load(f)
             count+=1
             
@@ -96,8 +99,8 @@ var = 0
 
 output_shape = train_data[0].shape
 out_dim = np.prod(output_shape)
-print(output_shape)
-print(out_dim)
+# print(output_shape)
+# print(out_dim)
 
 # print(train_index)
 print(train_labels)
@@ -143,11 +146,11 @@ def loss_D():
     j=0
     reshuffle_count = 0
     while j < batch_size_D:
-        print(j)
+        # print(j)
         
         batch_target_label = batch_target_labels[j]
-        print("\n")
-        print("batch target label",batch_target_label)
+        # print("\n")
+        # print("batch target label",batch_target_label)
 
         label_vicinity = np.ndarray(train_labels.shape)
 
@@ -169,15 +172,15 @@ def loss_D():
         # reshuffle the batch target labels, redo that sample
         if len(indices) < 1:
             reshuffle_count += 1
-            print("RESHUFFLE COUNT",reshuffle_count)
+            # print("RESHUFFLE COUNT",reshuffle_count)
             batch_epsilons_j = np.zeros((n_vars))
             for v in range(n_vars):
                 batch_epsilons_j[v] = np.random.normal(0,sigmas[v],1).transpose()
             batch_target_labels[j] = batch_target_labels_raw[j] + batch_epsilons_j
             continue
 
-        print("RESHUFFLE COUNT",reshuffle_count)
-        print("BATCH SAMPLE",batch_target_label)
+        # print("RESHUFFLE COUNT",reshuffle_count)
+        # print("BATCH SAMPLE",batch_target_label)
 
         # set the bounds for random draw of possible fake labels
         if use_hard_vicinity == "hard":
@@ -273,7 +276,7 @@ def gen_G(netG,batch_size,label):
     with torch.no_grad():
         tmp = 0
         while tmp < NFAKE:
-            print(tmp)
+            # print(tmp)
             z = torch.randn(batch_size,dim_latent_space,dtype=float).to(device)
             y = np.ones(batch_size) * label
             y = torch.from_numpy(y).type(torch.float).view(-1,1).to(device)
@@ -285,19 +288,31 @@ def gen_G(netG,batch_size,label):
     fake_samples = fake_samples[0:NFAKE]
     fake_labels = np.ones(NFAKE) * label
 
+    mass_pair_str = "%04.0f,%1.2f"%(label,second_label)
+    out_file_fstr = PROJECT_DIR+"/out/%s/gaus_%s.%s" 
+
     if path is not None:
-        raw_fake_samples = (fake_samples*0.5 + 0.5)+255.0
-        raw_fake_samples = raw_fake_samples.astype(np.uint8)
-        for i in range(NFAKE):
-            filename = path+str(i)+'.jpg'
-            im = Image.fromarray(raw_fake_samples[i][0],mode='L')
-            im = im.save(filename)
+        for i in range(batch_size):
+            fake_sample = fake_samples[i]
+            # print(fake_sample)
+
+            # out_file_jpg = out_file_fstr%("gen_jpg",mass_pair_str,"jpg")
+            out_file_npy = out_file_fstr%("1DGAN/gen_npy",mass_pair_str+"_"+str(i),"npy")
+            out_file_png = out_file_fstr%("1DGAN/gen_png",mass_pair_str+"_"+str(i),"png")
+
+            np.save(out_file_npy,fake_sample,allow_pickle=False)
+            plt.imsave(out_file_png,fake_sample.T,cmap="gray",vmin=0.,vmax=1.,format="png",origin="lower")
 
     return fake_samples,fake_labels
 
-
-netD = loss_D()
-netD.float()
-netG = loss_G()
-netG.float()
-gen_G(netG,5,(2e0))
+start = timeit.default_timer()
+for epoch in range(n_epochs):
+    print("------------EPOCH: " + str(epoch) + " ------------")
+    netD = loss_D()
+    netD.float()
+    netG = loss_G()
+    netG.float()
+stop = timeit.default_timer()
+time_diff = stop-start
+print("training took: " + str(time_diff) + "s\t" + str(time_diff/60) + "m\t" + str(time_diff/3600) + "h")
+gen_G(netG,5,(1e3))
