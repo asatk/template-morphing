@@ -2,4 +2,4 @@ morphing.code-workspace
 .vscode/
 *.root
 .old/
-/out/
+/out/*
