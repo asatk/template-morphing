@@ -57,7 +57,7 @@ with open(hpars_path) as hpars_json:
 n_vars = 1
 # n_samples = len(os.listdir(PROJECT_DIR+"/out/hist_npy/"))
 n_samples = int(subprocess.check_output('ls -alFh ../out/hist_npy/ | grep "1800" | wc -l',shell=True))
-n_epochs = int(1e2)
+n_epochs = int(1e3)
 lr_g = 5e-5
 lr_d = 5e-5
 batch_size_D = 5
@@ -70,7 +70,7 @@ dim_latent_space = 128
 train_data = [0]*n_samples
 train_labels = np.zeros((n_samples,n_vars))
 
-second_label = 1e0
+second_label = 1.4e0
 
 # associate each file's data with its label
 data_mapping_path = "data_mapping.json"
@@ -315,4 +315,4 @@ for epoch in range(n_epochs):
 stop = timeit.default_timer()
 time_diff = stop-start
 print("training took: " + str(time_diff) + "s\t" + str(time_diff/60) + "m\t" + str(time_diff/3600) + "h")
-gen_G(netG,5,(1e3))
+gen_G(netG,5,(2.4e3))
