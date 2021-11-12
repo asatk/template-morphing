@@ -16,17 +16,10 @@ class FileFormatException(Exception):
         __msg = """
         \nfile path provided is not relative to the head of the project directory:
                 HEAD
+                |>misc
                 |>out
-                |->phi
-                |-->crystalball
-                |-->gaus
-                |->omega
-                |-->landau
-                |-->landxgaus
                 |>root
                 |>src
-                |->build
-                ...etc
 
         expected:\t\'${PROJECT_DIR}/...\'
         actual:\t\t"""
