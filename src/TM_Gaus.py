@@ -57,7 +57,7 @@ with open(hpars_path) as hpars_json:
 n_vars = 1
 # n_samples = len(os.listdir(PROJECT_DIR+"/out/hist_npy/"))
 n_samples = int(subprocess.check_output('ls -alFh ../out/hist_npy/ | grep "1800" | wc -l',shell=True))
-n_epochs = int(1e3)
+n_epochs = int(1e2)
 lr_g = 5e-5
 lr_d = 5e-5
 batch_size_D = 5
@@ -70,7 +70,7 @@ dim_latent_space = 128
 train_data = [0]*n_samples
 train_labels = np.zeros((n_samples,n_vars))
 
-second_label = 1.4e0
+second_label = 0.8e0
 
 # associate each file's data with its label
 data_mapping_path = "data_mapping.json"
@@ -289,7 +289,7 @@ def gen_G(netG,batch_size,label):
     fake_labels = np.ones(NFAKE) * label
 
     mass_pair_str = "%04.0f,%1.2f"%(label,second_label)
-    out_file_fstr = PROJECT_DIR+"/out/%s/gaus_%s.%s" 
+    out_file_fstr = PROJECT_DIR+"/out/%s/gaus_%iepc_%s.%s" 
 
     if path is not None:
         for i in range(batch_size):
@@ -297,8 +297,8 @@ def gen_G(netG,batch_size,label):
             # print(fake_sample)
 
             # out_file_jpg = out_file_fstr%("gen_jpg",mass_pair_str,"jpg")
-            out_file_npy = out_file_fstr%("1DGAN/gen_npy",mass_pair_str+"_"+str(i),"npy")
-            out_file_png = out_file_fstr%("1DGAN/gen_png",mass_pair_str+"_"+str(i),"png")
+            out_file_npy = out_file_fstr%("1DGAN/gen_npy",int(n_epochs),mass_pair_str+"_"+str(i),"npy")
+            out_file_png = out_file_fstr%("1DGAN/gen_png",int(n_epochs),mass_pair_str+"_"+str(i),"png")
 
             np.save(out_file_npy,fake_sample,allow_pickle=False)
             plt.imsave(out_file_png,fake_sample.T,cmap="gray",vmin=0.,vmax=1.,format="png",origin="lower")
@@ -315,4 +315,4 @@ for epoch in range(n_epochs):
 stop = timeit.default_timer()
 time_diff = stop-start
 print("training took: " + str(time_diff) + "s\t" + str(time_diff/60) + "m\t" + str(time_diff/3600) + "h")
-gen_G(netG,5,(2.4e3))
+gen_G(netG,5,(0.6e3))

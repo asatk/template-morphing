@@ -1,4 +1,5 @@
 import ROOT
+import os
 import json
 import numpy as np
 from matplotlib import pyplot as plt
@@ -24,17 +25,23 @@ mass_list = [
     (300,1.2),(600,1.2),(900,1.2),(1200,1.2),(1500,1.2),(1800,1.2),(2100,1.2),(2400,1.2),(2700,1.2),(3000,1.2),
     (300,1.4),(600,1.4),(900,1.4),(1200,1.4),(1500,1.4),(1800,1.4),(2100,1.4),(2400,1.4),(2700,1.4),(3000,1.4),
     (300,1.6),(600,1.6),(900,1.6),(1200,1.6),(1500,1.6),(1800,1.6),(2100,1.6),(2400,1.6),(2700,1.6),(3000,1.6),
-    (300,1.8),(600,1.8),(900,1.8),(1200,1.8),(1500,1.8),(1800,1.8),(2100,1.8),(2400,1.8),(2700,1.8),(3000,1.8),
-    (300,2.0),(600,2.0),(900,2.0),(1200,2.0),(1500,2.0),(1800,2.0),(2100,2.0),(2400,2.0),(2700,2.0),(3000,2.0),
+    (300,1.8),(600,1.8),(900,1.8),(1200,1.8),(1500,1.8),(1800,1.8),(2100,1.8),(2400,1.8),(2700,1.8),(3000,1.8)
+    # (300,2.0),(600,2.0),(900,2.0),(1200,2.0),(1500,2.0),(1800,2.0),(2100,2.0),(2400,2.0),(2700,2.0),(3000,2.0),
 ]
 
-sig_x = 30*1/4
-sig_y = 0.02*1/4
+num_bins = 2.
+#bin width * number of bins covered in 1 sigma
+sig_x = 30*num_bins        
+sig_y = 0.02*num_bins
 
 xbins,xlo,xhi,ybins,ylo,yhi = (300,0,3000,200,0,2.000)
 
 data_label_map = {}
 data_mapping_path = "data_mapping.json"
+
+for d in ['hist_npy', 'hist_jpg', 'hist_png']:
+    out_dir = PROJECT_DIR+'/out/%s/bins_%2.2f'%(d,num_bins)
+    os.mkdir(out_dir)
 
 # estimate 1st and 2nd gaussian moments for each distribution
 for i in range(len(mass_list)):
@@ -68,23 +75,23 @@ for i in range(len(mass_list)):
 
     mass_pair = [mass_list[i][0],mass_list[i][1]]
     mass_pair_str = "%04.0f,%1.2f"%(mass_pair[0],mass_pair[1])
-    out_file_fstr = PROJECT_DIR+"/out/%s/gaus_%s.%s" 
-    out_file_jpg = out_file_fstr%("hist_jpg",mass_pair_str,"jpg")
-    out_file_png = out_file_fstr%("hist_png",mass_pair_str,"png")
-    out_file_npy = out_file_fstr%("hist_npy",mass_pair_str,"npy")
+    out_file_fstr = PROJECT_DIR+"/out/%s/bins_%2.2f/gaus_%s.%s" 
+    out_file_jpg = out_file_fstr%("hist_jpg",num_bins,mass_pair_str,"jpg")
+    out_file_png = out_file_fstr%("hist_png",num_bins,mass_pair_str,"png")
+    out_file_npy = out_file_fstr%("hist_npy",num_bins,mass_pair_str,"npy")
 
-    # hist.Draw("COL")
-    # c1 = ROOT.gROOT.FindObject("c1")
-    # c1.Update()
-    # c1.SaveAs(out_file_jpg)    
+    hist.Draw("COL")
+    c1 = ROOT.gROOT.FindObject("c1")
+    c1.Update()
+    c1.SaveAs(out_file_jpg)    
     
-    # plt.imsave(out_file_png,arr.T,cmap="gray",vmin=0.,vmax=1.,format="png",origin="lower")
+    plt.imsave(out_file_png,arr.T,cmap="gray",vmin=0.,vmax=1.,format="png",origin="lower")
     np.save(out_file_npy,arr,allow_pickle=False)
 
     data_label_map.update({out_file_npy:mass_pair})
     # temp=raw_input()
 
-    # c1.Clear()
+    c1.Clear()
 
 with open(data_mapping_path, 'w') as json_file:
     json.dump(data_label_map, json_file, indent=4)
