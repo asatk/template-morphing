@@ -1,27 +1,33 @@
 from defs import PROJECT_DIR
-from model import M2VAdapter
 
 import os
 
 class TMModel():
     
-    def __init__(self, m2v: M2VAdapter):
-        self.m2v = m2v
+    def __init__(self):
         self.files_all = []
         self.files_added = []
 
-    def update_label(self,text: str) -> str:
-        return text[::-1]
-        # self.m2v.update_label(text)
+    # def update_label(self,text: str) -> str:
+    #     return text[::-1]
 
-    # def update_file_lists(self, files_available: list[str] = None, files_selected: list[str] = None):
-    #     return ([],[])
+    def add_files(self, files_added: list[str] = None) -> tuple[list[str],list[str]]:
+        self.files_all = sorted(set(self.files_all) - set(files_added))
+        self.files_added = sorted(set(self.files_added) | set(files_added))
+        return (self.files_all, self.files_added)
+
+    def remove_files(self, files_removed: list[str] = None) -> tuple[list[str], list[str]]:
+        self.files_all = list(set(self.files_all) | set(files_removed))
+        self.files_added = list(set(self.files_added) - set(files_removed))
+        return (self.files_all, self.files_added)
+
+    def filter_files(self, filter_str: str):
+        files_all_filtered = [x for x in self.files_all if filter_str in x]
+        files_added_filtered = [x for x in self.files_added if filter_str in x]
+        return (files_all_filtered, files_added_filtered)
 
     def get_file_lists(self) -> tuple[list[str], list[str]]:
         return (self.files_all,self.files_added)
 
     def start(self):
-        self.files_all = self.root_files = os.listdir(PROJECT_DIR+"/root")
-        self.m2v.init_file_lists(self.files_all,self.files_added)
-
-        
+        self.files_all = os.listdir(PROJECT_DIR+"/root")

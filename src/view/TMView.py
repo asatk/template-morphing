@@ -1,24 +1,15 @@
 import tkinter as tk
 from tkinter import ttk
 from typing import Callable
-from view import V2MAdapter
-import os
-from defs import PROJECT_DIR
 
 class TMView(tk.Frame):
 
-    # root = tk.Tk()
-    # frames: dict[str,ttk.Frame] = {}
-    # labels: dict[str,ttk.Label] = {}
-    # buttons: dict[str,ttk.Button] = {}
-
-    def __init__(self, v2m: V2MAdapter):
-        self.v2m = v2m
-
+    def __init__(self, parent: tk.Tk, *args, **kwargs):
+        super().__init__(parent, *args, **kwargs)
+        self.__root = parent
         self.__frames: dict[str,ttk.Frame] = {}
         self.__labels: dict[str,ttk.Label] = {}
         self.__buttons: dict[str,ttk.Button] = {}
-        self.__root = tk.Tk()
         self.initGUI()
 
     def initGUI(self):
@@ -26,91 +17,135 @@ class TMView(tk.Frame):
         root.title("TM")
         root.geometry("500x300")
 
-        self.__create_frame("test")
-        self.__create_label("test label",self.get_frame("test"))
-        self.__create_button("press",self.get_frame("test"))
+        # configure grid layout
+        # self.columnconfigure(0,pad=2)
+        # self.columnconfigure(1,pad=2)
+        # self.columnconfigure(2,pad=2)
 
-        self.input = ttk.Entry(self.get_frame("test"))
-        self.input.pack(fill=tk.X)
-        # self.create_label("test input",self.input)
+        # self.rowconfigure(0,pad=2)
+        # self.rowconfigure(1,pad=2)
+        # self.rowconfigure(2,pad=2)
+        # self.rowconfigure(3,pad=2)
+        # self.rowconfigure(4,pad=2)
+
+        # self.__create_frame("test")
+        # self.__pack_frame("test",fill=tk.X)
+        # self.__create_label("test label",self.get_frame("test"))
+        # self.__pack_label("test label",fill=tk.X,side='left')
+        # self.__create_button("test",self.get_frame("test"))
+        # self.__pack_button("test",fill=tk.X,side='left')
+
+        # self.input = ttk.Entry(self.get_frame("test"))
+        # self.input.pack(fill=tk.BOTH)
 
         self.__create_frame("control")
-        self.__create_label("control frame",self.get_frame("control"))
+        self.__pack_frame("control")
+        self.__create_label("control frame: ",self.get_frame("control"))
+        self.__pack_label("control frame: ", fill=tk.X,side='left',padx=5)
         self.__create_button("quit",self.get_frame("control"))
+        self.__pack_button("quit",fill=tk.X,side='left')
+
+        self.__create_frame("filter")
+        self.__pack_frame("filter")
+        self.__create_label("filter text: ",self.get_frame("filter"))
+        self.__pack_label("filter text: ",fill=tk.BOTH,expand=True,side='left')
+        self.filter_text = ttk.Entry(self.get_frame("filter"))
+        self.filter_text.pack(fill=tk.BOTH,expand=True,side='left')
 
         self.__create_frame("data")
+        self.__pack_frame("data",fill=tk.BOTH,expand=True,padx=5,pady=5)
 
-        self.text_files_all = tk.Listbox(root,selectmode=tk.MULTIPLE)
-        self.text_files_added = tk.Listbox(root,selectmode=tk.MULTIPLE)
-        self.text_files_all.pack(fill=tk.X)
-        self.text_files_added.pack(fill=tk.X)
+        self.text_files_all = tk.Listbox(self.get_frame("data"),selectmode=tk.MULTIPLE)
+        self.text_files_all.pack(fill=tk.BOTH,expand=True,side='left',padx=5)
 
-        self.__create_button("add file(s)",self.get_frame("data"))
-        self.__create_button("remove file(s)",self.get_frame("data"))
-        # self.text_files_available
+        self.__create_frame("data buttons", self.get_frame("data"))
+        self.__pack_frame("data buttons",fill=None,expand=False,side='left')
 
-        # self.create_label("root file listing")
-        # self.cb_files = ttk.Combobox(self.get_frame("data"),values=os.listdir(PROJECT_DIR+"/root"))
-        # # self.cb_files.#dont allow typing
-        # self.cb_files.pack(fill=tk.X)
+        self.__create_button("add file(s)",self.get_frame("data buttons"))
+        self.__pack_button("add file(s)",fill=tk.X, expand=False,side='top')
+        self.__create_button("remove file(s)",self.get_frame("data buttons"))
+        self.__pack_button("remove file(s)",fill=tk.X, expand=False, side='bottom')
+
+        self.text_files_added = tk.Listbox(self.get_frame("data"),selectmode=tk.MULTIPLE)
+        self.text_files_added.pack(fill=tk.BOTH,expand=True,side='left',padx=5)
 
         # add two text select panes and filter
         # add add and remove buttons like in eclipse resrouces stuff
         # add add all and remove all buttons
-        
+
     def start(self):
-        self.update_file_lists(*self.v2m.get_file_lists())
-        self.__root.mainloop()
+        '''
+        no-op for now
+        '''
+        pass
     
     def quit(self):
         self.__root.quit()
 
     # general widget creation methods used internally (model will not be adding any components)
 
-    def __create_frame(self,name: str, parent: tk.Frame=None):
+    def __create_frame(self,name: str, parent: tk.Frame=None, *args, **kwargs):
         if parent == None:
             parent = self.__root
-        self.__frames[name] = ttk.Frame(parent)
-        self.__frames[name].pack(fill=tk.X)
+        self.__frames[name] = ttk.Frame(parent, *args, **kwargs)
 
-    def __create_label(self,name: str, parent: tk.Frame=None):
+    def __create_label(self,name: str, parent: tk.Frame=None, *args, **kwargs):
         if parent == None:
             parent = self.__root
-        self.__labels[name] = ttk.Label(parent,text=name)
-        self.__labels[name].pack(fill=tk.X)
+        self.__labels[name] = ttk.Label(parent,*args, text=name, **kwargs)
 
-    def __create_button(self,name: str, parent: tk.Frame=None):
+    def __create_button(self,name: str, parent: tk.Frame=None, *args, **kwargs):
         if parent == None:
             parent = self.__root
-        self.__buttons[name] = ttk.Button(parent,text=name)
-        self.__buttons[name].pack(fill=tk.X)
+        self.__buttons[name] = ttk.Button(parent, *args, text=name, **kwargs)
+
+    def __pack_frame(self, name: str, **kwargs):
+        self.__frames[name].pack(**kwargs)
+
+    def __pack_label(self, name: str, **kwargs):
+        self.__labels[name].pack(**kwargs)
+
+    def __pack_button(self, name: str, **kwargs):
+        self.__buttons[name].pack(**kwargs)
 
     def get_frame(self,name:str) -> ttk.Frame:
         return self.__frames[name]
 
     def button_cmd(self,name: str, cmd: Callable):
         self.__buttons[name].configure(command=cmd)
-        self.__buttons[name].pack(fill=tk.X)
 
-    #test methods
-    def press(self):
-        print(input.get())
-        # v2m.press(input.get())
+    def filter_cmd(self, cmd: Callable):
+        self.filter_text.bind("<Key>",cmd)
 
-    def update_label(self,text: str):
-        self.__labels["test label"].configure(text=text)
+    def grid_config(self, widget: tk.Widget, row, col, rowspan, colspan):
+        widget.grid(row=row,column=col,rowspan=rowspan,columnspan=colspan)
+    
+    # def display_label(self,text: str):
+    #     self.__labels["test label"].configure(text=text)
 
-    #data methods
-    def update_file_lists(self, files_all: list[str] = None, files_added: list[str] = []):
+    # def get_input(self) -> str:
+    #     return self.input.get()
+
+    # #data methods
+    def display_file_lists(self, files_all: list[str] = None, files_added: list[str] = None):
         if files_all == None:
-            files_all = self.root_files
+            files_all = []
+        if files_added == None:
+            files_added = []
+        files_all.sort()
+        files_added.sort()
         self.text_files_all.configure(listvariable=tk.StringVar(value=files_all))
         self.text_files_added.configure(listvariable=tk.StringVar(value=files_added))
 
-    def get_selected_files(self) -> tuple[list[str],list[str]]:
+    def get_selected_files_all_files(self) -> list[str]:
         indices_all = self.text_files_all.curselection()
-        indices_added = self.text_files_added.curselection()
         files_all = [self.text_files_all.get(i) for i in indices_all]
+        return files_all
+
+    def get_selected_files_added_files(self) -> list[str]:
+        indices_added = self.text_files_added.curselection()
         files_added = [self.text_files_added.get(i) for i in indices_added]
-        self.update_file_lists(files_all, files_added)
-        return (files_all, files_added)
+        return files_added
+
+    def get_filter_text(self) -> str:
+        return self.filter_text.get()
