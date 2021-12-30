@@ -5,4 +5,5 @@ used in many modules in different locations
 
 from os import getcwd
 from os.path import dirname
-PROJECT_DIR = dirname(getcwd())
+# PROJECT_DIR = dirname(getcwd())
+PROJECT_DIR = "/home/asatk/Documents/code/cern/TM"

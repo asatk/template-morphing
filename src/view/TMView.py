@@ -1,3 +1,5 @@
+#!/home/asatk/miniconda3/envs/py3CCGAN/bin/python
+
 import tkinter as tk
 from tkinter import ttk
 from typing import Callable
@@ -28,22 +30,14 @@ class TMView(tk.Frame):
         # self.rowconfigure(3,pad=2)
         # self.rowconfigure(4,pad=2)
 
-        # self.__create_frame("test")
-        # self.__pack_frame("test",fill=tk.X)
-        # self.__create_label("test label",self.get_frame("test"))
-        # self.__pack_label("test label",fill=tk.X,side='left')
-        # self.__create_button("test",self.get_frame("test"))
-        # self.__pack_button("test",fill=tk.X,side='left')
-
-        # self.input = ttk.Entry(self.get_frame("test"))
-        # self.input.pack(fill=tk.BOTH)
-
         self.__create_frame("control")
         self.__pack_frame("control")
         self.__create_label("control frame: ",self.get_frame("control"))
         self.__pack_label("control frame: ", fill=tk.X,side='left',padx=5)
         self.__create_button("quit",self.get_frame("control"))
         self.__pack_button("quit",fill=tk.X,side='left')
+        self.__create_button("display",self.get_frame("control"))
+        self.__pack_button("display",fill=tk.X,side='left')
 
         self.__create_frame("filter")
         self.__pack_frame("filter")
@@ -119,12 +113,6 @@ class TMView(tk.Frame):
 
     def grid_config(self, widget: tk.Widget, row, col, rowspan, colspan):
         widget.grid(row=row,column=col,rowspan=rowspan,columnspan=colspan)
-    
-    # def display_label(self,text: str):
-    #     self.__labels["test label"].configure(text=text)
-
-    # def get_input(self) -> str:
-    #     return self.input.get()
 
     # #data methods
     def display_file_lists(self, files_all: list[str] = None, files_added: list[str] = None):
@@ -137,6 +125,12 @@ class TMView(tk.Frame):
         self.text_files_all.configure(listvariable=tk.StringVar(value=files_all))
         self.text_files_added.configure(listvariable=tk.StringVar(value=files_added))
 
+    # def get_files_all_files(self) -> list[str]:
+    #     return self.text_files_all.get(0,self.text_files_all.size())
+
+    # def get_files_added_files(self) -> list[str]:
+    #     return self.text_files_added.get(0,self.text_files_added.size())
+
     def get_selected_files_all_files(self) -> list[str]:
         indices_all = self.text_files_all.curselection()
         files_all = [self.text_files_all.get(i) for i in indices_all]
@@ -147,5 +141,5 @@ class TMView(tk.Frame):
         files_added = [self.text_files_added.get(i) for i in indices_added]
         return files_added
 
-    def get_filter_text(self) -> str:
-        return self.filter_text.get()
+    def get_filter_text(self, event: tk.Event) -> str:
+        return self.filter_text.get() + str(event.char)

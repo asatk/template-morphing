@@ -1,3 +1,5 @@
+#!/home/asatk/miniconda3/envs/py3CCGAN/bin/python
+
 import tkinter as tk
 from view.TMView import TMView
 
