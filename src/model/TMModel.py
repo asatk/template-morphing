@@ -33,20 +33,28 @@ class TMModel():
     def start(self):
         self.files_all = os.listdir(PROJECT_DIR+"/root")
 
-    def plot_files(self):
+    def convert_files(self):
         self.root_to_np()
 
     def root_to_np(self):
         # cmd_str = ""+PROJECT_DIR+"/src/model/ROOTtoNP.py "+" ".join(self.files_added)
         files_added = [PROJECT_DIR+"/root/"+i for i in self.files_added]
         cmd_str = "model/ROOTtoNP.py "+" ".join(files_added)
+        print("cmd str")
         print(cmd_str)
-        process = subprocess.Popen(cmd_str, shell=True, stdout=subprocess.PIPE)
+
+        file_output = open(PROJECT_DIR+"/out/log/out.txt",'w')
+        file_error = open(PROJECT_DIR+"/out/log/err.txt",'w')
+
+        print("os environ path")
+        print(os.environ["PATH"])
+        new_path = os.environ["PATH"].replace("py3CCGAN","cern2.7")
+        new_environ = os.environ.copy()
+        new_environ["PATH"] = new_path
+
+        process = subprocess.Popen(cmd_str, shell=True, env=new_environ,
+                stdout=file_output, stderr=file_error)
         output, error = process.communicate()
-        # return 
-        # os.system("which python")
-        # os.system("pwd")
-        # os.system("PYTHONPATH="+PROJECT_DIR)
-        # os.system("echo $PYTHONPATH")
-        # os.system("model/ROOTtoNP.py " + )
-        # os.system(PROJECT_DIR+"/src/model/ROOTtoNP.py " + " ".join(self.files_added))
+        
+        file_output.close()
+        file_error.close()

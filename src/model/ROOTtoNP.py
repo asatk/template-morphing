@@ -6,27 +6,16 @@ import sys
 import numpy as np
 from matplotlib import pyplot as plt
 
-os.system("echo $PYTHONPATH")
-os.system("pwd")
 sys.path.append(os.getcwd())
-os.system("echo $PYTHONPATH")
 os.system("which python")
 
 from defs import PROJECT_DIR
 print "project dir:",PROJECT_DIR
 # from defs import file_path_check
 
-file_list = []
-
-def __main__():
-    global file_list
-    print(sys.argv[0])
-    print(sys.argv[1])
-    file_list = sys.argv[1:]
-    print "main"
-
-if __name__ == "__main__":
-    __main__()
+file_list = sys.argv[1:]
+print "(py2)"
+print("(py3)")
 
 if not os.path.isdir(PROJECT_DIR+"/out/"):
     os.mkdir(PROJECT_DIR+"/out/")

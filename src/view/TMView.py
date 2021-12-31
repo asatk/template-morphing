@@ -36,8 +36,8 @@ class TMView(tk.Frame):
         self.__pack_label("control frame: ", fill=tk.X,side='left',padx=5)
         self.__create_button("quit",self.get_frame("control"))
         self.__pack_button("quit",fill=tk.X,side='left')
-        self.__create_button("display",self.get_frame("control"))
-        self.__pack_button("display",fill=tk.X,side='left')
+        self.__create_button("convert",self.get_frame("control"))
+        self.__pack_button("convert",fill=tk.X,side='left')
 
         self.__create_frame("filter")
         self.__pack_frame("filter")

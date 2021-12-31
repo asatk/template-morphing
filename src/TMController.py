@@ -22,7 +22,7 @@ class TMController():
 
         #define commands that get event from view, process data in model, and update view
         quit_cmd = view.quit
-        display_cmd = lambda:model.plot_files()
+        convert_cmd = lambda:model.convert_files()
         add_files_cmd = lambda:view.display_file_lists(*model.add_files(view.get_selected_files_all_files()))
         remove_files_cmd = lambda:view.display_file_lists(*model.remove_files(view.get_selected_files_added_files()))
         filter_files_cmd = lambda event:view.display_file_lists(*model.filter_files(view.get_filter_text(event)))
@@ -30,7 +30,7 @@ class TMController():
         # #set buttons to respective commands
         # view.button_cmd("test", update_cmd)
         view.button_cmd("quit", quit_cmd)
-        view.button_cmd("display",display_cmd)
+        view.button_cmd("convert",convert_cmd)
         view.button_cmd("add file(s)", add_files_cmd)
         view.button_cmd("remove file(s)", remove_files_cmd)
         view.filter_cmd(filter_files_cmd)
