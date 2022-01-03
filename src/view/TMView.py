@@ -4,6 +4,9 @@ import tkinter as tk
 from tkinter import ttk
 from typing import Callable
 
+from PIL import ImageTk
+from matplotlib.pyplot import text
+
 class TMView(tk.Frame):
 
     def __init__(self, parent: tk.Tk, *args, **kwargs):
@@ -17,7 +20,8 @@ class TMView(tk.Frame):
     def initGUI(self):
         root = self.__root
         root.title("TM")
-        root.geometry("500x300")
+        root.geometry("700x500")
+        # root.resizable(0,0)
 
         # configure grid layout
         # self.columnconfigure(0,pad=2)
@@ -38,6 +42,8 @@ class TMView(tk.Frame):
         self.__pack_button("quit",fill=tk.X,side='left')
         self.__create_button("convert",self.get_frame("control"))
         self.__pack_button("convert",fill=tk.X,side='left')
+        self.__create_button("display",self.get_frame("control"))
+        self.__pack_button("display",fill=tk.X,side='left')
 
         self.__create_frame("filter")
         self.__pack_frame("filter")
@@ -49,7 +55,7 @@ class TMView(tk.Frame):
         self.__create_frame("data")
         self.__pack_frame("data",fill=tk.BOTH,expand=True,padx=5,pady=5)
 
-        self.text_files_all = tk.Listbox(self.get_frame("data"),selectmode=tk.MULTIPLE)
+        self.text_files_all = tk.Listbox(self.get_frame("data"),selectmode=tk.MULTIPLE, exportselection=False)
         self.text_files_all.pack(fill=tk.BOTH,expand=True,side='left',padx=5)
 
         self.__create_frame("data buttons", self.get_frame("data"))
@@ -60,12 +66,32 @@ class TMView(tk.Frame):
         self.__create_button("remove file(s)",self.get_frame("data buttons"))
         self.__pack_button("remove file(s)",fill=tk.X, expand=False, side='bottom')
 
-        self.text_files_added = tk.Listbox(self.get_frame("data"),selectmode=tk.MULTIPLE)
+        self.text_files_added = tk.Listbox(self.get_frame("data"),selectmode=tk.MULTIPLE, exportselection=False)
         self.text_files_added.pack(fill=tk.BOTH,expand=True,side='left',padx=5)
 
-        # add two text select panes and filter
-        # add add and remove buttons like in eclipse resrouces stuff
-        # add add all and remove all buttons
+        self.__create_frame("image")
+        self.__pack_frame("image",fill=tk.BOTH,expand=False)
+
+        # self.image_canvas = tk.Canvas(self.get_frame("image"),bd=0,highlightthickness=0)
+        # self.image_canvas.pack(fill=tk.BOTH,expand=True,side='left')
+
+        self.image_label = ttk.Label(self.get_frame("image"))
+        self.image_label.pack(fill=tk.NONE,expand=False,side='left',padx=5,pady=5)
+
+        self.__create_frame("image control",self.get_frame("image"),width=250,height=300)
+        # self.__pack_frame("image control")
+        self.__pack_frame("image control",expand=False)
+
+        self.__frames["image control"].pack_propagate(False)
+
+        self.text_files_converted = tk.Listbox(self.get_frame("image control"),
+                selectmode=tk.SINGLE,exportselection=False, width=30)
+        self.text_files_converted.pack(fill=tk.Y,expand=False,side='top',padx=5,anchor='c')
+        # self.text_files_converted.place(in_=self.get_frame("image control"),anchor='c',relx=0.5,rely=0.5)
+
+        self.file_type_combobox = ttk.Combobox(self.get_frame("image control"), values=['jpg','png'],state='readonly')
+        self.file_type_combobox.pack(fill=tk.Y,side='top',pady=5)
+        self.file_type_combobox.current(0)
 
     def start(self):
         '''
@@ -109,27 +135,39 @@ class TMView(tk.Frame):
         self.__buttons[name].configure(command=cmd)
 
     def filter_cmd(self, cmd: Callable):
-        self.filter_text.bind("<Key>",cmd)
+        self.filter_text.bind("<KeyRelease>",cmd)
 
-    def grid_config(self, widget: tk.Widget, row, col, rowspan, colspan):
-        widget.grid(row=row,column=col,rowspan=rowspan,columnspan=colspan)
+    def display_cmd(self, cmd: Callable):
+        self.text_files_converted.bind("<<ListboxSelect>>",cmd)
 
-    # #data methods
-    def display_file_lists(self, files_all: list[str] = None, files_added: list[str] = None):
+    def file_type_cmd(self, cmd: Callable):
+        self.file_type_combobox.bind("<<ComboboxSelected>>",cmd)
+
+    # def image_resize_cmd(self, cmd: Callable):
+    #     self.image_canvas.bind("<Configure>",cmd)
+
+    def display_image(self, image: ImageTk.PhotoImage):
+        self.image_label.image = image
+        self.image_label['image'] = self.image_label.image
+        # self.image_canvas.create_image(0,0,image=image,anchor=tk.NW)
+
+    # def grid_config(self, widget: tk.Widget, row, col, rowspan, colspan):
+    #     widget.grid(row=row,column=col,rowspan=rowspan,columnspan=colspan)
+
+    # data methods
+    def display_file_lists(self, files_all: list[str] = None, files_added: list[str] = None, files_converted: list[str] = None):
         if files_all == None:
             files_all = []
         if files_added == None:
             files_added = []
+        if files_converted == None:
+            files_converted = []
         files_all.sort()
         files_added.sort()
+        files_converted.sort()
         self.text_files_all.configure(listvariable=tk.StringVar(value=files_all))
         self.text_files_added.configure(listvariable=tk.StringVar(value=files_added))
-
-    # def get_files_all_files(self) -> list[str]:
-    #     return self.text_files_all.get(0,self.text_files_all.size())
-
-    # def get_files_added_files(self) -> list[str]:
-    #     return self.text_files_added.get(0,self.text_files_added.size())
+        self.text_files_converted.configure(listvariable=tk.StringVar(value=files_converted))
 
     def get_selected_files_all_files(self) -> list[str]:
         indices_all = self.text_files_all.curselection()
@@ -141,5 +179,15 @@ class TMView(tk.Frame):
         files_added = [self.text_files_added.get(i) for i in indices_added]
         return files_added
 
+    def get_selected_file_converted_files(self, event: tk.Event=None) -> tuple[str,int,int]:
+        text_files_converted = self.text_files_converted
+        if tk.Event != None:
+            text_files_converted = event.widget
+        return (text_files_converted.get(text_files_converted.curselection()),
+            self.get_frame("image").winfo_width() - self.get_frame("image control").winfo_width() - 12,
+            self.get_frame("image").winfo_height() - 12)
+        # return tuple(text_files_converted.get(text_files_converted.curselection()),
+        #         self.image_canvas.winfo_width(),self.image_canvas.winfo_height())
+
     def get_filter_text(self, event: tk.Event) -> str:
-        return self.filter_text.get() + str(event.char)
+        return event.widget.get()

@@ -7,22 +7,18 @@ import numpy as np
 from matplotlib import pyplot as plt
 
 sys.path.append(os.getcwd())
-os.system("which python")
+# os.system("which python")
 
 from defs import PROJECT_DIR
-print "project dir:",PROJECT_DIR
-# from defs import file_path_check
+# print("project dir: "+PROJECT_DIR)
 
 file_list = sys.argv[1:]
-print "(py2)"
-print("(py3)")
 
 if not os.path.isdir(PROJECT_DIR+"/out/"):
     os.mkdir(PROJECT_DIR+"/out/")
     os.mkdir(PROJECT_DIR+"/out/jpg")
     os.mkdir(PROJECT_DIR+"/out/png")
     os.mkdir(PROJECT_DIR+"/out/npy")
-
 
 plt.ion()
 
@@ -37,48 +33,7 @@ cut_str = "nTwoProngs>0 && nIDPhotons>0 && Obj_PhotonTwoProng.dR>0.1 && Obj_Phot
 # Tree name in Ntuplizer files
 tree_name = "twoprongNtuplizer/fTree"
 
-# file_list = [
-#     "${PROJECT_DIR}/root/Feb2021_PH-0500_OM-0p550.root",
-#     "${PROJECT_DIR}/root/Feb2021_PH-0500_OM-0p950.root",
-#     # "${PROJECT_DIR}/root/Feb2021_PH-1000_OM-0p550.root",
-#     # "${PROJECT_DIR}/root/Feb2021_PH-1000_OM-0p950.root",
-#     "${PROJECT_DIR}/root/Mar2021_PH-0500_OM-0p290.root",
-#     "${PROJECT_DIR}/root/Mar2021_PH-0500_OM-0p420.root",
-#     "${PROJECT_DIR}/root/Mar2021_PH-0500_OM-0p480.root",
-#     "${PROJECT_DIR}/root/Mar2021_PH-0500_OM-0p650.root",
-#     "${PROJECT_DIR}/root/Mar2021_PH-0500_OM-0p750.root",
-#     "${PROJECT_DIR}/root/Mar2021_PH-0500_OM-0p850.root",
-#     "${PROJECT_DIR}/root/Mar2021_PH-0500_OM-1p100.root",
-#     "${PROJECT_DIR}/root/Mar2021_PH-0500_OM-1p300.root",
-#     "${PROJECT_DIR}/root/Mar2021_PH-0500_OM-1p500.root"
-# ]
-
-# mass_list = [
-#     (500,0.55),
-#     (500,0.95),
-#     # (1000,0.55),
-#     # (1000,0.95),
-#     (500,0.29),
-#     (500,0.42),
-#     (500,0.48),
-#     (500,0.65),
-#     (500,0.75),
-#     (500,0.85),
-#     (500,1.1),
-#     (500,1.3),
-#     (500,1.5)
-# ]
-
 xbins,xlo,xhi,ybins,ylo,yhi = (300,0,3000,200,0,2.000)
-
-# if not (len(file_list) == len(mass_list)):
-#     print("list of root files and list of mass points are not the same length:")
-#     print("file_list: %i\tmass_list: %i"%(len(file_list),len(mass_list)))
-#     quit()
-# validate that all root files exist
-# for i in range(len(file_list)):
-#     file_list[i] = file_path_check(file_list[i])
-
 
 # estimate 1st and 2nd gaussian moments for each distribution
 for i,f in enumerate(file_list):
@@ -89,9 +44,13 @@ for i,f in enumerate(file_list):
     chain = ROOT.TChain(tree_name)
     chain.Add(f)
     chain.Draw(draw_str,cut_str,"goff")
+    # hist = hist.DrawNormalized("0")
 
-    # scale histogram from 0.0 to 1.0
-    hist.Scale(1/hist.GetMaximum())
+    # # scale histogram from 0.0 to 1.0
+    # hist.Scale(1/hist.GetMaximum())
+
+    # normalize histogram to the num of entries in cut
+    hist.Scale(1/hist.Integral())
     
     # make np arrays to store, use in py3 with keras
     x = np.zeros(xbins)
@@ -109,16 +68,11 @@ for i,f in enumerate(file_list):
             if z_val != 0:
                 arr[bin_x,bin_y] = z_val
 
-    # out_file_fstr = PROJECT_DIR+"/out/%s/%4.0f,%1.2f.%s" 
-    # out_file_jpg = out_file_fstr%("hist_jpg",mass_list[i][0],mass_list[i][1],"jpg")
-    # out_file_png = out_file_fstr%("hist_png",mass_list[i][0],mass_list[i][1],"png")
-    # out_file_npy = out_file_fstr%("hist_npy",mass_list[i][0],mass_list[i][1],"npy")
-
     file_str = file_list[i]
     idx_slash = file_str.rfind('/')
     idx_radix = file_str.rfind('.')
     file_str = file_str[idx_slash+1:idx_radix]
-    print "file str:",file_str
+    print("file str: "+file_str)
 
     out_file_fstr = PROJECT_DIR+"/out/{suffix}/"+file_str+".{suffix}"
     out_file_jpg = out_file_fstr.format(suffix="jpg")
@@ -144,7 +98,6 @@ for i,f in enumerate(file_list):
     
     plt.show()
     
-    
     plt.imsave(out_file_png,arr.T,cmap="gray",vmin=0.,vmax=1.,format="png",origin="lower")
     np.save(out_file_npy,arr,allow_pickle=False)
 
@@ -153,7 +106,3 @@ for i,f in enumerate(file_list):
     plt.close("all")
     c1.Clear()
     hist.Delete()
-
-
-
-

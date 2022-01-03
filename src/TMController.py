@@ -22,20 +22,21 @@ class TMController():
 
         #define commands that get event from view, process data in model, and update view
         quit_cmd = view.quit
-        convert_cmd = lambda:model.convert_files()
+        convert_cmd = lambda:view.display_file_lists(*model.convert_files())
+        display_cmd = lambda event:view.display_image(model.display(*view.get_selected_file_converted_files(event=event)))
         add_files_cmd = lambda:view.display_file_lists(*model.add_files(view.get_selected_files_all_files()))
         remove_files_cmd = lambda:view.display_file_lists(*model.remove_files(view.get_selected_files_added_files()))
         filter_files_cmd = lambda event:view.display_file_lists(*model.filter_files(view.get_filter_text(event)))
+        file_type_cmd = lambda event:view.display_file_lists(*model.set_image_file_mode(event.widget.get()))
 
-        # #set buttons to respective commands
-        # view.button_cmd("test", update_cmd)
+        # set buttons to respective commands
         view.button_cmd("quit", quit_cmd)
         view.button_cmd("convert",convert_cmd)
         view.button_cmd("add file(s)", add_files_cmd)
         view.button_cmd("remove file(s)", remove_files_cmd)
         view.filter_cmd(filter_files_cmd)
-
-        # view.update_file_lists(model.get_file_lists())
+        view.display_cmd(display_cmd)
+        view.file_type_cmd(file_type_cmd)
 
     def init_display(self):
         view = self.window.get_view()
