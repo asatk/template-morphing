@@ -21,18 +21,6 @@ class TMView(tk.Frame):
         root = self.__root
         root.title("TM")
         root.geometry("700x500")
-        # root.resizable(0,0)
-
-        # configure grid layout
-        # self.columnconfigure(0,pad=2)
-        # self.columnconfigure(1,pad=2)
-        # self.columnconfigure(2,pad=2)
-
-        # self.rowconfigure(0,pad=2)
-        # self.rowconfigure(1,pad=2)
-        # self.rowconfigure(2,pad=2)
-        # self.rowconfigure(3,pad=2)
-        # self.rowconfigure(4,pad=2)
 
         self.__create_frame("control")
         self.__pack_frame("control")
@@ -72,9 +60,6 @@ class TMView(tk.Frame):
         self.__create_frame("image")
         self.__pack_frame("image",fill=tk.BOTH,expand=False)
 
-        # self.image_canvas = tk.Canvas(self.get_frame("image"),bd=0,highlightthickness=0)
-        # self.image_canvas.pack(fill=tk.BOTH,expand=True,side='left')
-
         self.image_label = ttk.Label(self.get_frame("image"))
         self.image_label.pack(fill=tk.NONE,expand=False,side='left',padx=5,pady=5)
 
@@ -87,7 +72,6 @@ class TMView(tk.Frame):
         self.text_files_converted = tk.Listbox(self.get_frame("image control"),
                 selectmode=tk.SINGLE,exportselection=False, width=30)
         self.text_files_converted.pack(fill=tk.Y,expand=False,side='top',padx=5,anchor='c')
-        # self.text_files_converted.place(in_=self.get_frame("image control"),anchor='c',relx=0.5,rely=0.5)
 
         self.file_type_combobox = ttk.Combobox(self.get_frame("image control"), values=['jpg','png'],state='readonly')
         self.file_type_combobox.pack(fill=tk.Y,side='top',pady=5)
@@ -143,16 +127,9 @@ class TMView(tk.Frame):
     def file_type_cmd(self, cmd: Callable):
         self.file_type_combobox.bind("<<ComboboxSelected>>",cmd)
 
-    # def image_resize_cmd(self, cmd: Callable):
-    #     self.image_canvas.bind("<Configure>",cmd)
-
     def display_image(self, image: ImageTk.PhotoImage):
         self.image_label.image = image
         self.image_label['image'] = self.image_label.image
-        # self.image_canvas.create_image(0,0,image=image,anchor=tk.NW)
-
-    # def grid_config(self, widget: tk.Widget, row, col, rowspan, colspan):
-    #     widget.grid(row=row,column=col,rowspan=rowspan,columnspan=colspan)
 
     # data methods
     def display_file_lists(self, files_all: list[str] = None, files_added: list[str] = None, files_converted: list[str] = None):
@@ -186,8 +163,6 @@ class TMView(tk.Frame):
         return (text_files_converted.get(text_files_converted.curselection()),
             self.get_frame("image").winfo_width() - self.get_frame("image control").winfo_width() - 12,
             self.get_frame("image").winfo_height() - 12)
-        # return tuple(text_files_converted.get(text_files_converted.curselection()),
-        #         self.image_canvas.winfo_width(),self.image_canvas.winfo_height())
 
     def get_filter_text(self, event: tk.Event) -> str:
         return event.widget.get()
