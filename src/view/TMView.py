@@ -41,7 +41,7 @@ class TMView(tk.Frame):
         self.filter_text.pack(fill=tk.BOTH,expand=True,side='left')
 
         self.__create_frame("data")
-        self.__pack_frame("data",fill=tk.BOTH,expand=True,padx=5,pady=5)
+        self.__pack_frame("data",fill=tk.BOTH,expand=False,padx=5,pady=5)
 
         self.text_files_all = tk.Listbox(self.get_frame("data"),selectmode=tk.MULTIPLE, exportselection=False)
         self.text_files_all.pack(fill=tk.BOTH,expand=True,side='left',padx=5)
@@ -58,7 +58,7 @@ class TMView(tk.Frame):
         self.text_files_added.pack(fill=tk.BOTH,expand=True,side='left',padx=5)
 
         self.__create_frame("image")
-        self.__pack_frame("image",fill=tk.BOTH,expand=False)
+        self.__pack_frame("image",fill=tk.BOTH,expand=True)
 
         self.image_label = ttk.Label(self.get_frame("image"))
         self.image_label.pack(fill=tk.NONE,expand=False,side='left',padx=5,pady=5)
