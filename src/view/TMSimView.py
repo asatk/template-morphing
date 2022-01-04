@@ -7,7 +7,7 @@ from typing import Callable
 from PIL import ImageTk
 from matplotlib.pyplot import text
 
-class TMView(tk.Toplevel):
+class TMSimView(tk.Toplevel):
 
     def __init__(self, root: tk.Tk, *args, **kwargs):
         super().__init__(root, *args, **kwargs)
@@ -21,13 +21,11 @@ class TMView(tk.Toplevel):
         self.geometry("700x500")
 
         self.__create_frame("control")
-        self.__pack_frame("control")
+        self.__pack_frame("control",pady=5)
         self.__create_label("control: ",self.get_frame("control"))
         self.__pack_label("control: ", fill=tk.X,side='left',padx=5)
         self.__create_button("quit",self.get_frame("control"))
         self.__pack_button("quit",fill=tk.X,side='left')
-        self.__create_button("convert",self.get_frame("control"))
-        self.__pack_button("convert",fill=tk.X,side='left')
 
         self.__create_frame("filter")
         self.__pack_frame("filter")
@@ -36,40 +34,26 @@ class TMView(tk.Toplevel):
         self.filter_text = ttk.Entry(self.get_frame("filter"))
         self.filter_text.pack(fill=tk.BOTH,expand=True,side='left')
 
-        self.__create_frame("data")
-        self.__pack_frame("data",fill=tk.BOTH,expand=False,padx=5,pady=5)
-
-        self.text_files_all = tk.Listbox(self.get_frame("data"),selectmode=tk.MULTIPLE, exportselection=False)
-        self.text_files_all.pack(fill=tk.BOTH,expand=True,side='left',padx=5)
-
-        self.__create_frame("data buttons", self.get_frame("data"))
-        self.__pack_frame("data buttons",fill=None,expand=False,side='left')
-
-        self.__create_button("add file(s)",self.get_frame("data buttons"))
-        self.__pack_button("add file(s)",fill=tk.X, expand=False,side='top')
-        self.__create_button("remove file(s)",self.get_frame("data buttons"))
-        self.__pack_button("remove file(s)",fill=tk.X, expand=False, side='bottom')
-
-        self.text_files_added = tk.Listbox(self.get_frame("data"),selectmode=tk.MULTIPLE, exportselection=False)
-        self.text_files_added.pack(fill=tk.BOTH,expand=True,side='left',padx=5)
-
         self.__create_frame("image")
         self.__pack_frame("image",fill=tk.BOTH,expand=True)
 
         self.image_label = ttk.Label(self.get_frame("image"))
         self.image_label.pack(fill=tk.NONE,expand=False,side='left',padx=5,pady=5)
 
-        self.__create_frame("image control",self.get_frame("image"),width=250,height=300)
-        self.__pack_frame("image control")
+        self.__create_frame("sim control",self.get_frame("image"),width=250,height=300)
+        self.__pack_frame("sim control")
 
-        self.__frames["image control"].pack_propagate(False)
+        self.__frames["sim control"].pack_propagate(False)
 
-        self.text_files_converted = tk.Listbox(self.get_frame("image control"),
+        self.text_files_npy = tk.Listbox(self.get_frame("sim control"),
                 selectmode=tk.SINGLE,exportselection=False, width=30)
-        self.text_files_converted.pack(fill=tk.Y,expand=False,side='top',padx=5,anchor='c')
+        self.text_files_npy.pack(fill=tk.BOTH,expand=False,side='top',padx=5,pady=5,anchor='c')
+        
+        self.num_samples_text = ttk.Entry(self.get_frame("sim control"))
+        self.num_samples_text.pack(fill=tk.X,side='left',padx=5,pady=5)
 
-        self.file_type_combobox = ttk.Combobox(self.get_frame("image control"),state='readonly')
-        self.file_type_combobox.pack(fill=tk.Y,side='top',pady=5)
+        self.__create_button("generate",self.get_frame("sim control"))
+        self.__pack_button("generate",fill=tk.X,side='left')
 
     def start(self):
         '''
@@ -112,52 +96,33 @@ class TMView(tk.Toplevel):
     def filter_cmd(self, cmd: Callable):
         self.filter_text.bind("<KeyRelease>",cmd)
 
-    def display_cmd(self, cmd: Callable):
-        self.text_files_converted.bind("<<ListboxSelect>>",cmd)
-
-    def set_file_types(self, file_types: list[str]):
-        self.file_type_combobox.configure(values=file_types)
-        self.file_type_combobox.current(0)
-
-    def file_type_cmd(self, cmd: Callable):
-        self.file_type_combobox.bind("<<ComboboxSelected>>",cmd)
-
     def display_image(self, image: ImageTk.PhotoImage):
         self.image_label.image = image
         self.image_label['image'] = self.image_label.image
 
     # data methods
-    def display_file_lists(self, files_all: list[str] = None, files_added: list[str] = None, files_converted: list[str] = None):
-        if files_all == None:
-            files_all = []
-        if files_added == None:
-            files_added = []
-        if files_converted == None:
-            files_converted = []
-        files_all.sort()
-        files_added.sort()
-        files_converted.sort()
-        self.text_files_all.configure(listvariable=tk.StringVar(value=files_all))
-        self.text_files_added.configure(listvariable=tk.StringVar(value=files_added))
-        self.text_files_converted.configure(listvariable=tk.StringVar(value=files_converted))
-
-    def get_selected_files_all_files(self) -> list[str]:
-        indices_all = self.text_files_all.curselection()
-        files_all = [self.text_files_all.get(i) for i in indices_all]
-        return files_all
-
-    def get_selected_files_added_files(self) -> list[str]:
-        indices_added = self.text_files_added.curselection()
-        files_added = [self.text_files_added.get(i) for i in indices_added]
-        return files_added
+    def display_file_lists(self, files_npy: list[str] = None):
+        # print(files_npy)
+        if files_npy == None:
+            files_npy = []
+        files_npy.sort()
+        print(files_npy)
+        self.text_files_npy.configure(listvariable=tk.StringVar(value=files_npy))
+        print(self.text_files_npy.get(0))
+        # if len(files_npy) > 0:
+        #     self.text_files_npy.selection_set(0)
 
     def get_selected_file_converted_files(self, event: tk.Event=None) -> tuple[str,int,int]:
-        text_files_converted = self.text_files_converted
+        text_files_npy = self.text_files_npy
         if tk.Event != None:
-            text_files_converted = event.widget
-        return (text_files_converted.get(text_files_converted.curselection()),
+            text_files_npy = event.widget
+        return (text_files_npy.get(text_files_npy.curselection()),
             self.get_frame("image").winfo_width() - self.get_frame("image control").winfo_width() - 12,
             self.get_frame("image").winfo_height() - 12)
 
     def get_filter_text(self, event: tk.Event) -> str:
         return event.widget.get()
+
+    def get_samples_info(self) -> tuple[str,int]:
+        return (self.text_files_npy.get(self.text_files_npy.curselection()),
+                int(self.num_samples_text.get()))

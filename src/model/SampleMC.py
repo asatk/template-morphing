@@ -12,19 +12,16 @@ sys.path.append(os.getcwd())
 from defs import PROJECT_DIR
 # print("project dir: "+PROJECT_DIR)
 
-file_list = sys.argv[1:]
+#do options for this stuff even tho its just being called by TMSimModel
+n_samples = sys.argv[1]
+seed = 100
+file_list = sys.argv[2:]
 
 if not os.path.isdir(PROJECT_DIR+"/out/"):
     os.mkdir(PROJECT_DIR+"/out/")
-    os.mkdir(PROJECT_DIR+"/out/jpg")
-    os.mkdir(PROJECT_DIR+"/out/png")
-    os.mkdir(PROJECT_DIR+"/out/npy")
+    os.mkdir(PROJECT_DIR+"/out/sample/")
 
-# change if debugging
-show_plots = False
-
-if show_plots:
-    plt.ion()
+plt.ion()
 
 hs = ROOT.THStack("hs","2D Moment Morph")
 
@@ -54,11 +51,7 @@ for i,f in enumerate(file_list):
     # hist.Scale(1/hist.GetMaximum())
 
     # normalize histogram to the num of entries in cut
-    # hist.Scale(1/hist.Integral())
-    # hist.Scale(1/hist.GetEntries())
-
-    print(hist.Integral())
-    print(hist.GetEntries())
+    hist.Scale(1/hist.Integral())
     
     # make np arrays to store, use in py3 with keras
     x = np.zeros(xbins)
@@ -104,13 +97,9 @@ for i,f in enumerate(file_list):
             origin="lower",aspect="auto")
     ax2.set_title("grayscale contour 0. to 1.")
     
-    if show_plots:
-        plt.show()
-
-    max_val = np.amax(arr)
-    print("max_val: "+str(max_val))
+    plt.show()
     
-    plt.imsave(out_file_png,arr.T,cmap="gray",vmin=0.,vmax=max_val,format="png",origin="lower")
+    plt.imsave(out_file_png,arr.T,cmap="gray",vmin=0.,vmax=1.,format="png",origin="lower")
     np.save(out_file_npy,arr,allow_pickle=False)
 
     # temp=raw_input()

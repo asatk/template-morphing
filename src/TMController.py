@@ -1,23 +1,44 @@
 #!/home/asatk/miniconda3/envs/py3CCGAN/bin/python
 
+import sys
+
 from model.TMModel import TMModel
+from model.TMSimModel import TMSimModel
 from view.TMView import TMView
-from view.TMWindow import TMWindow
+from view.TMSimView import TMSimView
+import tkinter as tk
 
 class TMController():
 
-    def __init__(self):
-        self.model = TMModel()
-        self.window = TMWindow()
+    def __init__(self, mode: str):
+        self.__root = tk.Tk()
+        self.__root.withdraw()
+        self.mode = mode
+        if int(mode[-1]):
+            self.model = TMModel()
+            self.view = TMView(self.__root)
+
+        if int(mode[-2]):
+            self.model_sim = TMSimModel()
+            self.view_sim = TMSimView(self.__root)
     
     def start(self):
-        self.model.start()
-        self.init_cmds()
-        self.init_display()
-        self.window.start()
+        if int(self.mode[-1]):
+            self.model.start()
+            self.init_cmds()
+            self.init_display()
+            self.view.start()
+
+        if int(self.mode[-2]):
+            self.model_sim.start()
+            self.init_cmds_sim()
+            self.init_display_sim()
+            self.view_sim.start()
+        
+        self.__root.mainloop()
         
     def init_cmds(self):
-        view = self.window.get_view()
+        view = self.view
         model = self.model
 
         #define commands that get event from view, process data in model, and update view
@@ -29,7 +50,7 @@ class TMController():
         filter_files_cmd = lambda event:view.display_file_lists(*model.filter_files(view.get_filter_text(event)))
         file_type_cmd = lambda event:view.display_file_lists(*model.set_image_file_mode(event.widget.get()))
 
-        # set buttons to respective commands
+        # set buttons to corresponding commands
         view.button_cmd("quit", quit_cmd)
         view.button_cmd("convert",convert_cmd)
         view.button_cmd("add file(s)", add_files_cmd)
@@ -39,10 +60,29 @@ class TMController():
         view.file_type_cmd(file_type_cmd)
 
     def init_display(self):
-        view = self.window.get_view()
+        view = self.view
         model = self.model
+        view.set_file_types(model.get_file_types())
+        view.display_file_lists(*model.get_file_lists())
+        
+    def init_cmds_sim(self):
+        view = self.view_sim
+        model = self.model_sim
+
+        #define commands that get event from view, process data in model, and update view
+        quit_cmd = view.quit
+        generate_cmd = lambda:model.generate_samples(*view.get_samples_info())
+
+        # set buttons to corresponding commands
+        view.button_cmd("quit", quit_cmd)
+        view.button_cmd("generate",generate_cmd)
+
+    def init_display_sim(self):
+        view = self.view_sim
+        model = self.model_sim
         view.display_file_lists(*model.get_file_lists())
 
 if __name__ == '__main__':
-    controller = TMController()
+    mode = ("{:02b}".format(int(sys.argv[1])) if len(sys.argv) > 1 else bin(3))
+    controller = TMController(mode)
     controller.start()

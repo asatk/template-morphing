@@ -27,13 +27,15 @@ class TMModel():
     def filter_files(self, filter_str: str) -> tuple[list[str], list[str], list[str]]:
         files_all_filtered = [x for x in self.files_all if filter_str in x]
         files_added_filtered = [x for x in self.files_added if filter_str in x]
-        return (files_all_filtered, files_added_filtered, self.files_converted)
+        files_converted_filtered = [x for x in self.files_converted if filter_str in x]
+        return (files_all_filtered, files_added_filtered, files_converted_filtered)
 
     def get_file_lists(self) -> tuple[list[str], list[str], list[str]]:
         return (self.files_all,self.files_added, self.files_converted)
 
     def start(self):
         self.files_all = os.listdir(PROJECT_DIR+"/root/")
+        self.image_file_mode = self.get_file_types()[0]
         self.files_converted = self.__get_image_files_converted()
 
     def convert_files(self) -> tuple[list[str], list[str], list[str]]:
@@ -75,3 +77,6 @@ class TMModel():
         # print((width,height))
         image_tk = ImageTk.PhotoImage(image_jpg)
         return image_tk
+
+    def get_file_types(self) -> list[str]:
+        return os.listdir(PROJECT_DIR+"/out/")

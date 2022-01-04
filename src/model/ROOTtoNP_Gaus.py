@@ -85,8 +85,9 @@ for i in range(len(mass_list)):
     hist.Draw("COL")
     c1 = ROOT.gROOT.FindObject("c1")
     c1.Update()
-    c1.SaveAs(out_file_jpg)    
+    c1.SaveAs(out_file_jpg)
     
+    max_val = np.amax(arr.T)
     plt.imsave(out_file_png,arr.T,cmap="gray",vmin=0.,vmax=1.,format="png",origin="lower")
     np.save(out_file_npy,arr,allow_pickle=False)
 
