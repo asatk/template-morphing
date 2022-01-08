@@ -56,9 +56,11 @@ for i,f in enumerate(file_list):
     # normalize histogram to the num of entries in cut
     # hist.Scale(1/hist.Integral())
     # hist.Scale(1/hist.GetEntries())
+    # temporary correction b/c ROOT and numpy event integrals are off by 1 for one specific file??
+    # hist.Scale(1/(hist.Integral() - 1))
 
-    print(hist.Integral())
-    print(hist.GetEntries())
+    # print("hist intg "+str(hist.Integral()))
+    # print(hist.GetEntries())
     
     # make np arrays to store, use in py3 with keras
     x = np.zeros(xbins)
@@ -75,6 +77,8 @@ for i,f in enumerate(file_list):
             # don't access np array if unecessary
             if z_val != 0:
                 arr[bin_x,bin_y] = z_val
+
+    arr *= 1./np.sum(arr)
 
     file_str = file_list[i]
     idx_slash = file_str.rfind('/')
@@ -99,16 +103,16 @@ for i,f in enumerate(file_list):
     ax1.contour(x,y,arr.T,50)
     ax1.set_title("contour")
     
-    im=ax2.imshow(arr.T,cmap="gray",vmin=0.,vmax=1.,
+    max_val = np.amax(arr)
+    print("max_val: "+str(max_val))
+
+    im=ax2.imshow(arr.T,cmap="gray",vmin=0.,vmax=max_val,
             extent=[xlo,xhi,ylo,yhi],
             origin="lower",aspect="auto")
-    ax2.set_title("grayscale contour 0. to 1.")
+    ax2.set_title("grayscale contour 0. to max val")
     
     if show_plots:
         plt.show()
-
-    max_val = np.amax(arr)
-    print("max_val: "+str(max_val))
     
     plt.imsave(out_file_png,arr.T,cmap="gray",vmin=0.,vmax=max_val,format="png",origin="lower")
     np.save(out_file_npy,arr,allow_pickle=False)
