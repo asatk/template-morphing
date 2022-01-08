@@ -83,6 +83,8 @@ class TMController():
         view.display_file_lists(*model.get_file_lists())
 
 if __name__ == '__main__':
+    #the mode is a base-10 num representing the bit-string for which apps (bits) one wishes to run
+    #3 -> 11 (both); 2 -> 10 (analysis app); 1 -> 01 (main app)
     mode = ("{:02b}".format(int(sys.argv[1])) if len(sys.argv) > 1 else bin(3))
     controller = TMController(mode)
     controller.start()

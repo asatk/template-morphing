@@ -106,9 +106,9 @@ class TMSimView(tk.Toplevel):
         if files_npy == None:
             files_npy = []
         files_npy.sort()
-        print(files_npy)
+        # print(files_npy)
         self.text_files_npy.configure(listvariable=tk.StringVar(value=files_npy))
-        print(self.text_files_npy.get(0))
+        # print(self.text_files_npy.get(0))
         # if len(files_npy) > 0:
         #     self.text_files_npy.selection_set(0)
 

@@ -117,7 +117,7 @@ class TMView(tk.Toplevel):
 
     def set_file_types(self, file_types: list[str]):
         self.file_type_combobox.configure(values=file_types)
-        self.file_type_combobox.current(0)
+        self.file_type_combobox.current(2)
 
     def file_type_cmd(self, cmd: Callable):
         self.file_type_combobox.bind("<<ComboboxSelected>>",cmd)

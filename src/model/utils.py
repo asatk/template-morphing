@@ -106,7 +106,26 @@ def sampler_CircleGaussian(n_samp_per_gaussian, angle_grid, radius, sigma = 0.05
     return samples, angles, means
 
 def sampler_MCDist(n_samples: int, mass_grid: list[float], const_mass: float) -> tuple:
-    pass
+
+    n_dists = len(mass_grid)
+    means = np.zeros((n_dists, 2))
+    for i in range(dists):
+        mass = mass_grid[:i]
+        means[i] = mass
+
+        if i == 0:
+            # samples = np.random.multivariate_normal(mean_curr, cov, size=n_samp_per_gaussian)
+            #TODO grab samples from data mapping
+            angles = np.ones(n_samples) * angle
+        else:
+            # samples = np.concatenate((samples, np.random.multivariate_normal(mean_curr, cov, size=n_samp_per_gaussian)), axis=0)
+            angles = np.concatenate((angles, np.ones(n_samples) * angle), axis=0)
+
+    assert len(samples) == n_samples*n_dists
+    assert len(angles) == n_samples*n_dists
+    assert samples.shape[1] == 2
+
+    return samples, angles, means
 
 
 ################################################################################

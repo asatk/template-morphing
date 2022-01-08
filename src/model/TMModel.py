@@ -12,7 +12,7 @@ class TMModel():
         self.files_all = []
         self.files_added = []
         self.files_converted = []
-        self.image_file_mode = "jpg"
+        self.image_file_mode = "png"
 
     def add_files(self, files_added: list[str] = None) -> tuple[list[str],list[str], list[str]]:
         self.files_all = sorted(set(self.files_all) - set(files_added))
@@ -35,7 +35,7 @@ class TMModel():
 
     def start(self):
         self.files_all = os.listdir(PROJECT_DIR+"/root/")
-        self.image_file_mode = self.get_file_types()[0]
+        # self.image_file_mode = self.get_file_types()[0]
         self.files_converted = self.__get_image_files_converted()
 
     def convert_files(self) -> tuple[list[str], list[str], list[str]]:
@@ -74,7 +74,6 @@ class TMModel():
     def display(self, image_name: str, width: int, height: int) -> ImageTk.PhotoImage:
         image_jpg = Image.open(PROJECT_DIR+"/out/%s/"%(self.image_file_mode)+image_name)
         image_jpg = image_jpg.resize((width,height),Image.ANTIALIAS)
-        # print((width,height))
         image_tk = ImageTk.PhotoImage(image_jpg)
         return image_tk
 
