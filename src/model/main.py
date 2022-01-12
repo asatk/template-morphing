@@ -12,6 +12,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib as mpl
 import os
+import sys
 import random
 from tqdm import tqdm
 import torch
@@ -19,6 +20,8 @@ import torchvision
 import torch.nn as nn
 import torch.backends.cudnn as cudnn
 import timeit
+
+sys.path.append(os.getcwd())
 from defs import *
 
 from opts import parse_opts
@@ -26,9 +29,9 @@ args = parse_opts()
 wd = args.root_path
 os.chdir(wd)
 
-from model.utils import *
-from model.models import *
-from model.Train_CcGAN import *
+from utils import *
+from models import *
+from Train_CcGAN_OG import *
 
 
 #######################################################################################
@@ -52,28 +55,30 @@ np.random.seed(args.seed)
 #--------------------------------
 # Extra Data Generation Settings
 n_dists = args.n_dists
-n_gaussians_eval = args.n_gaussians_eval
-n_features = 2 # 2-D
-radius = args.radius
+n_features = 2  #2-D
+n_dists_eval = args.n_dists_eval
+n_samples_train = args.n_samples_train
+axis = args.axis
+const_mass = args.const_mass
 # angles for training
 # angle_grid_train = np.linspace(0, 2*np.pi, n_gaussians+1) # 12 clock is the start point; last angle is dropped to avoid overlapping.
 # angle_grid_train = angle_grid_train[0:n_gaussians]
 
 #rectangle grid of training data labels:
-phi_labels_train = np.linspace(0,phi_max,n_dists+1,endpoint=True)
-omega_labels_train = np.linspace(0,omega_max,n_dists+1,endpoint=True)
+phi_labels_train = np.linspace(phi_min,phi_max,n_dists+1,endpoint=True)
+omega_labels_train = np.linspace(omega_min,omega_max,n_dists+1,endpoint=True)
 
 # angles for evaluation
-phi_labels = np.linspace(0,phi_max,n_dists*100+1,endpoint= True)
+phi_labels = np.linspace(phi_min,phi_max,n_dists*100+1,endpoint= True)
 phi_labels = np.setdiff1d(phi_labels,phi_labels_train)
-omega_labels = np.linspace(0,omega_max,n_dists*100+1,endpoint= True)
+omega_labels = np.linspace(omega_min,omega_max,n_dists*100+1,endpoint= True)
 omega_labels = np.setdiff1d(omega_labels,omega_labels_train)
 
 phi_labels_eval = np.zeros(args.n_dists_eval)
 omega_labels_eval = np.zeros(args.n_dists_eval)
 
-for i in range(args.n_gaussians_eval):
-    quantile_i = (i+1)/args.n_gaussians_eval
+for i in range(args.n_dists_eval):
+    quantile_i = (i+1)/args.n_dists_eval
     phi_labels_eval[i] = np.quantile(phi_labels, quantile_i, interpolation='nearest')
     omega_labels_eval[i] = np.quantile(omega_labels, quantile_i, interpolation='nearest')
 assert len(np.intersect1d(phi_labels_eval, phi_labels_train))==0
@@ -82,13 +87,13 @@ assert len(np.intersect1d(omega_labels_eval, omega_labels_train))==0
 #rectangle grid of resolution
 
 # angles for plotting
-phi_labels = np.linspace(0,phi_max,n_dists*100+1,endpoint= True)
+phi_labels = np.linspace(phi_min,phi_max,n_dists*100+1,endpoint= True)
 phi_labels = np.setdiff1d(phi_labels,phi_labels_train)
-omega_labels = np.linspace(0,omega_max,n_dists*100+1,endpoint= True)
+omega_labels = np.linspace(omega_min,omega_max,n_dists*100+1,endpoint= True)
 omega_labels = np.setdiff1d(omega_labels,omega_labels_train)
 
-phi_labels_plot = np.zeros(args.n_gaussians_plot)
-omega_labels_plot = np.zeros(args.n_gaussians_plot)
+phi_labels_plot = np.zeros(args.n_dists_plot)
+omega_labels_plot = np.zeros(args.n_dists_plot)
 
 for i in range(args.n_dists_plot):
     quantile_i = (i+1)/args.n_dists_plot
@@ -103,7 +108,9 @@ sigma_gaussian = args.sigma_gaussian
 quality_threshold = sigma_gaussian*4 #good samples are within 5 standard deviation
 print("Quality threshold is {}".format(quality_threshold))
 
-mass_grid = np.meshgrid(phi_labels,omega_labels)
+label_min = phi_min if axis == 'phi' else omega_min
+label_max = phi_max if axis == 'phi' else omega_max
+# mass_grid = np.meshgrid(phi_labels,omega_labels)
 
 #-------------------------------
 # Plot Settings
@@ -123,10 +130,9 @@ os.makedirs(save_images_folder,exist_ok=True)
 #######################################################################################
 #---------------------------------
 # sampler for target distribution
-def generate_data(n_samples, mass_grid):
-    # return sampler_CircleGaussian(n_samp_per_gaussian, angle_grid, radius = radius, sigma = sigma_gaussian, dim = n_features)
+def generate_data():
     # load sampled files/dists
-    return sampler_MCDist(n_samples,mass_grid,const_mass=args.phi_mass)
+    return sampler_ROOT(const_mass=const_mass,axis=axis,data_are_samples=True)
 
 prop_recovered_modes = np.zeros(args.nsim) # num of recovered modes diveded by num of modes
 prop_good_samples = np.zeros(args.nsim) # num of good fake samples diveded by num of all fake samples
@@ -142,32 +148,51 @@ for nSim in range(args.nsim):
     ###############################################################################
     # Data generation and dataloaders
     ###############################################################################
-    samples_train, angles_train, means_train = generate_data(args.n_samp_per_gaussian_train, angle_grid_train) #this angles_train is not normalized; normalize if args.GAN is not cGAN.
-    samples_plot_in_train, _, _ = generate_data(10, unseen_angle_grid_plot)
+    mass_labels_train = phi_labels_train if axis == 'phi' else omega_labels_train
+    mass_labels_plot = phi_labels_plot if axis == 'phi' else omega_labels_plot
+    samples_train, samples_mass_labels_train, masses_train = generate_data() #this angles_train is not normalized; normalize if args.GAN is not cGAN.
+    n_dists = len(masses_train)
+    samples_plot_in_train, _, _ = generate_data()
+
+    print("samples",samples_train)
+    print("sample mass labels",samples_mass_labels_train)
+    # for i in range(len(samples_train)):
+    #     print("sample:",samples_train[i],"\tlabel:",samples_mass_labels_train[i])
+    print("masses train",masses_train)
+
+    print(samples_train[:,0])
+
+    print(len(samples_train),len(samples_mass_labels_train),len(masses_train))
+    print(samples_train.shape,samples_mass_labels_train.shape,masses_train.shape)
 
     # plot training samples and their theoretical means
-    filename_tmp = save_images_folder + 'samples_train_with_means_nSim_' + str(nSim) + '.pdf'
+    filename_tmp = save_images_folder + 'samples_train_with_means_nSim_' + str(nSim) + '.png'
     if not os.path.isfile(filename_tmp):
         plt.switch_backend('agg')
         mpl.style.use('seaborn')
         plt.figure(figsize=(fig_size, fig_size), facecolor='w')
         plt.grid(b=True)
-        plt.scatter(samples_train[:, 0], samples_train[:, 1], c='blue', edgecolor='none', alpha=0.5, s=point_size, label="Real samples")
-        plt.scatter(means_train[:, 0], means_train[:, 1], c='red', edgecolor='none', alpha=1, s=point_size, label="Means")
+        plt.scatter(samples_train[:,0], samples_train[:,1], c='blue', edgecolor='none', alpha=0.5, s=point_size, label="Real samples")
+        plt.scatter(masses_train[:,0], masses_train[:,1], c='red', edgecolor='none', alpha=1, s=point_size, label="Masses")
         plt.legend(loc=1)
         plt.savefig(filename_tmp)
 
     if args.GAN == 'CcGAN':
-        angles_train = angles_train/(2*np.pi) #normalize to [0,1]
+        #normalize
+        # samples_mass_label_min = np.min(samples_mass_labels_train)
+        # samples_mass_label_max = np.max(samples_mass_labels_train)
+        samples_mass_labels_train = (samples_mass_labels_train - label_min)/(label_max-label_min)
+        # angles_train = angles_train/(2*np.pi) #normalize to [0,1]
 
         # rule-of-thumb for the bandwidth selection
         if args.kernel_sigma<0:
-            std_angles_train = np.std(angles_train)
-            args.kernel_sigma = 1.06*std_angles_train*(len(angles_train))**(-1/5)
+            std_angles_train = np.std(samples_mass_labels_train)
+            # print(len(samples_mass_labels_train))
+            args.kernel_sigma = 1.06*std_angles_train*(len(samples_mass_labels_train))**(-1/5)
             print("\n Use rule-of-thumb formula to compute kernel_sigma >>>")
 
         if args.kappa < 0:
-            kappa_base = np.abs(args.kappa)/args.n_gaussians
+            kappa_base = np.abs(args.kappa)/n_dists
 
             if args.threshold_type=="hard":
                 args.kappa = kappa_base
@@ -189,11 +214,11 @@ for nSim in range(args.nsim):
         Filename_GAN = save_models_folder + '/ckpt_{}_niters_{}_seed_{}_{}_{}_{}_nSim_{}.pth'.format(args.GAN, args.niters_gan, args.seed, args.threshold_type, args.kernel_sigma, args.kappa, nSim)
 
         if not os.path.isfile(Filename_GAN):
-            netG = cont_cond_generator(ngpu=NGPU, nz=args.dim_gan, out_dim=n_features, radius=radius)
-            netD = cont_cond_discriminator(ngpu=NGPU, input_dim = n_features, radius=radius)
+            netG = cont_cond_generator(ngpu=NGPU, nz=args.dim_gan, out_dim=n_features, label_min=label_min, label_max=label_max, const_mass=const_mass,axis=axis)
+            netD = cont_cond_discriminator(ngpu=NGPU, input_dim = n_features, label_min=label_min, label_max=label_max, const_mass=const_mass,axis=axis)
 
             # Start training
-            netG, netD = train_CcGAN(args.kernel_sigma, args.kappa, samples_train, angles_train, netG, netD, save_images_folder=save_GANimages_InTrain_folder, save_models_folder = save_models_folder, plot_in_train=plot_in_train, samples_tar_eval = samples_plot_in_train, angle_grid_eval = unseen_angle_grid_plot, fig_size=fig_size, point_size=point_size)
+            netG, netD = train_CcGAN(args.kernel_sigma, args.kappa, samples_train, samples_mass_labels_train, netG, netD, save_images_folder=save_GANimages_InTrain_folder, save_models_folder = save_models_folder, plot_in_train=plot_in_train, samples_tar_eval = samples_plot_in_train, mass_labels_eval = mass_labels_plot, label_min=label_min, label_max=label_max, fig_size=fig_size, point_size=point_size)
 
             # store model
             torch.save({
@@ -202,7 +227,7 @@ for nSim in range(args.nsim):
         else:
             print("Loading pre-trained generator >>>")
             checkpoint = torch.load(Filename_GAN)
-            netG = cont_cond_generator(ngpu=NGPU, nz=args.dim_gan, out_dim=n_features, radius=radius).to(device)
+            netG = cont_cond_generator(ngpu=NGPU, nz=args.dim_gan, out_dim=n_features, label_min=label_min, label_max=label_max, const_mass=const_mass,axis=axis).to(device)
             netG.load_state_dict(checkpoint['netG_state_dict'])
 
         def fn_sampleGAN_given_label(nfake, label, batch_size):
@@ -215,18 +240,32 @@ for nSim in range(args.nsim):
     if args.eval:
         print("\n Start evaluation >>>")
 
+        mass_labels_eval = phi_labels_eval if args.axis == 'phi' else omega_labels_eval
+        n_samples_eval = args.n_samples_eval
+        # eval_mass_label_min = np.amin(mass_labels_eval)
+        # eval_mass_label_max = np.amax(mass_labels_eval)
+
         # percentage of high quality and recovered modes
-        for i_ang in range(len(angle_grid_eval)):
-            angle_curr = angle_grid_eval[i_ang]
-            mean_curr = np.array([radius*np.sin(angle_curr), radius*np.cos(angle_curr)])
-            fake_samples_curr = fn_sampleGAN_given_label(args.n_samp_per_gaussian_eval, angle_curr/(2*np.pi), batch_size=args.n_samp_per_gaussian_eval)
-            mean_curr_repeat = np.repeat(mean_curr.reshape(1,n_features), args.n_samp_per_gaussian_eval, axis=0)
-            assert mean_curr_repeat.shape[0]==args.n_samp_per_gaussian_eval and mean_curr_repeat.shape[1]==n_features
-            assert fake_samples_curr.shape[0]==args.n_samp_per_gaussian_eval and fake_samples_curr.shape[1]==n_features
+        for i_mass in range(len(mass_labels_eval)):
+            mass_label = mass_labels_eval[i_mass]
+
+            # masses = np.array((mass_labels_eval,np.ones(len(mass_labels_eval)) * const_mass))
+            if axis == 'phi':
+                masses = np.transpose(np.array((phi_labels_eval,np.ones(len(mass_labels_eval)) * const_mass)))
+            else:
+                masses = np.transpose(np.array((np.ones(len(mass_labels_eval)) * const_mass,omega_labels_eval)))
+
+            fake_samples_curr = fn_sampleGAN_given_label(
+                    n_samples_eval,
+                    (mass_label - label_min)/(label_max - label_min),
+                    batch_size=n_samples_eval)
+            mass_curr_repeat = np.repeat(masses[i].reshape(1,n_features), n_samples_eval, axis=0)
+            assert mass_curr_repeat.shape[0]==n_samples_eval and mass_curr_repeat.shape[1]==n_features
+            assert fake_samples_curr.shape[0]==n_samples_eval and fake_samples_curr.shape[1]==n_features
             #l2 distance between a fake sample and its mean
-            l2_dis_fake_samples_curr = np.sqrt(np.sum((fake_samples_curr-mean_curr_repeat)**2, axis=1))
-            assert len(l2_dis_fake_samples_curr)==args.n_samp_per_gaussian_eval
-            if i_ang == 0:
+            l2_dis_fake_samples_curr = np.sqrt(np.sum((fake_samples_curr-mass_curr_repeat)**2, axis=1))
+            assert len(l2_dis_fake_samples_curr)==n_samples_eval
+            if i_mass == 0:
                 l2_dis_fake_samples = l2_dis_fake_samples_curr
             else:
                 l2_dis_fake_samples = np.concatenate((l2_dis_fake_samples, l2_dis_fake_samples_curr))
@@ -235,24 +274,30 @@ for nSim in range(args.nsim):
             if sum(l2_dis_fake_samples_curr<=quality_threshold)>0:
                 prop_recovered_modes[nSim] += 1
         #end for i_ang
-        prop_recovered_modes[nSim] = (prop_recovered_modes[nSim]/len(angle_grid_eval))*100
+        prop_recovered_modes[nSim] = (prop_recovered_modes[nSim]/len(mass_labels_eval))*100
         prop_good_samples[nSim] = sum(l2_dis_fake_samples<=quality_threshold)/len(l2_dis_fake_samples)*100 #proportion of good fake samples
 
 
         # 2-Wasserstein Distance
         real_cov = np.eye(n_features)*sigma_gaussian**2 #covraiance matrix for each Gaussian
-        for i_ang in tqdm(range(len(angle_grid_eval))):
-            angle_curr = angle_grid_eval[i_ang]
+        for i_ang in tqdm(range(len(mass_labels_eval))):
+            mass_curr = mass_labels_eval[i_ang]
             # the mean for current Gaussian (angle)
-            real_mean_curr = np.array([radius*np.sin(angle_curr), radius*np.cos(angle_curr)])
+            if axis == 'phi':
+                real_mass_curr = np.array((mass_curr,const_mass))
+            else:
+                real_mass_curr = np.array((const_mass,mass_curr))
             # sample from trained GAN
-            fake_samples_curr = fn_sampleGAN_given_label(args.n_samp_per_gaussian_eval, angle_curr/(2*np.pi), batch_size=args.n_samp_per_gaussian_eval)
-            # the sample mean and sample cov of fake samples with current label
-            fake_mean_curr = np.mean(fake_samples_curr, axis = 0)
+            fake_samples_curr = fn_sampleGAN_given_label(
+                    n_samples_eval,
+                    (mass_curr - label_min)/(label_max - label_min),
+                    batch_size=n_samples_eval)
+            # the sample mass and sample cov of fake samples with current label
+            fake_mass_curr = np.mean(fake_samples_curr, axis = 0)
             fake_cov_curr = np.cov(fake_samples_curr.transpose())
 
             # 2-W distance for current label
-            two_w_dist_curr = two_wasserstein(real_mean_curr, fake_mean_curr, real_cov, fake_cov_curr, eps=1e-20)
+            two_w_dist_curr = two_wasserstein(real_mass_curr, fake_mass_curr, real_cov, fake_cov_curr, eps=1e-20)
 
             if i_ang == 0:
                 two_w_dist_all = [two_w_dist_curr]
@@ -263,18 +308,24 @@ for nSim in range(args.nsim):
 
         ### visualize fake samples
         if args.GAN == "CcGAN":
-            filename_tmp = save_images_folder + '{}_real_fake_samples_{}_sigma_{}_kappa_{}_nSim_{}.pdf'.format(args.GAN, args.threshold_type, args.kernel_sigma, args.kappa, nSim)
+            filename_tmp = save_images_folder + '{}_real_fake_samples_{}_sigma_{}_kappa_{}_nSim_{}.png'.format(args.GAN, args.threshold_type, args.kernel_sigma, args.kappa, nSim)
 
-        fake_samples = np.zeros((args.n_gaussians_plot*args.n_samp_per_gaussian_plot, n_features))
-        for i_tmp in range(args.n_gaussians_plot):
-            angle_curr = unseen_angle_grid_plot[i_tmp]
-            fake_samples_curr = fn_sampleGAN_given_label(args.n_samp_per_gaussian_plot, angle_curr/(2*np.pi), batch_size=args.n_samp_per_gaussian_plot)
+        n_dists_plot = args.n_dists_plot
+        n_samples_plot = args.n_samples_plot
+
+        fake_samples = np.zeros((n_dists_plot*n_samples_plot, n_features))
+        for i_tmp in range(n_dists_plot):
+            mass_label = mass_labels_plot[i_tmp]
+            fake_samples_curr = fn_sampleGAN_given_label(
+                    n_samples_plot,
+                    (mass_label - label_min)/(label_max - label_min),
+                    batch_size=n_samples_plot)
             if i_tmp == 0:
                 fake_samples = fake_samples_curr
             else:
                 fake_samples = np.concatenate((fake_samples, fake_samples_curr), axis=0)
 
-        real_samples_plot, _, _ = generate_data(args.n_samp_per_gaussian_plot, unseen_angle_grid_plot)
+        real_samples_plot, _, _ = generate_data()
 
         plt.switch_backend('agg')
         mpl.style.use('seaborn')
@@ -295,8 +346,6 @@ print("\n Prop. good samples over %d Sims: %.1f (%.1f)" % (args.nsim, np.mean(pr
 print("\n Prop. of recovered modes>>>\n")
 print(prop_recovered_modes)
 print("\n Prop. recovered modes over %d Sims: %.1f (%.1f)" % (args.nsim, np.mean(prop_recovered_modes), np.std(prop_recovered_modes)))
-
 print("\r 2-Wasserstein Distance: %.2e (%.2e)"% (np.mean(avg_two_w_dist), np.std(avg_two_w_dist)))
 print(avg_two_w_dist)
-
 print("\n===================================================================================================")

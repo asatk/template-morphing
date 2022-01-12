@@ -2,4 +2,5 @@ morphing.code-workspace
 .vscode/
 *.root
 .old/
-/out/*
+src/model/out/*
+src/model/output/*

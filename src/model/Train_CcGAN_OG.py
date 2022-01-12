@@ -32,10 +32,7 @@ batch_size_gene = args.batch_size_gene
 threshold_type = args.threshold_type
 nonzero_soft_weight_threshold = args.nonzero_soft_weight_threshold
 
-
-
-
-def train_CcGAN(kernel_sigma, kappa, train_samples, train_labels, netG, netD, save_images_folder, save_models_folder = None, plot_in_train=False, samples_tar_eval = None, angle_grid_eval = None, fig_size=5, point_size=None):
+def train_CcGAN(kernel_sigma, kappa, train_samples, train_labels, netG, netD, save_images_folder, save_models_folder = None, plot_in_train=False, samples_tar_eval = None, mass_labels_eval = None, label_min = 0., label_max = 1., fig_size=5, point_size=None):
 
     netG = netG.to(device)
     netD = netD.to(device)
@@ -189,17 +186,17 @@ def train_CcGAN(kernel_sigma, kappa, train_samples, train_labels, netG, netD, sa
             assert save_images_folder is not None
             z = torch.randn(samples_tar_eval.shape[0], dim_gan, dtype=torch.float).to(device)
 
-            labels = np.random.choice(angle_grid_eval/(2*np.pi), size=samples_tar_eval.shape[0], replace=True)
+            labels = np.random.choice((mass_labels_eval - label_min)/(label_max - label_min), size=samples_tar_eval.shape[0], replace=True)
             labels = torch.from_numpy(labels).type(torch.float).to(device)
             prop_samples = netG(z, labels).cpu().detach().numpy()
             filename = save_images_folder + '/{}.png'.format(niter+1)
             ScatterPoints(samples_tar_eval, prop_samples, filename, fig_size=fig_size, point_size=point_size)
 
-            labels = np.random.choice(angle_grid_eval/(2*np.pi), size=1, replace=True)
+            labels = np.random.choice((mass_labels_eval - label_min)/(label_max - label_min), size=1, replace=True)
             labels = np.repeat(labels, samples_tar_eval.shape[0])
             labels = torch.from_numpy(labels).type(torch.float).to(device)
             prop_samples = netG(z, labels).cpu().detach().numpy()
-            filename = save_images_folder + '/{}_{}.png'.format(niter+1, labels[0]*(2*np.pi))
+            filename = save_images_folder + '/{}_{}.png'.format(niter+1, labels[0]*(label_max - label_min) + label_min)
             ScatterPoints(samples_tar_eval, prop_samples, filename, fig_size=fig_size, point_size=point_size)
 
         if save_models_folder is not None and ((niter+1) % save_niters_freq == 0 or (niter+1) == niters):
@@ -218,13 +215,13 @@ def train_CcGAN(kernel_sigma, kappa, train_samples, train_labels, netG, netD, sa
 
 
 
-def SampCcGAN_given_label(netG, label, path=None, NFAKE = 10000, batch_size = 500, num_features=2):
+def SampCcGAN_given_label(netG, label, path=None, NFAKE = 10000, batch_size = 500, n_features=2):
     '''
     label: normalized label in [0,1]
     '''
     if batch_size>NFAKE:
         batch_size = NFAKE
-    fake_samples = np.zeros((NFAKE+batch_size, num_features), dtype=np.float)
+    fake_samples = np.zeros((NFAKE+batch_size, n_features), dtype=np.float)
     netG=netG.to(device)
     netG.eval()
     with torch.no_grad():
@@ -239,7 +236,7 @@ def SampCcGAN_given_label(netG, label, path=None, NFAKE = 10000, batch_size = 50
 
     #remove extra entries
     fake_samples = fake_samples[0:NFAKE]
-    fake_angles = np.ones(NFAKE) * label #use assigned label
+    fake_masses = np.ones(NFAKE) * label #use assigned label
 
     if path is not None:
         raw_fake_samples = (fake_samples*0.5+0.5)*255.0
@@ -249,4 +246,4 @@ def SampCcGAN_given_label(netG, label, path=None, NFAKE = 10000, batch_size = 50
             im = Image.fromarray(raw_fake_samples[i][0], mode='L')
             im = im.save(filename)
 
-    return fake_samples, fake_angles
+    return fake_samples, fake_masses

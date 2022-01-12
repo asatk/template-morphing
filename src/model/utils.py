@@ -2,6 +2,7 @@
 Some helper functions
 
 """
+from random import sample
 import numpy as np
 import torch
 import torch.nn as nn
@@ -13,7 +14,9 @@ from scipy.stats import multivariate_normal
 import os
 from numpy import linalg as LA
 from scipy import linalg
+import json
 
+from defs import PROJECT_DIR
 
 ################################################################################
 # Progress Bar
@@ -105,27 +108,45 @@ def sampler_CircleGaussian(n_samp_per_gaussian, angle_grid, radius, sigma = 0.05
 
     return samples, angles, means
 
-def sampler_MCDist(n_samples: int, mass_grid: list[float], const_mass: float) -> tuple:
+def sampler_ROOT(axis: str='phi', const_mass: float=500., data_are_samples: bool=True, n_samples: int=10) -> tuple:
+    axis_idx = 0 if axis == 'phi' else 1
+    const_idx = 1 if axis == 'phi' else 0
 
-    n_dists = len(mass_grid)
-    means = np.zeros((n_dists, 2))
-    for i in range(dists):
-        mass = mass_grid[:i]
-        means[i] = mass
+    samples = np.empty((0,2),dtype=float)
+    sample_mass_labels = np.empty((0,),dtype=float)
+    masses = np.empty((0,2),dtype=float)
 
-        if i == 0:
-            # samples = np.random.multivariate_normal(mean_curr, cov, size=n_samp_per_gaussian)
-            #TODO grab samples from data mapping
-            angles = np.ones(n_samples) * angle
-        else:
-            # samples = np.concatenate((samples, np.random.multivariate_normal(mean_curr, cov, size=n_samp_per_gaussian)), axis=0)
-            angles = np.concatenate((angles, np.ones(n_samples) * angle), axis=0)
+    with open("data_mapping.json",'r') as json_file:
+        file_mapping: dict[str,list[int]] = json.load(json_file)
+        for f in file_mapping:
+            # print(f)
+            mass_label = np.array(file_mapping[f])
+            
+            #check that a file has the desired mass along the desired constant mass axis
+            if mass_label[const_idx] != const_mass:
+                continue
 
-    assert len(samples) == n_samples*n_dists
-    assert len(angles) == n_samples*n_dists
-    assert samples.shape[1] == 2
+            masses = np.append(masses,[mass_label],axis=0)
+            
+            data: np.ndarray = np.load(PROJECT_DIR+"/out/npy/"+f)
 
-    return samples, angles, means
+            if data_are_samples:
+                samples_f = np.nonzero(data)
+            else:
+                data_flat = data.flatten()
+                # print(np.sum(samples_flat))
+                samples_f_flat = np.random.choice(a=data_flat.size,p=data_flat,size=n_samples)
+                samples_f = np.unravel_index(samples_f_flat, data.shape)
+
+            samples_f = np.transpose(samples_f)
+            # np.set_printoptions(threshold=np.inf)
+            # print(samples_f)
+            # np.set_printoptions(threshold=1000)
+
+            samples = np.append(samples,samples_f,axis=0)
+            sample_mass_labels = np.concatenate((sample_mass_labels,np.ones(len(samples_f)) * mass_label[axis_idx]))
+
+    return samples, sample_mass_labels, masses
 
 
 ################################################################################
@@ -145,8 +166,6 @@ def ScatterPoints(tar_samples, prop_samples, filename, plot_real_samples = False
     else:
         plt.show()
     plt.close()
-
-
 
 ################################################################################
 # Compute 2-Wasserstein distance

@@ -28,7 +28,7 @@ class TMSimModel():
         # np.random.seed(100)
         data: np.ndarray = np.load(PROJECT_DIR+"/out/npy/"+file_name)
         samples_flat = data.flatten()
-        print(np.sum(samples_flat))
+        # print(np.sum(samples_flat))
         random_indices_flat = np.random.choice(a=samples_flat.size,p=samples_flat,size=num_samples)
         random_indices = np.unravel_index(random_indices_flat, data.shape)
 
@@ -41,7 +41,7 @@ class TMSimModel():
         max_val = np.amax(samples)
 
         plt.imsave(out_file_png,samples.T,cmap="gray",vmin=0.,vmax=max_val,format="png",origin="lower")
-        np.save(out_file_npy,samples,allow_pickle=False)
+        # np.save(out_file_npy,samples,allow_pickle=False)
 
         return samples
 

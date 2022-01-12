@@ -16,11 +16,13 @@ def parse_opts():
     # TODO get accurate default by scanning dir/file mapping
     parser.add_argument('--n_dists', type=int, default=5,
                         help = "Number of Dists (number of phi data points).") #half of them will be used for training and the rest are for testing
-    parser.add_argument('--n_samples_train', type=int, default=10) # n_gaussians*n_rsamp_per_gaussian = ntrain
+    parser.add_argument('--n_samples_train', type=int, default=10000) # n_gaussians*n_rsamp_per_gaussian = ntrain
     parser.add_argument('--radius', type=float, default=1.0)
     parser.add_argument('--sigma_gaussian', type=float, default=0.02)
 
-    parser.add_argument('--phi_mass',type=int,default=500)
+    # my additions
+    parser.add_argument('--axis', type=str,default='phi')
+    parser.add_argument('--const_mass',type=float,default=0.550)
 
 
     ''' GAN settings '''
@@ -50,14 +52,14 @@ def parse_opts():
     parser.add_argument('--eval', action='store_true', default=False) #evaluation fake samples
     #TODO put accurate number idk
     parser.add_argument('--n_dists_eval', type=int, default=5) #number of labels for evaluation
-    parser.add_argument('--n_samp_per_gaussian_eval', type=int, default=100) # number of fake samples for each Gaussian
+    parser.add_argument('--n_samples_eval', type=int, default=100) # number of fake samples for each dist
     parser.add_argument('--samp_batch_size_eval', type=int, default=100)
 
 
     ''' Visualization '''
     #TODO put accurate number
     parser.add_argument('--n_dists_plot', type=int, default=5) #number of unseen labels for plotting
-    parser.add_argument('--n_samp_per_gaussian_plot', type=int, default=100) # number of fake samples for each Gaussian
+    parser.add_argument('--n_samples_plot', type=int, default=100) # number of fake samples for each Gaussian
     parser.add_argument('--samp_batch_size_plot', type=int, default=100)
 
 

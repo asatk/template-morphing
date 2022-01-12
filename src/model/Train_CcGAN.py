@@ -277,13 +277,13 @@ def train_CcGAN(kernel_sigma, kappa, train_samples, train_labels, netG, netD, sa
 
     return netG, netD
 
-def SampCcGAN_given_label(netG, label, path=None, NFAKE = 10000, batch_size = 500, num_features=2):
+def SampCcGAN_given_label(netG, label, path=None, NFAKE = 10000, batch_size = 500, n_features=2):
     '''
     label: normalized label in [0,1]
     '''
     if batch_size>NFAKE:
         batch_size = NFAKE
-    fake_samples = np.zeros((NFAKE+batch_size, num_features), dtype=np.float)
+    fake_samples = np.zeros((NFAKE+batch_size, n_features), dtype=np.float)
     netG=netG.to(device)
     netG.eval()
     with torch.no_grad():

@@ -7,12 +7,16 @@ import numpy as np
 # genearator
 bias_g = False
 class cont_cond_generator(nn.Module):
-    def __init__(self, ngpu=1, nz=2, out_dim=2, radius=1):
+    def __init__(self, ngpu=1, nz=2, out_dim=2, label_min = 0., label_max = 1., const_mass = 500., axis = 'phi'):
         super(cont_cond_generator, self).__init__()
         self.nz = nz
         self.ngpu = ngpu
         self.out_dim = out_dim
-        self.radius = radius
+
+        self.label_min = label_min
+        self.label_max = label_max
+        self.const_mass = const_mass
+        self.axis = axis
 
         self.inner_dim = 100
 
@@ -46,9 +50,13 @@ class cont_cond_generator(nn.Module):
 
     def forward(self, input, labels):
         input = input.view(-1, self.nz)
+        labels = labels.view(-1,1) * (self.label_max - self.label_min) + self.label_min
 
-        labels = labels.view(-1, 1)*2*np.pi
-        input = torch.cat((input, self.radius*torch.sin(labels), self.radius*torch.cos(labels)), 1)
+        labels = labels.view(-1, 1) * (self.label_max - self.label_min) + self.label_min
+        if self.axis == 'phi':
+            input = torch.cat((input, labels, torch.ones((len(labels),1)) * self.const_mass), 1)
+        else:
+            input = torch.cat((input, torch.ones((len(labels),1)) * self.const_mass, labels), 1)
 
         if input.is_cuda and self.ngpu > 1:
             output = nn.parallel.data_parallel(self.linear, input, range(self.ngpu))
@@ -60,11 +68,15 @@ class cont_cond_generator(nn.Module):
 # discriminator
 bias_d=False
 class cont_cond_discriminator(nn.Module):
-    def __init__(self, ngpu=1, input_dim = 2, radius=1):
+    def __init__(self, ngpu=1, input_dim = 2, label_min = 0., label_max = 1., const_mass = 500., axis = 'phi'):
         super(cont_cond_discriminator, self).__init__()
         self.ngpu = ngpu
         self.input_dim = input_dim
-        self.radius = radius
+
+        self.label_min = label_min
+        self.label_max = label_max
+        self.const_mass = const_mass
+        self.axis = axis
 
         self.inner_dim = 100
         self.main = nn.Sequential(
@@ -90,9 +102,12 @@ class cont_cond_discriminator(nn.Module):
 
     def forward(self, input, labels):
         input = input.view(-1, self.input_dim)
+        labels = labels.view(-1, 1) * (self.label_max - self.label_min) + self.label_min
 
-        labels = labels.view(-1, 1)*2*np.pi
-        input = torch.cat((input, self.radius*torch.sin(labels), self.radius*torch.cos(labels)), 1)
+        if self.axis == 'phi':
+            input = torch.cat((input, labels, torch.ones((len(labels),1)) * self.const_mass), 1)
+        else:
+            input = torch.cat((input, torch.ones((len(labels),1)) * self.const_mass, labels), 1)
 
         if input.is_cuda and self.ngpu > 1:
             output = nn.parallel.data_parallel(self.main, input, range(self.ngpu))

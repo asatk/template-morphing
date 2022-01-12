@@ -55,6 +55,12 @@ class TMSimView(tk.Toplevel):
         self.__create_button("generate",self.get_frame("sim control"))
         self.__pack_button("generate",fill=tk.X,side='left')
 
+        self.__create_frame("Train CCGAN")
+        self.__pack_frame("Train CCGAN",fill=tk.BOTH)
+
+        self.__create_button("run experiment", self.get_frame("Train CCGAN"))
+        self.__pack_button("run experiment", fill=tk.X)
+
     def start(self):
         '''
         no-op for now

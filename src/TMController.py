@@ -72,10 +72,12 @@ class TMController():
         #define commands that get event from view, process data in model, and update view
         quit_cmd = view.quit
         generate_cmd = lambda:model.generate_samples(*view.get_samples_info())
+        experiment_cmd = model.train_GAN
 
         # set buttons to corresponding commands
         view.button_cmd("quit", quit_cmd)
         view.button_cmd("generate",generate_cmd)
+        view.button_cmd("run experiment",experiment_cmd)
 
     def init_display_sim(self):
         view = self.view_sim
