@@ -144,7 +144,7 @@ def sampler_ROOT(axis: str='phi', const_mass: float=500., samples_are_data: bool
             
             data: np.ndarray = np.load(PROJECT_DIR+"/out/npy/"+f)
 
-            if data_are_samples:
+            if samples_are_data:
                 samples_f = np.nonzero(data)
             else:
                 data_flat = data.flatten()

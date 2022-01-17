@@ -85,8 +85,6 @@ for i in range(phi_bins_eval):
 for i in range(omega_bins_eval):
     quantile_i = (i+1)/omega_bins_eval
     omega_labels_eval[i] = np.quantile(omega_labels, quantile_i, interpolation='nearest')
-assert len(np.intersect1d(phi_labels_eval, phi_labels_train))==0
-assert len(np.intersect1d(omega_labels_eval, omega_labels_train))==0
 
 # masses for plotting
 phi_labels = np.linspace(phi_min,phi_max,phi_bins_all*100+1,endpoint= True)
@@ -103,8 +101,6 @@ for i in range(phi_bins_plot):
 for i in range(omega_bins_plot):
     quantile_i = (i+1)/omega_bins_plot
     omega_labels_plot[i] = np.quantile(omega_labels, quantile_i, interpolation='nearest')
-assert len(np.intersect1d(phi_labels_plot, phi_labels_train))==0
-assert len(np.intersect1d(omega_labels_plot, omega_labels_train))==0
 
 # standard deviation of each Gaussian
 sigma_gaussian = args.sigma_gaussian
@@ -159,36 +155,25 @@ for nSim in range(args.nsim):
 
     # print("samples",samples_train)
     # print("sample mass labels",samples_mass_labels_train)
-    # # for i in range(len(samples_train)):
-    # #     print("sample:",samples_train[i],"\tlabel:",samples_mass_labels_train[i])
+    # for i in range(len(samples_train)):
+    #     print("sample:",samples_train[i],"\tlabel:",samples_mass_labels_train[i])
     # print("masses train",masses_train)
 
     # plot training samples and their theoretical means
     filename_tmp = save_images_folder + 'samples_train_with_means_nSim_' + str(nSim) + '.png'
     # if not os.path.isfile(filename_tmp):
-    if True:
-        plt.switch_backend('agg')
-        mpl.style.use('seaborn')
-        plt.figure(figsize=(fig_size, fig_size), facecolor='w')
-        plt.grid(b=True)
-        plt.scatter(samples_train[:,0], samples_train[:,1], c='blue', edgecolor='none', alpha=0.5, s=point_size, label="Real samples")
-        plt.scatter(masses_train[:,0], masses_train[:,1], c='red', edgecolor='none', alpha=1, s=point_size, label="Masses")
-        plt.legend(loc=1)
-        plt.savefig(filename_tmp)
-
-    # print(samples_train.shape)
-    # print(masses_train.shape)
-    # print(samples_train)
-    # print(masses_train)
-
-    # exit()
+    plt.switch_backend('agg')
+    mpl.style.use('seaborn')
+    plt.figure(figsize=(fig_size, fig_size), facecolor='w')
+    plt.grid(b=True)
+    plt.scatter(samples_train[:,0], samples_train[:,1], c='blue', edgecolor='none', alpha=0.5, s=point_size, label="Real samples")
+    plt.scatter(masses_train[:,0], masses_train[:,1], c='red', edgecolor='none', alpha=1, s=point_size, label="Masses")
+    plt.legend(loc=1)
+    plt.savefig(filename_tmp)
 
     if args.GAN == 'CcGAN':
         #normalize
-        # samples_mass_label_min = np.min(samples_mass_labels_train)
-        # samples_mass_label_max = np.max(samples_mass_labels_train)
         samples_mass_labels_train = (samples_mass_labels_train - label_min)/(label_max-label_min)
-        # angles_train = angles_train/(2*np.pi) #normalize to [0,1]
 
         # rule-of-thumb for the bandwidth selection
         if args.kernel_sigma<0:
@@ -248,14 +233,11 @@ for nSim in range(args.nsim):
 
         mass_labels_eval = phi_labels_eval if args.axis == 'phi' else omega_labels_eval
         n_samples_eval = args.n_samples_eval
-        # eval_mass_label_min = np.amin(mass_labels_eval)
-        # eval_mass_label_max = np.amax(mass_labels_eval)
 
         # percentage of high quality and recovered modes
         for i_mass in range(len(mass_labels_eval)):
             mass_label = mass_labels_eval[i_mass]
 
-            # masses = np.array((mass_labels_eval,np.ones(len(mass_labels_eval)) * const_mass))
             if axis == 'phi':
                 masses = np.transpose(np.array((phi_labels_eval,np.ones(len(mass_labels_eval)) * const_mass)))
             else:
@@ -265,12 +247,12 @@ for nSim in range(args.nsim):
                     n_samples_eval,
                     (mass_label - label_min)/(label_max - label_min),
                     batch_size=n_samples_eval)
+                    
             mass_curr_repeat = np.repeat(masses[i].reshape(1,n_features), n_samples_eval, axis=0)
-            assert mass_curr_repeat.shape[0]==n_samples_eval and mass_curr_repeat.shape[1]==n_features
-            assert fake_samples_curr.shape[0]==n_samples_eval and fake_samples_curr.shape[1]==n_features
+
             #l2 distance between a fake sample and its mean
             l2_dis_fake_samples_curr = np.sqrt(np.sum((fake_samples_curr-mass_curr_repeat)**2, axis=1))
-            assert len(l2_dis_fake_samples_curr)==n_samples_eval
+            
             if i_mass == 0:
                 l2_dis_fake_samples = l2_dis_fake_samples_curr
             else:
