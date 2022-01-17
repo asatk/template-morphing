@@ -54,50 +54,54 @@ np.random.seed(args.seed)
 
 #--------------------------------
 # Extra Data Generation Settings
+phi_bins_eval = phi_bins_plot = phi_bins_train = phi_bins
+omega_bins_eval = omega_bins_plot = omega_bins_train = omega_bins
+phi_bins_all = phi_bins * 100
+omega_bins_all = omega_bins * 100
+
 n_dists = args.n_dists
 n_features = 2  #2-D
-n_dists_eval = args.n_dists_eval
+# n_dists_eval = args.n_dists_eval
 n_samples_train = args.n_samples_train
 axis = args.axis
 const_mass = args.const_mass
-# angles for training
-# angle_grid_train = np.linspace(0, 2*np.pi, n_gaussians+1) # 12 clock is the start point; last angle is dropped to avoid overlapping.
-# angle_grid_train = angle_grid_train[0:n_gaussians]
 
 #rectangle grid of training data labels:
-phi_labels_train = np.linspace(phi_min,phi_max,n_dists+1,endpoint=True)
-omega_labels_train = np.linspace(omega_min,omega_max,n_dists+1,endpoint=True)
+phi_labels_train = np.linspace(phi_min,phi_max,phi_bins_train+1,endpoint=True)
+omega_labels_train = np.linspace(omega_min,omega_max,omega_bins_train,endpoint=True)
 
-# angles for evaluation
-phi_labels = np.linspace(phi_min,phi_max,n_dists*100+1,endpoint= True)
+# masses for evaluation
+phi_labels = np.linspace(phi_min,phi_max,phi_bins_all*100+1,endpoint= True)
 phi_labels = np.setdiff1d(phi_labels,phi_labels_train)
-omega_labels = np.linspace(omega_min,omega_max,n_dists*100+1,endpoint= True)
+omega_labels = np.linspace(omega_min,omega_max,omega_bins_all*100+1,endpoint= True)
 omega_labels = np.setdiff1d(omega_labels,omega_labels_train)
 
-phi_labels_eval = np.zeros(args.n_dists_eval)
-omega_labels_eval = np.zeros(args.n_dists_eval)
+phi_labels_eval = np.zeros(phi_bins_eval)
+omega_labels_eval = np.zeros(omega_bins_eval)
 
-for i in range(args.n_dists_eval):
-    quantile_i = (i+1)/args.n_dists_eval
+for i in range(phi_bins_eval):
+    quantile_i = (i+1)/phi_bins_eval
     phi_labels_eval[i] = np.quantile(phi_labels, quantile_i, interpolation='nearest')
+for i in range(omega_bins_eval):
+    quantile_i = (i+1)/omega_bins_eval
     omega_labels_eval[i] = np.quantile(omega_labels, quantile_i, interpolation='nearest')
 assert len(np.intersect1d(phi_labels_eval, phi_labels_train))==0
 assert len(np.intersect1d(omega_labels_eval, omega_labels_train))==0
 
-#rectangle grid of resolution
-
-# angles for plotting
-phi_labels = np.linspace(phi_min,phi_max,n_dists*100+1,endpoint= True)
+# masses for plotting
+phi_labels = np.linspace(phi_min,phi_max,phi_bins_all*100+1,endpoint= True)
 phi_labels = np.setdiff1d(phi_labels,phi_labels_train)
-omega_labels = np.linspace(omega_min,omega_max,n_dists*100+1,endpoint= True)
+omega_labels = np.linspace(omega_min,omega_max,omega_bins_all*100+1,endpoint= True)
 omega_labels = np.setdiff1d(omega_labels,omega_labels_train)
 
-phi_labels_plot = np.zeros(args.n_dists_plot)
-omega_labels_plot = np.zeros(args.n_dists_plot)
+phi_labels_plot = np.zeros(phi_bins_plot)
+omega_labels_plot = np.zeros(omega_bins_plot)
 
-for i in range(args.n_dists_plot):
-    quantile_i = (i+1)/args.n_dists_plot
+for i in range(phi_bins_plot):
+    quantile_i = (i+1)/phi_bins_plot
     phi_labels_plot[i] = np.quantile(phi_labels, quantile_i, interpolation='nearest')
+for i in range(omega_bins_plot):
+    quantile_i = (i+1)/omega_bins_plot
     omega_labels_plot[i] = np.quantile(omega_labels, quantile_i, interpolation='nearest')
 assert len(np.intersect1d(phi_labels_plot, phi_labels_train))==0
 assert len(np.intersect1d(omega_labels_plot, omega_labels_train))==0
@@ -132,11 +136,10 @@ os.makedirs(save_images_folder,exist_ok=True)
 # sampler for target distribution
 def generate_data():
     # load sampled files/dists
-    return sampler_ROOT(const_mass=const_mass,axis=axis,data_are_samples=True)
+    return sampler_ROOT(const_mass=const_mass,axis=axis,samples_are_data=True)
 
 prop_recovered_modes = np.zeros(args.nsim) # num of recovered modes diveded by num of modes
 prop_good_samples = np.zeros(args.nsim) # num of good fake samples diveded by num of all fake samples
-
 avg_two_w_dist = np.zeros(args.nsim)
 
 print("\n Begin The Experiment; Start Training {} >>>".format(args.GAN))
@@ -154,20 +157,16 @@ for nSim in range(args.nsim):
     n_dists = len(masses_train)
     samples_plot_in_train, _, _ = generate_data()
 
-    print("samples",samples_train)
-    print("sample mass labels",samples_mass_labels_train)
-    # for i in range(len(samples_train)):
-    #     print("sample:",samples_train[i],"\tlabel:",samples_mass_labels_train[i])
-    print("masses train",masses_train)
-
-    print(samples_train[:,0])
-
-    print(len(samples_train),len(samples_mass_labels_train),len(masses_train))
-    print(samples_train.shape,samples_mass_labels_train.shape,masses_train.shape)
+    # print("samples",samples_train)
+    # print("sample mass labels",samples_mass_labels_train)
+    # # for i in range(len(samples_train)):
+    # #     print("sample:",samples_train[i],"\tlabel:",samples_mass_labels_train[i])
+    # print("masses train",masses_train)
 
     # plot training samples and their theoretical means
     filename_tmp = save_images_folder + 'samples_train_with_means_nSim_' + str(nSim) + '.png'
-    if not os.path.isfile(filename_tmp):
+    # if not os.path.isfile(filename_tmp):
+    if True:
         plt.switch_backend('agg')
         mpl.style.use('seaborn')
         plt.figure(figsize=(fig_size, fig_size), facecolor='w')
@@ -176,6 +175,13 @@ for nSim in range(args.nsim):
         plt.scatter(masses_train[:,0], masses_train[:,1], c='red', edgecolor='none', alpha=1, s=point_size, label="Masses")
         plt.legend(loc=1)
         plt.savefig(filename_tmp)
+
+    # print(samples_train.shape)
+    # print(masses_train.shape)
+    # print(samples_train)
+    # print(masses_train)
+
+    # exit()
 
     if args.GAN == 'CcGAN':
         #normalize
@@ -280,8 +286,10 @@ for nSim in range(args.nsim):
 
         # 2-Wasserstein Distance
         real_cov = np.eye(n_features)*sigma_gaussian**2 #covraiance matrix for each Gaussian
-        for i_ang in tqdm(range(len(mass_labels_eval))):
-            mass_curr = mass_labels_eval[i_ang]
+        # real_cov = np.eye(n_features)
+        # real_cov = np.cov
+        for i_mass in tqdm(range(len(mass_labels_eval))):
+            mass_curr = mass_labels_eval[i_mass]
             # the mean for current Gaussian (angle)
             if axis == 'phi':
                 real_mass_curr = np.array((mass_curr,const_mass))
@@ -299,7 +307,7 @@ for nSim in range(args.nsim):
             # 2-W distance for current label
             two_w_dist_curr = two_wasserstein(real_mass_curr, fake_mass_curr, real_cov, fake_cov_curr, eps=1e-20)
 
-            if i_ang == 0:
+            if i_mass == 0:
                 two_w_dist_all = [two_w_dist_curr]
             else:
                 two_w_dist_all.append(two_w_dist_curr)
@@ -310,11 +318,11 @@ for nSim in range(args.nsim):
         if args.GAN == "CcGAN":
             filename_tmp = save_images_folder + '{}_real_fake_samples_{}_sigma_{}_kappa_{}_nSim_{}.png'.format(args.GAN, args.threshold_type, args.kernel_sigma, args.kappa, nSim)
 
-        n_dists_plot = args.n_dists_plot
+        # n_dists_plot = args.n_dists_plot
         n_samples_plot = args.n_samples_plot
 
-        fake_samples = np.zeros((n_dists_plot*n_samples_plot, n_features))
-        for i_tmp in range(n_dists_plot):
+        fake_samples = np.zeros((n_dists*n_samples_plot, n_features))
+        for i_tmp in range(n_dists):
             mass_label = mass_labels_plot[i_tmp]
             fake_samples_curr = fn_sampleGAN_given_label(
                     n_samples_plot,

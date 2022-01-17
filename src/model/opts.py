@@ -17,7 +17,6 @@ def parse_opts():
     parser.add_argument('--n_dists', type=int, default=5,
                         help = "Number of Dists (number of phi data points).") #half of them will be used for training and the rest are for testing
     parser.add_argument('--n_samples_train', type=int, default=10000) # n_gaussians*n_rsamp_per_gaussian = ntrain
-    parser.add_argument('--radius', type=float, default=1.0)
     parser.add_argument('--sigma_gaussian', type=float, default=0.02)
 
     # my additions

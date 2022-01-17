@@ -16,7 +16,7 @@ from numpy import linalg as LA
 from scipy import linalg
 import json
 
-from defs import PROJECT_DIR
+from defs import *
 
 ################################################################################
 # Progress Bar
@@ -108,13 +108,27 @@ def sampler_CircleGaussian(n_samp_per_gaussian, angle_grid, radius, sigma = 0.05
 
     return samples, angles, means
 
-def sampler_ROOT(axis: str='phi', const_mass: float=500., data_are_samples: bool=True, n_samples: int=10) -> tuple:
+def sampler_ROOT(axis: str='phi', const_mass: float=500., samples_are_data: bool=True, n_samples: int=10) -> tuple:
+    '''
+    returns indices
+    '''
     axis_idx = 0 if axis == 'phi' else 1
     const_idx = 1 if axis == 'phi' else 0
 
     samples = np.empty((0,2),dtype=float)
     sample_mass_labels = np.empty((0,),dtype=float)
     masses = np.empty((0,2),dtype=float)
+
+    phi_axis = np.linspace(phi_min,phi_max,phi_bins+1)
+    omega_axis = np.linspace(omega_min,omega_max,omega_bins+1)
+    # phi_temp, omega_temp = np.meshgrid(phi_axis, omega_axis)
+    # mass_grid = np.array((phi_temp.ravel(), omega_temp.ravel())).T
+    # mass_grid = np.reshape(mass_grid,(phi_bins+1,omega_bins+1,2), order='F')
+    # np.set_printoptions(threshold=np.inf)
+    # print("mass grid",mass_grid)
+    # np.set_printoptions(threshold=1000)
+    # print(mass_grid[300,200])
+    # exit()
 
     with open("data_mapping.json",'r') as json_file:
         file_mapping: dict[str,list[int]] = json.load(json_file)
@@ -138,16 +152,13 @@ def sampler_ROOT(axis: str='phi', const_mass: float=500., data_are_samples: bool
                 samples_f_flat = np.random.choice(a=data_flat.size,p=data_flat,size=n_samples)
                 samples_f = np.unravel_index(samples_f_flat, data.shape)
 
-            samples_f = np.transpose(samples_f)
-            # np.set_printoptions(threshold=np.inf)
-            # print(samples_f)
-            # np.set_printoptions(threshold=1000)
-
+            # samples_f = np.transpose(samples_f)
+            # samples_f = mass_grid[samples_f]
+            samples_f = np.array([phi_axis[samples_f[0]],omega_axis[samples_f[1]]]).T
             samples = np.append(samples,samples_f,axis=0)
             sample_mass_labels = np.concatenate((sample_mass_labels,np.ones(len(samples_f)) * mass_label[axis_idx]))
 
     return samples, sample_mass_labels, masses
-
 
 ################################################################################
 # Plot samples in a 2-D coordinate

@@ -56,6 +56,7 @@ class TMModel():
         new_environ = os.environ.copy()
         new_environ["PATH"] = new_path
 
+        # nosec - run shell command as desired
         process = subprocess.Popen(cmd_str, shell=True, env=new_environ,
                 stdout=file_output, stderr=file_error)
         output, error = process.communicate()
