@@ -120,9 +120,9 @@ point_size = 25
 
 #-------------------------------
 # output folders
-save_models_folder = wd + '/out/saved_models/'
+save_models_folder = PROJECT_DIR + '/out/saved_models/'
 os.makedirs(save_models_folder,exist_ok=True)
-save_images_folder = wd + '/out/saved_images/'
+save_images_folder = PROJECT_DIR + '/out/saved_images/'
 os.makedirs(save_images_folder,exist_ok=True)
 
 #######################################################################################
@@ -132,7 +132,7 @@ os.makedirs(save_images_folder,exist_ok=True)
 # sampler for target distribution
 def generate_data():
     # load sampled files/dists
-    return sampler_ROOT(const_mass=const_mass,axis=axis,samples_are_data=True)
+    return sampler_ROOT(const_mass=const_mass,axis=axis,samples_are_data=False,n_samples=2000)
 
 prop_recovered_modes = np.zeros(args.nsim) # num of recovered modes diveded by num of modes
 prop_good_samples = np.zeros(args.nsim) # num of good fake samples diveded by num of all fake samples
@@ -196,7 +196,7 @@ for nSim in range(args.nsim):
     print("{}/{}, {}, Sigma is {}, Kappa is {}".format(nSim+1, args.nsim, args.threshold_type, args.kernel_sigma, args.kappa))
 
     if args.GAN == 'CcGAN':
-        save_GANimages_InTrain_folder = wd + '/output/saved_images/{}_{}_{}_{}_nSim_{}_InTrain'.format(args.GAN, args.threshold_type, args.kernel_sigma, args.kappa, nSim)
+        save_GANimages_InTrain_folder = PROJECT_DIR + '/out/saved_images/{}_{}_{}_{}_nSim_{}_InTrain'.format(args.GAN, args.threshold_type, args.kernel_sigma, args.kappa, nSim)
     os.makedirs(save_GANimages_InTrain_folder,exist_ok=True)
 
     #----------------------------------------------

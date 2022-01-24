@@ -1,11 +1,13 @@
 #!/home/asatk/miniconda3/envs/py3CCGAN/bin/python
 
 import tkinter as tk
-from tkinter import ttk
+from tkinter import ttk, filedialog
 from typing import Callable
 
 from PIL import ImageTk
 from matplotlib.pyplot import text
+
+from defs import PROJECT_DIR
 
 class TMView(tk.Toplevel):
 
@@ -68,8 +70,11 @@ class TMView(tk.Toplevel):
                 selectmode=tk.SINGLE,exportselection=False, width=30)
         self.text_files_converted.pack(fill=tk.Y,expand=False,side='top',padx=5,anchor='c')
 
-        self.file_type_combobox = ttk.Combobox(self.get_frame("image control"),state='readonly')
-        self.file_type_combobox.pack(fill=tk.Y,side='top',pady=5)
+        # self.file_type_combobox = ttk.Combobox(self.get_frame("image control"),state='readonly')
+        # self.file_type_combobox.pack(fill=tk.Y,side='top',pady=5)
+
+        self.__create_button("image dir",self.get_frame("image control"))
+        self.__pack_button("image dir",fill=tk.X,expand=False,side='top')
 
     def start(self):
         '''
@@ -115,12 +120,12 @@ class TMView(tk.Toplevel):
     def display_cmd(self, cmd: Callable):
         self.text_files_converted.bind("<<ListboxSelect>>",cmd)
 
-    def set_file_types(self, file_types: list[str]):
-        self.file_type_combobox.configure(values=file_types)
-        self.file_type_combobox.current(2)
+    # def set_file_types(self, file_types: list[str]):
+    #     self.file_type_combobox.configure(values=file_types)
+    #     self.file_type_combobox.current(2)
 
-    def file_type_cmd(self, cmd: Callable):
-        self.file_type_combobox.bind("<<ComboboxSelected>>",cmd)
+    # def file_type_cmd(self, cmd: Callable):
+    #     self.file_type_combobox.bind("<<ComboboxSelected>>",cmd)
 
     def display_image(self, image: ImageTk.PhotoImage):
         self.image_label.image = image
@@ -161,3 +166,6 @@ class TMView(tk.Toplevel):
 
     def get_filter_text(self, event: tk.Event) -> str:
         return event.widget.get()
+
+    def get_image_directory(self):
+        return filedialog.askdirectory(initialdir=PROJECT_DIR + "/out",title='select image dir')

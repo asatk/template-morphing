@@ -12,7 +12,9 @@ class TMModel():
         self.files_all = []
         self.files_added = []
         self.files_converted = []
-        self.image_file_mode = "png"
+        # self.image_file_mode = "png"
+        self.image_dir = PROJECT_DIR + "/out/png"
+        self.image_dir_modes = {}
 
     def add_files(self, files_added: list[str] = None) -> tuple[list[str],list[str], list[str]]:
         self.files_all = sorted(set(self.files_all) - set(files_added))
@@ -34,9 +36,10 @@ class TMModel():
         return (self.files_all,self.files_added, self.files_converted)
 
     def start(self):
-        self.files_all = os.listdir(PROJECT_DIR+"/root/")
+        self.files_all = os.listdir(PROJECT_DIR+"/root")
         # self.image_file_mode = self.get_file_types()[0]
         self.files_converted = self.__get_image_files_converted()
+        self.image_dir_modes = self.__get_image_dir_modes()
 
     def convert_files(self) -> tuple[list[str], list[str], list[str]]:
         self.root_to_np()
@@ -65,18 +68,33 @@ class TMModel():
         file_error.close()
 
     def __get_image_files_converted(self) -> list[str]:
-        return os.listdir(PROJECT_DIR+"/out/%s/"%(self.image_file_mode))
+        return os.listdir(self.image_dir)
 
-    def set_image_file_mode(self, image_file_mode: str) -> tuple[list[str], list[str], list[str]]:
-        self.image_file_mode = image_file_mode
+    def __get_image_dir_modes(self) -> dict[str,str]:
+        return {
+            "png": "png",
+            "jpg": "jpg",
+            "npy": "npy",
+            "log": "txt",
+            "saved_images": "png"
+        }
+
+    def set_image_directory(self, image_dir: str) -> tuple[list[str], list[str], list[str]]:
+        self.image_dir = image_dir
         self.files_converted = self.__get_image_files_converted()
         return self.get_file_lists()
 
+    # def set_image_file_mode(self, image_file_mode: str) -> tuple[list[str], list[str], list[str]]:
+    #     # self.image_file_mode = image_file_mode
+    #     self.files_converted = self.__get_image_files_converted()
+    #     return self.get_file_lists()
+
     def display(self, image_name: str, width: int, height: int) -> ImageTk.PhotoImage:
-        image_jpg = Image.open(PROJECT_DIR+"/out/%s/"%(self.image_file_mode)+image_name)
+        # image_jpg = Image.open(PROJECT_DIR+"/out/%s/"%(self.image_file_mode)+image_name)
+        image_jpg = Image.open(self.image_dir + "/" +image_name)
         image_jpg = image_jpg.resize((width,height),Image.ANTIALIAS)
         image_tk = ImageTk.PhotoImage(image_jpg)
         return image_tk
 
     def get_file_types(self) -> list[str]:
-        return os.listdir(PROJECT_DIR+"/out/")
+        return os.listdir(PROJECT_DIR+"/out")

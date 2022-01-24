@@ -4,3 +4,4 @@ morphing.code-workspace
 .old/
 src/model/out/*
 src/model/output/*
+out/*

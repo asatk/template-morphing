@@ -1,21 +1,9 @@
-  0%|          | 0/5 [00:00<?, ?it/s]100%|██████████| 5/5 [00:00<00:00, 814.08it/s]
-  0%|          | 0/5 [00:00<?, ?it/s]100%|██████████| 5/5 [00:00<00:00, 956.08it/s]
-  0%|          | 0/5 [00:00<?, ?it/s]100%|██████████| 5/5 [00:00<00:00, 690.60it/s]
-usage: main.py [-h] [--GAN {cGAN,CcGAN}] [--nsim NSIM] [--seed S]
-               [--root_path ROOT_PATH] [--n_dists N_DISTS]
-               [--n_samples_train N_SAMPLES_TRAIN] [--radius RADIUS]
-               [--sigma_gaussian SIGMA_GAUSSIAN] [--axis AXIS]
-               [--const_mass CONST_MASS] [--niters_gan NITERS_GAN]
-               [--resume_niters_gan RESUME_NITERS_GAN]
-               [--save_niters_freq SAVE_NITERS_FREQ] [--lr_gan LR_GAN]
-               [--dim_gan DIM_GAN] [--batch_size_disc BATCH_SIZE_DISC]
-               [--batch_size_gene BATCH_SIZE_GENE]
-               [--threshold_type {soft,hard}] [--kernel_sigma KERNEL_SIGMA]
-               [--kappa KAPPA]
-               [--nonzero_soft_weight_threshold NONZERO_SOFT_WEIGHT_THRESHOLD]
-               [--eval] [--n_dists_eval N_DISTS_EVAL]
-               [--n_samples_eval N_SAMPLES_EVAL]
-               [--samp_batch_size_eval SAMP_BATCH_SIZE_EVAL]
-               [--n_dists_plot N_DISTS_PLOT] [--n_samples_plot N_SAMPLES_PLOT]
-               [--samp_batch_size_plot SAMP_BATCH_SIZE_PLOT]
-main.py: error: unrecognized arguments: --axis_mass 500
+  0%|          | 0/300 [00:00<?, ?it/s]/home/asatk/miniconda3/envs/py3CCGAN/lib/python3.9/site-packages/scipy/linalg/_matfuncs_sqrtm.py:186: RuntimeWarning: invalid value encountered in double_scalars
+  arg2 = norm(X.dot(X) - A, 'fro')**2 / norm(A, 'fro')
+ 30%|███       | 91/300 [00:00<00:00, 901.29it/s] 61%|██████    | 182/300 [00:00<00:00, 905.33it/s] 91%|█████████ | 273/300 [00:00<00:00, 860.58it/s]100%|██████████| 300/300 [00:00<00:00, 874.33it/s]
+  0%|          | 0/300 [00:00<?, ?it/s] 30%|███       | 90/300 [00:00<00:00, 890.62it/s]/home/asatk/miniconda3/envs/py3CCGAN/lib/python3.9/site-packages/scipy/linalg/_matfuncs_sqrtm.py:186: RuntimeWarning: invalid value encountered in double_scalars
+  arg2 = norm(X.dot(X) - A, 'fro')**2 / norm(A, 'fro')
+ 60%|██████    | 181/300 [00:00<00:00, 899.34it/s] 90%|█████████ | 271/300 [00:00<00:00, 899.13it/s]100%|██████████| 300/300 [00:00<00:00, 899.36it/s]
+  0%|          | 0/300 [00:00<?, ?it/s] 23%|██▎       | 68/300 [00:00<00:00, 678.81it/s]/home/asatk/miniconda3/envs/py3CCGAN/lib/python3.9/site-packages/scipy/linalg/_matfuncs_sqrtm.py:186: RuntimeWarning: invalid value encountered in double_scalars
+  arg2 = norm(X.dot(X) - A, 'fro')**2 / norm(A, 'fro')
+ 52%|█████▏    | 155/300 [00:00<00:00, 790.77it/s] 79%|███████▉  | 238/300 [00:00<00:00, 805.34it/s]100%|██████████| 300/300 [00:00<00:00, 809.58it/s]

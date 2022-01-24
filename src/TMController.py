@@ -48,21 +48,23 @@ class TMController():
         add_files_cmd = lambda:view.display_file_lists(*model.add_files(view.get_selected_files_all_files()))
         remove_files_cmd = lambda:view.display_file_lists(*model.remove_files(view.get_selected_files_added_files()))
         filter_files_cmd = lambda event:view.display_file_lists(*model.filter_files(view.get_filter_text(event)))
-        file_type_cmd = lambda event:view.display_file_lists(*model.set_image_file_mode(event.widget.get()))
+        image_dir_cmd = lambda:view.display_file_lists(*model.set_image_directory(view.get_image_directory()))
+        # file_type_cmd = lambda event:view.display_file_lists(*model.set_image_file_mode(event.widget.get()))
 
         # set buttons to corresponding commands
         view.button_cmd("quit", quit_cmd)
-        view.button_cmd("convert",convert_cmd)
+        view.button_cmd("convert", convert_cmd)
         view.button_cmd("add file(s)", add_files_cmd)
         view.button_cmd("remove file(s)", remove_files_cmd)
         view.filter_cmd(filter_files_cmd)
         view.display_cmd(display_cmd)
-        view.file_type_cmd(file_type_cmd)
+        view.button_cmd("image dir", image_dir_cmd)
+        # view.file_type_cmd(file_type_cmd)
 
     def init_display(self):
         view = self.view
         model = self.model
-        view.set_file_types(model.get_file_types())
+        # view.set_file_types(model.get_file_types())
         view.display_file_lists(*model.get_file_lists())
         
     def init_cmds_sim(self):
