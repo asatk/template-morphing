@@ -172,22 +172,22 @@ class TMView(tk.Toplevel):
 
     def get_selected_file_converted_files(self, event: tk.Event=None, offset=0, idx=None) -> tuple[str,int,int]:
         text_files_converted = self.text_files_converted
+        selection = text_files_converted.curselection()
         if idx is None:
-            cursel = text_files_converted.curselection()
-            if cursel == tuple() and offset == -1:
-                idx = 0
+            if selection == tuple():
+                selection = (0, )
+                if offset == -1:
+                    idx = tk.END
+                elif offset == 1:
+                    idx = 0
             else:
-                idx = text_files_converted.curselection()[0] + offset
+                idx = selection[0] + offset
 
         text_files_converted.selection_clear(0,tk.END)
         text_files_converted.selection_set(idx)
         text_files_converted.see(idx)
         text_files_converted.activate(idx)
         text_files_converted.selection_anchor(idx)
-
-        selection = text_files_converted.curselection()
-        if selection == tuple():
-            selection = (0, )
 
         if event is not None:
             text_files_converted = event.widget
@@ -199,4 +199,6 @@ class TMView(tk.Toplevel):
         return event.widget.get()
 
     def get_image_directory(self):
-        return filedialog.askdirectory(initialdir=PROJECT_DIR + "/out",title='select image dir')
+        val = filedialog.askdirectory(initialdir=PROJECT_DIR + "/out",title='select image dir')
+        self.text_files_converted.focus()
+        return val
