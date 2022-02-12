@@ -120,6 +120,20 @@ class TMView(tk.Toplevel):
     def display_cmd(self, cmd: Callable):
         self.text_files_converted.bind("<<ListboxSelect>>",cmd)
 
+    def display_prev_cmd(self, cmd: Callable):
+        self.text_files_converted.bind("<Left>",cmd)
+        self.text_files_converted.bind("<Up>",cmd)
+
+    def display_next_cmd(self, cmd: Callable):
+        self.text_files_converted.bind("<Right>",cmd)
+        self.text_files_converted.bind("<Down>",cmd)
+
+    def display_first_cmd(self, cmd: Callable):
+        self.text_files_converted.bind("<Home>",cmd)
+
+    def display_last_cmd(self, cmd: Callable):
+        self.text_files_converted.bind("<End>",cmd)
+
     # def set_file_types(self, file_types: list[str]):
     #     self.file_type_combobox.configure(values=file_types)
     #     self.file_type_combobox.current(2)
@@ -156,11 +170,28 @@ class TMView(tk.Toplevel):
         files_added = [self.text_files_added.get(i) for i in indices_added]
         return files_added
 
-    def get_selected_file_converted_files(self, event: tk.Event=None) -> tuple[str,int,int]:
+    def get_selected_file_converted_files(self, event: tk.Event=None, offset=0, idx=None) -> tuple[str,int,int]:
         text_files_converted = self.text_files_converted
-        if tk.Event != None:
+        if idx is None:
+            cursel = text_files_converted.curselection()
+            if cursel == tuple() and offset == -1:
+                idx = 0
+            else:
+                idx = text_files_converted.curselection()[0] + offset
+
+        text_files_converted.selection_clear(0,tk.END)
+        text_files_converted.selection_set(idx)
+        text_files_converted.see(idx)
+        text_files_converted.activate(idx)
+        text_files_converted.selection_anchor(idx)
+
+        selection = text_files_converted.curselection()
+        if selection == tuple():
+            selection = (0, )
+
+        if event is not None:
             text_files_converted = event.widget
-        return (text_files_converted.get(text_files_converted.curselection()),
+        return (text_files_converted.get(selection),
             self.get_frame("image").winfo_width() - self.get_frame("image control").winfo_width() - 12,
             self.get_frame("image").winfo_height() - 12)
 

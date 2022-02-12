@@ -45,6 +45,10 @@ class TMController():
         quit_cmd = view.quit
         convert_cmd = lambda:view.display_file_lists(*model.convert_files())
         display_cmd = lambda event:view.display_image(model.display(*view.get_selected_file_converted_files(event=event)))
+        display_first_cmd = lambda event:view.display_image(model.display(*view.get_selected_file_converted_files(event=event,idx=0)))
+        display_last_cmd = lambda event:view.display_image(model.display(*view.get_selected_file_converted_files(event=event,idx="end")))
+        display_prev_cmd = lambda event:view.display_image(model.display(*view.get_selected_file_converted_files(event=event,offset=-1)))
+        display_next_cmd = lambda event:view.display_image(model.display(*view.get_selected_file_converted_files(event=event,offset=+1)))
         add_files_cmd = lambda:view.display_file_lists(*model.add_files(view.get_selected_files_all_files()))
         remove_files_cmd = lambda:view.display_file_lists(*model.remove_files(view.get_selected_files_added_files()))
         filter_files_cmd = lambda event:view.display_file_lists(*model.filter_files(view.get_filter_text(event)))
@@ -58,6 +62,10 @@ class TMController():
         view.button_cmd("remove file(s)", remove_files_cmd)
         view.filter_cmd(filter_files_cmd)
         view.display_cmd(display_cmd)
+        view.display_first_cmd(display_first_cmd)
+        view.display_last_cmd(display_last_cmd)
+        view.display_prev_cmd(display_prev_cmd)
+        view.display_next_cmd(display_next_cmd)
         view.button_cmd("image dir", image_dir_cmd)
         # view.file_type_cmd(file_type_cmd)
 
