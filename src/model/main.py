@@ -8,6 +8,7 @@ print("\n=======================================================================
 
 import argparse
 import gc
+from unittest.mock import NonCallableMagicMock
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib as mpl
@@ -131,8 +132,10 @@ os.makedirs(save_images_folder,exist_ok=True)
 #---------------------------------
 # sampler for target distribution
 def generate_data():
+    mass_grid = phi_labels_train if axis == 'phi' else omega_bins_train
     # load sampled files/dists
-    return sampler_ROOT(const_mass=const_mass,axis=axis,samples_are_data=False,n_samples=2000)
+    # return sampler_ROOT(const_mass=const_mass,axis=axis,samples_are_data=False,n_samples=2000)
+    return sampler_GridGaussian(mass_grid, axis=axis, const_mass=const_mass, n_samples=20, phi_sigma = (phi_max-phi_min)/100, omega_sigma = (omega_max-omega_min)/100)
 
 prop_recovered_modes = np.zeros(args.nsim) # num of recovered modes diveded by num of modes
 prop_good_samples = np.zeros(args.nsim) # num of good fake samples diveded by num of all fake samples
@@ -153,6 +156,11 @@ for nSim in range(args.nsim):
     n_dists = len(masses_train)
     samples_plot_in_train, _, _ = generate_data()
 
+    print("samples train:",samples_train)
+    print("samples mass labels train", samples_mass_labels_train)
+    print("masses train", masses_train)
+
+
     # print("samples",samples_train)
     # print("sample mass labels",samples_mass_labels_train)
     # for i in range(len(samples_train)):
@@ -164,12 +172,39 @@ for nSim in range(args.nsim):
     # if not os.path.isfile(filename_tmp):
     plt.switch_backend('agg')
     mpl.style.use('seaborn')
-    plt.figure(figsize=(fig_size, fig_size), facecolor='w')
+
+    # plt.ion()
+
+    # fig, ax = plt.subplots()
+
+    # fig = plt.figure(figsize=(fig_size, fig_size), facecolor='w')
+    # fig, ax = plt.subplot(111)
+
+    fig = plt.figure(1, figsize=(fig_size, fig_size), facecolor='w')
+    # ax = plt.subplot(111,xlim=(phi_min, phi_max),ylim=(omega_min, omega_max))
+    
+    # ax = fig.add_axes(xlim=(phi_min, phi_max),ylim=(omega_min, omega_max))
+
+    # plt.axes()
+    # ax = fig.add_axes(xlim=(phi_min,phi_max),ylim=(omega_min,omega_max))
+    # fig.grid(b=True)
+    # ax.
     plt.grid(b=True)
+    # plt.axes(xlim=(phi_min, phi_max),ylim=(omega_min, omega_max))
+    plt.xlim((phi_min, phi_max))
+    plt.ylim((omega_min, omega_max))
     plt.scatter(samples_train[:,0], samples_train[:,1], c='blue', edgecolor='none', alpha=0.5, s=point_size, label="Real samples")
     plt.scatter(masses_train[:,0], masses_train[:,1], c='red', edgecolor='none', alpha=1, s=point_size, label="Masses")
+    # plt.sca(plt.axes(xlim=(phi_min, phi_max),ylim=(omega_min, omega_max)))
+    # plt.axes(xlim=(phi_min, phi_max),ylim=(omega_min, omega_max))
+    # plt.axes.get_xaxis().set_xlim((phi_min, phi_max))
+    # plt.axes.get_yaxis().set_ylim((omega_min, omega_max))
     plt.legend(loc=1)
+    
+    
     plt.savefig(filename_tmp)
+
+    # exit()
 
     if args.GAN == 'CcGAN':
         #normalize
@@ -321,6 +356,8 @@ for nSim in range(args.nsim):
         mpl.style.use('seaborn')
         plt.figure(figsize=(fig_size, fig_size), facecolor='w')
         plt.grid(b=True)
+        plt.xlim((phi_min, phi_max))
+        plt.ylim=((omega_min, omega_max))
         plt.scatter(real_samples_plot[:, 0], real_samples_plot[:, 1], c='blue', edgecolor='none', alpha=0.5, s=point_size, label="Real samples")
         plt.scatter(fake_samples[:, 0], fake_samples[:, 1], c='green', edgecolor='none', alpha=1, s=point_size, label="Fake samples")
         plt.legend(loc=1)
