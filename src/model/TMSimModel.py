@@ -2,7 +2,9 @@
 
 from defs import PROJECT_DIR
 
+import asyncio
 import os
+import sys
 import numpy as np
 from PIL import Image, ImageTk
 from matplotlib import pyplot as plt
@@ -13,11 +15,11 @@ class TMSimModel():
     def __init__(self):
         self.files_npy = []
 
-    def filter_files(self, filter_str: str) -> tuple[list[str]]:
+    def filter_files(self, filter_str: str) -> 'tuple[list[str]]':
         files_npy_filtered = [x for x in self.files_npy if filter_str in x]
         return (files_npy_filtered,)
 
-    def get_file_lists(self) -> tuple[list[str]]:
+    def get_file_lists(self) -> 'tuple[list[str]]':
         return (self.files_npy,)
 
     def start(self):
@@ -51,11 +53,32 @@ class TMSimModel():
         image_tk = ImageTk.PhotoImage(image_jpg)
         return image_tk
 
-    def train_GAN(self):
+    def train_GAN(self, output_mode=7):
+        # task = asyncio.create_task(self.__train_GAN_async())
+
+        # await task
+        asyncio.run(self.__train_GAN_async(output_mode=output_mode))
+
+
+        
+
+    async def __train_GAN_async(self,output_mode=7):
         cmd_str = "model/scripts/run_train.sh "
 
-        file_output = open(PROJECT_DIR+"/out/log/train_out.txt",'w')
-        file_error = open(PROJECT_DIR+"/out/log/train_err.txt",'w')
+        #file
+        if output_mode & 0x1:
+            file_output = open(PROJECT_DIR+"/out/log/train_out.txt",'w')
+            file_error = open(PROJECT_DIR+"/out/log/train_err.txt",'w')
+
+        #log
+        if output_mode & 0x2:
+            #append to logger
+            pass
+
+        #terminal
+        if output_mode & 0x4:
+            #output to terminal
+            pass
 
         # print("os environ path")
         # print(os.environ["PATH"])
@@ -66,9 +89,13 @@ class TMSimModel():
         process = subprocess.Popen(cmd_str, shell=True,
                 stdout=file_output, stderr=file_error)
         output, error = process.communicate()
+
+        # process = subprocess.Popen(cmd_str, shell=True,
+        #         stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+
+        # for line in iter(lambda: process.stdout.readline(1), b''):
+        #     sys.stdout.buffer.write(line)
+        
         
         file_output.close()
         file_error.close()
-
-    def gen_GAN(self):
-        pass

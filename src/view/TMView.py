@@ -19,7 +19,7 @@ class TMView(tk.Toplevel):
         self.initGUI()
 
     def initGUI(self):
-        self.title("TM")
+        self.title("Display Window")
         self.geometry("700x500")
 
         self.__create_frame("control")
@@ -146,7 +146,7 @@ class TMView(tk.Toplevel):
         self.image_label['image'] = self.image_label.image
 
     # data methods
-    def display_file_lists(self, files_all: list[str] = None, files_added: list[str] = None, files_converted: list[str] = None):
+    def display_file_lists(self, files_all: 'list[str]' = None, files_added: 'list[str]' = None, files_converted: 'list[str]' = None):
         if files_all == None:
             files_all = []
         if files_added == None:
@@ -160,17 +160,17 @@ class TMView(tk.Toplevel):
         self.text_files_added.configure(listvariable=tk.StringVar(value=files_added))
         self.text_files_converted.configure(listvariable=tk.StringVar(value=files_converted))
 
-    def get_selected_files_all_files(self) -> list[str]:
+    def get_selected_files_all_files(self) -> 'list[str]':
         indices_all = self.text_files_all.curselection()
         files_all = [self.text_files_all.get(i) for i in indices_all]
         return files_all
 
-    def get_selected_files_added_files(self) -> list[str]:
+    def get_selected_files_added_files(self) -> 'list[str]':
         indices_added = self.text_files_added.curselection()
         files_added = [self.text_files_added.get(i) for i in indices_added]
         return files_added
 
-    def get_selected_file_converted_files(self, event: tk.Event=None, offset=0, idx=None) -> tuple[str,int,int]:
+    def get_selected_file_converted_files(self, event: tk.Event=None, offset=0, idx=None) -> 'tuple[str,int,int]':
         text_files_converted = self.text_files_converted
         selection = text_files_converted.curselection()
         if idx is None:

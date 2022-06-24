@@ -17,7 +17,7 @@ class TMSimView(tk.Toplevel):
         self.initGUI()
 
     def initGUI(self):
-        self.title("TM")
+        self.title("Simulation Window")
         self.geometry("700x500")
 
         self.__create_frame("control")
@@ -43,23 +43,32 @@ class TMSimView(tk.Toplevel):
         self.__create_frame("sim control",self.get_frame("image"),width=250,height=300)
         self.__pack_frame("sim control")
 
-        self.__frames["sim control"].pack_propagate(False)
+        self.get_frame("sim control").pack_propagate(False)
 
         self.text_files_npy = tk.Listbox(self.get_frame("sim control"),
                 selectmode=tk.SINGLE,exportselection=False, width=30)
         self.text_files_npy.pack(fill=tk.BOTH,expand=False,side='top',padx=5,pady=5,anchor='c')
         
-        self.num_samples_text = ttk.Entry(self.get_frame("sim control"))
+        self.__create_frame("generate frame", self.get_frame("sim control"))
+        self.__pack_frame("generate frame",side='top')
+
+        self.num_samples_text = ttk.Entry(self.get_frame("generate frame"))
         self.num_samples_text.pack(fill=tk.X,side='left',padx=5,pady=5)
 
-        self.__create_button("generate",self.get_frame("sim control"))
+        self.__create_button("generate",self.get_frame("generate frame"))
         self.__pack_button("generate",fill=tk.X,side='left')
 
-        self.__create_frame("Train CCGAN")
-        self.__pack_frame("Train CCGAN",fill=tk.BOTH)
+        self.__create_frame("Train CCGAN Frame", self.get_frame("sim control"))
+        self.__pack_frame("Train CCGAN Frame",fill=tk.BOTH,side='top')
 
-        self.__create_button("run experiment", self.get_frame("Train CCGAN"))
-        self.__pack_button("run experiment", fill=tk.X)
+        self.__create_button("run experiment", self.get_frame("Train CCGAN Frame"))
+        self.__pack_button("run experiment", fill=tk.BOTH)
+
+        self.__create_frame("log frame", self.get_frame("Train CCGAN Frame"))
+        self.__pack_frame("log frame", fill=tk.X,side='bottom')
+
+        self.__logger_text_area = tk.Text(self.get_frame("Train CCGAN Frame"),state=tk.DISABLED)
+        self.__logger_text_area.pack(fill=tk.BOTH)
 
     def start(self):
         '''
@@ -107,7 +116,7 @@ class TMSimView(tk.Toplevel):
         self.image_label['image'] = self.image_label.image
 
     # data methods
-    def display_file_lists(self, files_npy: list[str] = None):
+    def display_file_lists(self, files_npy: 'list[str]' = None):
         # print(files_npy)
         if files_npy == None:
             files_npy = []
@@ -118,7 +127,7 @@ class TMSimView(tk.Toplevel):
         # if len(files_npy) > 0:
         #     self.text_files_npy.selection_set(0)
 
-    def get_selected_file_converted_files(self, event: tk.Event=None) -> tuple[str,int,int]:
+    def get_selected_file_converted_files(self, event: tk.Event=None) -> 'tuple[str,int,int]':
         text_files_npy = self.text_files_npy
         if tk.Event != None:
             text_files_npy = event.widget
@@ -129,6 +138,9 @@ class TMSimView(tk.Toplevel):
     def get_filter_text(self, event: tk.Event) -> str:
         return event.widget.get()
 
-    def get_samples_info(self) -> tuple[str,int]:
+    def get_samples_info(self) -> 'tuple[str,int]':
         return (self.text_files_npy.get(self.text_files_npy.curselection()),
                 int(self.num_samples_text.get()))
+
+    def append_text(self, text: str) -> None:
+        self.__logger_text_area.insert(text)

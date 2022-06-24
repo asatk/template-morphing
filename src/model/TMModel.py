@@ -16,23 +16,23 @@ class TMModel():
         self.image_dir = PROJECT_DIR + "/out/png"
         self.image_dir_modes = {}
 
-    def add_files(self, files_added: list[str] = None) -> tuple[list[str],list[str], list[str]]:
+    def add_files(self, files_added: 'list[str]' = None) -> 'tuple[list[str],list[str], list[str]]':
         self.files_all = sorted(set(self.files_all) - set(files_added))
         self.files_added = sorted(set(self.files_added) | set(files_added))
         return (self.files_all, self.files_added, self.files_converted)
 
-    def remove_files(self, files_removed: list[str] = None) -> tuple[list[str], list[str], list[str]]:
+    def remove_files(self, files_removed: 'list[str]' = None) -> 'tuple[list[str], list[str], list[str]]':
         self.files_all = list(set(self.files_all) | set(files_removed))
         self.files_added = list(set(self.files_added) - set(files_removed))
         return (self.files_all, self.files_added, self.files_converted)
 
-    def filter_files(self, filter_str: str) -> tuple[list[str], list[str], list[str]]:
+    def filter_files(self, filter_str: str) -> 'tuple[list[str], list[str], list[str]]':
         files_all_filtered = [x for x in self.files_all if filter_str in x]
         files_added_filtered = [x for x in self.files_added if filter_str in x]
         files_converted_filtered = [x for x in self.files_converted if filter_str in x]
         return (files_all_filtered, files_added_filtered, files_converted_filtered)
 
-    def get_file_lists(self) -> tuple[list[str], list[str], list[str]]:
+    def get_file_lists(self) -> 'tuple[list[str], list[str], list[str]]':
         return (self.files_all,self.files_added, self.files_converted)
 
     def start(self):
@@ -41,12 +41,12 @@ class TMModel():
         self.files_converted = self.__get_image_files_converted()
         self.image_dir_modes = self.__get_image_dir_modes()
 
-    def convert_files(self) -> tuple[list[str], list[str], list[str]]:
+    def convert_files(self) -> 'tuple[list[str], list[str], list[str]]':
         self.root_to_np()
         self.files_converted = self.__get_image_files_converted()
         return self.get_file_lists()
 
-    def root_to_np(self) -> list[str]:
+    def root_to_np(self) -> 'list[str]':
         files = [PROJECT_DIR+"/root/"+i for i in self.files_added]
         cmd_str = "model/ROOTtoNP.py "+" ".join(files)
 
@@ -67,10 +67,10 @@ class TMModel():
         file_output.close()
         file_error.close()
 
-    def __get_image_files_converted(self) -> list[str]:
+    def __get_image_files_converted(self) -> 'list[str]':
         return os.listdir(self.image_dir)
 
-    def __get_image_dir_modes(self) -> dict[str,str]:
+    def __get_image_dir_modes(self) -> 'dict[str,str]':
         return {
             "png": "png",
             "jpg": "jpg",
@@ -79,7 +79,7 @@ class TMModel():
             "saved_images": "png"
         }
 
-    def set_image_directory(self, image_dir: str) -> tuple[list[str], list[str], list[str]]:
+    def set_image_directory(self, image_dir: str) -> 'tuple[list[str], list[str], list[str]]':
         self.image_dir = image_dir
         self.files_converted = self.__get_image_files_converted()
         return self.get_file_lists()
@@ -96,5 +96,5 @@ class TMModel():
         image_tk = ImageTk.PhotoImage(image_jpg)
         return image_tk
 
-    def get_file_types(self) -> list[str]:
+    def get_file_types(self) -> 'list[str]':
         return os.listdir(PROJECT_DIR+"/out")

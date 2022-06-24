@@ -1,9 +1,20 @@
-  0%|          | 0/300 [00:00<?, ?it/s]/home/asatk/miniconda3/envs/py3CCGAN/lib/python3.9/site-packages/scipy/linalg/_matfuncs_sqrtm.py:186: RuntimeWarning: invalid value encountered in double_scalars
-  arg2 = norm(X.dot(X) - A, 'fro')**2 / norm(A, 'fro')
- 30%|███       | 91/300 [00:00<00:00, 901.29it/s] 61%|██████    | 182/300 [00:00<00:00, 905.33it/s] 91%|█████████ | 273/300 [00:00<00:00, 860.58it/s]100%|██████████| 300/300 [00:00<00:00, 874.33it/s]
-  0%|          | 0/300 [00:00<?, ?it/s] 30%|███       | 90/300 [00:00<00:00, 890.62it/s]/home/asatk/miniconda3/envs/py3CCGAN/lib/python3.9/site-packages/scipy/linalg/_matfuncs_sqrtm.py:186: RuntimeWarning: invalid value encountered in double_scalars
-  arg2 = norm(X.dot(X) - A, 'fro')**2 / norm(A, 'fro')
- 60%|██████    | 181/300 [00:00<00:00, 899.34it/s] 90%|█████████ | 271/300 [00:00<00:00, 899.13it/s]100%|██████████| 300/300 [00:00<00:00, 899.36it/s]
-  0%|          | 0/300 [00:00<?, ?it/s] 23%|██▎       | 68/300 [00:00<00:00, 678.81it/s]/home/asatk/miniconda3/envs/py3CCGAN/lib/python3.9/site-packages/scipy/linalg/_matfuncs_sqrtm.py:186: RuntimeWarning: invalid value encountered in double_scalars
-  arg2 = norm(X.dot(X) - A, 'fro')**2 / norm(A, 'fro')
- 52%|█████▏    | 155/300 [00:00<00:00, 790.77it/s] 79%|███████▉  | 238/300 [00:00<00:00, 805.34it/s]100%|██████████| 300/300 [00:00<00:00, 809.58it/s]
+Traceback (most recent call last):
+  File "/home/asatk/Documents/code/cern/TM/src/model/main.py", line 230, in <module>
+    netG, netD = train_CcGAN(args.kernel_sigma, args.kappa, samples_train, samples_mass_labels_train, netG, netD, save_images_folder=save_GANimages_InTrain_folder, save_models_folder = save_models_folder, plot_in_train=plot_in_train, samples_tar_eval = samples_plot_in_train, mass_labels_eval = mass_labels_plot, label_min=label_min, label_max=label_max, fig_size=fig_size, point_size=point_size)
+  File "/home/asatk/Documents/code/cern/TM/src/model/Train_CcGAN_OG.py", line 128, in train_CcGAN
+    batch_fake_samples = netG(z, batch_fake_labels)
+  File "/home/asatk/miniconda3/envs/py3CCGAN/lib/python3.9/site-packages/torch/nn/modules/module.py", line 1051, in _call_impl
+    return forward_call(*input, **kwargs)
+  File "/home/asatk/Documents/code/cern/TM/src/model/models/cont_cond_GAN.py", line 64, in forward
+    output = self.linear(input)
+  File "/home/asatk/miniconda3/envs/py3CCGAN/lib/python3.9/site-packages/torch/nn/modules/module.py", line 1051, in _call_impl
+    return forward_call(*input, **kwargs)
+  File "/home/asatk/miniconda3/envs/py3CCGAN/lib/python3.9/site-packages/torch/nn/modules/container.py", line 139, in forward
+    input = module(input)
+  File "/home/asatk/miniconda3/envs/py3CCGAN/lib/python3.9/site-packages/torch/nn/modules/module.py", line 1051, in _call_impl
+    return forward_call(*input, **kwargs)
+  File "/home/asatk/miniconda3/envs/py3CCGAN/lib/python3.9/site-packages/torch/nn/modules/batchnorm.py", line 167, in forward
+    return F.batch_norm(
+  File "/home/asatk/miniconda3/envs/py3CCGAN/lib/python3.9/site-packages/torch/nn/functional.py", line 2281, in batch_norm
+    return torch.batch_norm(
+KeyboardInterrupt

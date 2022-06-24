@@ -40,9 +40,12 @@ def parse_opts():
 
     parser.add_argument('--threshold_type', type=str, default='hard',
                         choices=['soft', 'hard'])
-    parser.add_argument('--kernel_sigma', type=float, default=-1.0,
+    parser.add_argument('--kernel_sigma_phi', type=float, default=-1.0,
                         help='If kernel_sigma<0, then use rule-of-thumb formula to compute the sigma.')
-    parser.add_argument('--kappa', type=float, default=-1.0)
+    parser.add_argument('--kernel_sigma_omega', type=float, default=-1.0,
+                        help='If kernel_sigma<0, then use rule-of-thumb formula to compute the sigma.')
+    parser.add_argument('--kappa_phi', type=float, default=-1.0)
+    parser.add_argument('--kappa_omega', type=float, default=-1.0)
     parser.add_argument('--nonzero_soft_weight_threshold', type=float, default=1e-3,
                         help='threshold for determining nonzero weights for SVDL')
 

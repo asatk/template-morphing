@@ -108,7 +108,47 @@ def sampler_CircleGaussian(n_samp_per_gaussian, angle_grid, radius, sigma = 0.05
 
     return samples, angles, means
 
-def sampler_ROOT(axis: str='phi', const_mass: float=500., samples_are_data: bool=True, n_samples: int=10) -> tuple:
+def sampler_GridGaussian(mass_grid, axis: str='phi', const_mass: float = 0.550, n_samples: int = 10, phi_sigma = 5, omega_sigma = 0.0005):
+    '''
+
+    n_samp_per_gaussian: how many samples will be drawn from each Gaussian
+    mass_grid: raw masses
+    sigma: a fixed standard deviation
+
+    '''
+
+    axis_idx = 0 if axis == 'phi' else 1
+    const_idx = 1 if axis == 'phi' else 0
+
+
+    # cov = np.diag(np.repeat(sigma**2, 2)) #covariance matrix; fixed for each component
+    cov = np.array([[phi_sigma**2, 0.], [0., omega_sigma**2]])
+    print("cov",cov)
+    n_gaussians = len(mass_grid)
+
+    samples = np.empty((0,2),dtype=float)
+    sample_mass_labels = np.empty((0,),dtype=float)
+    masses = np.empty((0,2),dtype=float)
+
+
+    for i in range(n_gaussians):
+        mass_label = np.empty((2,), dtype=float)
+        mass_label[axis_idx] = mass_grid[i]
+        mass_label[const_idx] = const_mass
+
+        masses = np.append(masses, [mass_label], axis=0)
+
+        # print("mass label:",mass_label)
+
+        samples_i = np.random.multivariate_normal(mass_label, cov, size=n_samples)
+        print("samples_i",samples_i)
+        samples = np.append(samples, samples_i, axis=0)
+
+        sample_mass_labels = np.concatenate((sample_mass_labels, np.ones(n_samples) * mass_label[axis_idx]), axis=0)
+
+    return samples, sample_mass_labels, masses
+
+def sampler_ROOT(axis: str='phi', const_mass: float=0.550, samples_are_data: bool=True, n_samples: int=10) -> tuple:
     '''
     returns indices
     '''

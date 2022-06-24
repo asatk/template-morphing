@@ -68,7 +68,7 @@ axis = args.axis
 const_mass = args.const_mass
 
 #rectangle grid of training data labels:
-phi_labels_train = np.linspace(phi_min,phi_max,phi_bins_train+1,endpoint=True)
+phi_labels_train = np.linspace(phi_min,phi_max,phi_bins_train,endpoint=True)
 omega_labels_train = np.linspace(omega_min,omega_max,omega_bins_train,endpoint=True)
 
 # masses for evaluation
@@ -173,78 +173,74 @@ for nSim in range(args.nsim):
     plt.switch_backend('agg')
     mpl.style.use('seaborn')
 
-    # plt.ion()
-
-    # fig, ax = plt.subplots()
-
-    # fig = plt.figure(figsize=(fig_size, fig_size), facecolor='w')
-    # fig, ax = plt.subplot(111)
-
-    fig = plt.figure(1, figsize=(fig_size, fig_size), facecolor='w')
-    # ax = plt.subplot(111,xlim=(phi_min, phi_max),ylim=(omega_min, omega_max))
-    
-    # ax = fig.add_axes(xlim=(phi_min, phi_max),ylim=(omega_min, omega_max))
-
-    # plt.axes()
-    # ax = fig.add_axes(xlim=(phi_min,phi_max),ylim=(omega_min,omega_max))
-    # fig.grid(b=True)
-    # ax.
+    plt.figure(1, figsize=(fig_size, fig_size), facecolor='w')
     plt.grid(b=True)
-    # plt.axes(xlim=(phi_min, phi_max),ylim=(omega_min, omega_max))
     plt.xlim((phi_min, phi_max))
     plt.ylim((omega_min, omega_max))
     plt.scatter(samples_train[:,0], samples_train[:,1], c='blue', edgecolor='none', alpha=0.5, s=point_size, label="Real samples")
     plt.scatter(masses_train[:,0], masses_train[:,1], c='red', edgecolor='none', alpha=1, s=point_size, label="Masses")
-    # plt.sca(plt.axes(xlim=(phi_min, phi_max),ylim=(omega_min, omega_max)))
-    # plt.axes(xlim=(phi_min, phi_max),ylim=(omega_min, omega_max))
-    # plt.axes.get_xaxis().set_xlim((phi_min, phi_max))
-    # plt.axes.get_yaxis().set_ylim((omega_min, omega_max))
     plt.legend(loc=1)
-    
-    
     plt.savefig(filename_tmp)
-
-    # exit()
 
     if args.GAN == 'CcGAN':
         #normalize
         samples_mass_labels_train = (samples_mass_labels_train - label_min)/(label_max-label_min)
 
         # rule-of-thumb for the bandwidth selection
-        if args.kernel_sigma<0:
+        if args.kernel_sigma_phi<0:
             std_angles_train = np.std(samples_mass_labels_train)
             # print(len(samples_mass_labels_train))
-            args.kernel_sigma = 1.06*std_angles_train*(len(samples_mass_labels_train))**(-1/5)
+            args.kernel_sigma_phi = 1.06*std_angles_train*(len(samples_mass_labels_train))**(-1/5)
             print("\n Use rule-of-thumb formula to compute kernel_sigma >>>")
 
-        if args.kappa < 0:
-            kappa_base = np.abs(args.kappa)/n_dists
+        if args.kernel_sigma_omega<0:
+            std_angles_train = np.std(samples_mass_labels_train)
+            # print(len(samples_mass_labels_train))
+            args.kernel_sigma_omega = 1.06*std_angles_train*(len(samples_mass_labels_train))**(-1/5)
+
+        if args.kappa_phi < 0:
+            kappa_base = np.abs(args.kappa_phi)/n_dists
 
             if args.threshold_type=="hard":
-                args.kappa = kappa_base
+                args.kappa_phi = kappa_base
             else:
-                args.kappa = 1/kappa_base**2
+                args.kappa_phi = 1/kappa_base**2
+
+        if args.kappa_omega < 0:
+            kappa_base = np.abs(args.kappa_omega)/n_dists
+
+            if args.threshold_type=="hard":
+                args.kappa_omega = kappa_base
+            else:
+                args.kappa_omega = 1/kappa_base**2
 
     ###############################################################################
     # Train a GAN model
     ###############################################################################
-    print("{}/{}, {}, Sigma is {}, Kappa is {}".format(nSim+1, args.nsim, args.threshold_type, args.kernel_sigma, args.kappa))
+    print("{}/{}, {}, Sigma_Phi is {}, Kappa_Phi is {}".format(nSim+1, args.nsim, args.threshold_type, args.kernel_sigma_phi, args.kappa_phi))
+    print("{}/{}, {}, Sigma_Omega is {}, Kappa_Omega is {}".format(nSim+1, args.nsim, args.threshold_type, args.kernel_sigma_omega, args.kappa_omega))
+
+    sigmas = [args.kernel_sigma_phi,args.kernel_sigma_omega]
+    kappas = [args.kappa_phi,args.kappa_omega]
+
+    args.kappa = kappas[0]
+    args.kernel_sigma = sigmas[0]
 
     if args.GAN == 'CcGAN':
-        save_GANimages_InTrain_folder = PROJECT_DIR + '/out/saved_images/{}_{}_{}_{}_nSim_{}_InTrain'.format(args.GAN, args.threshold_type, args.kernel_sigma, args.kappa, nSim)
+        save_GANimages_InTrain_folder = PROJECT_DIR + '/out/saved_images/{}_{}_{:2f}_{:2f}_{:2f}_{:2f}_nSim_{}_InTrain'.format(args.GAN, args.threshold_type, sigmas[0], kappas[0], sigmas[1], kappas[1], nSim)
     os.makedirs(save_GANimages_InTrain_folder,exist_ok=True)
 
     #----------------------------------------------
     # Continuous cGAN
     if args.GAN == "CcGAN":
-        Filename_GAN = save_models_folder + '/ckpt_{}_niters_{}_seed_{}_{}_{}_{}_nSim_{}.pth'.format(args.GAN, args.niters_gan, args.seed, args.threshold_type, args.kernel_sigma, args.kappa, nSim)
+        Filename_GAN = save_models_folder + '/ckpt_{}_niters_{}_seed_{}_{}_{:2f}_{:2f}_{:2f}_{:2f}_nSim_{}.pth'.format(args.GAN, args.niters_gan, args.seed, args.threshold_type, sigmas[0], kappas[0], sigmas[1], kappas[1], nSim)
 
         if not os.path.isfile(Filename_GAN):
             netG = cont_cond_generator(ngpu=NGPU, nz=args.dim_gan, out_dim=n_features, label_min=label_min, label_max=label_max, const_mass=const_mass,axis=axis)
             netD = cont_cond_discriminator(ngpu=NGPU, input_dim = n_features, label_min=label_min, label_max=label_max, const_mass=const_mass,axis=axis)
 
             # Start training
-            netG, netD = train_CcGAN(args.kernel_sigma, args.kappa, samples_train, samples_mass_labels_train, netG, netD, save_images_folder=save_GANimages_InTrain_folder, save_models_folder = save_models_folder, plot_in_train=plot_in_train, samples_tar_eval = samples_plot_in_train, mass_labels_eval = mass_labels_plot, label_min=label_min, label_max=label_max, fig_size=fig_size, point_size=point_size)
+            netG, netD = train_CcGAN(sigmas[0], kappas[0], samples_train, samples_mass_labels_train, netG, netD, save_images_folder=save_GANimages_InTrain_folder, save_models_folder = save_models_folder, plot_in_train=plot_in_train, samples_tar_eval = samples_plot_in_train, mass_labels_eval = mass_labels_plot, label_min=label_min, label_max=label_max, fig_size=fig_size, point_size=point_size)
 
             # store model
             torch.save({
@@ -340,6 +336,7 @@ for nSim in range(args.nsim):
 
         fake_samples = np.zeros((n_dists*n_samples_plot, n_features))
         for i_tmp in range(n_dists):
+            print(i_tmp,n_dists)
             mass_label = mass_labels_plot[i_tmp]
             fake_samples_curr = fn_sampleGAN_given_label(
                     n_samples_plot,
@@ -354,12 +351,12 @@ for nSim in range(args.nsim):
 
         plt.switch_backend('agg')
         mpl.style.use('seaborn')
-        plt.figure(figsize=(fig_size, fig_size), facecolor='w')
+        plt.figure(1, figsize=(fig_size, fig_size), facecolor='w')
         plt.grid(b=True)
-        plt.xlim((phi_min, phi_max))
-        plt.ylim=((omega_min, omega_max))
         plt.scatter(real_samples_plot[:, 0], real_samples_plot[:, 1], c='blue', edgecolor='none', alpha=0.5, s=point_size, label="Real samples")
         plt.scatter(fake_samples[:, 0], fake_samples[:, 1], c='green', edgecolor='none', alpha=1, s=point_size, label="Fake samples")
+        plt.xlim(phi_min, phi_max)
+        plt.ylim=(omega_min, omega_max)
         plt.legend(loc=1)
         plt.savefig(filename_tmp)
 
